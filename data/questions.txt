@@ -1,0 +1,300 @@
+# setId|topic|level|seconds|correctIndex(0-3)|question|A;B;C;D
+# ==============================================================================
+# CHỦ ĐỀ 1: MẠNG MÁY TÍNH (COMPUTER NETWORKS)
+# ==============================================================================
+# Bộ 1-1-1: Mạng máy tính - Mức Dễ (Bộ 1)
+1-1-1|Mạng máy tính|Dễ|100|0|Giao thức TCP thuộc tầng nào trong mô hình OSI?|Tầng Giao vận (Transport);Tầng Mạng (Network);Tầng Ứng dụng (Application);Tầng Liên kết dữ liệu (Data Link)
+1-1-1|Mạng máy tính|Dễ|100|3|Giao thức nào dùng để phân giải tên miền thành địa chỉ IP?|FTP;DHCP;SNMP;DNS
+1-1-1|Mạng máy tính|Dễ|100|2|Cổng mặc định (default port) của giao thức HTTP là bao nhiêu?|21;443;80;25
+1-1-1|Mạng máy tính|Dễ|100|1|Địa chỉ IP phiên bản 4 (IPv4) có độ dài bao nhiêu bit?|16 bit;32 bit;64 bit;128 bit
+1-1-1|Mạng máy tính|Dễ|100|0|Địa chỉ Loopback mặc định của giao thức IPv4 là gì?|127.0.0.1;192.168.1.1;10.0.0.1;255.255.255.0
+1-1-1|Mạng máy tính|Dễ|100|3|Giao thức nào sau đây truyền dữ liệu không hướng kết nối (Connectionless)?|TCP;FTP;SSH;UDP
+1-1-1|Mạng máy tính|Dễ|100|2|Thiết bị nào hoạt động chủ yếu ở Tầng 2 (Data Link) trong mô hình OSI?|Router;Hub;Switch;Repeater
+1-1-1|Mạng máy tính|Dễ|100|1|Lệnh nào trong dòng lệnh dùng để kiểm tra tính thông suốt của kết nối mạng?|ipconfig;ping;tracert;netstat
+1-1-1|Mạng máy tính|Dễ|100|0|Cổng mặc định của giao thức SSH là bao nhiêu?|22;23;8080;3306
+1-1-1|Mạng máy tính|Dễ|100|3|Mô hình chuẩn OSI gồm có bao nhiêu tầng?|4 tầng;5 tầng;6 tầng;7 tầng
+
+# Bộ 1-1-2: Mạng máy tính - Mức Dễ (Bộ 2)
+1-1-2|Mạng máy tính|Dễ|100|1|Giao thức nào tự động cấp phát địa chỉ IP cho thiết bị khi kết nối mạng?|DNS;DHCP;ARP;ICMP
+1-1-2|Mạng máy tính|Dễ|100|2|Cổng mặc định của giao thức bảo mật HTTPS là bao nhiêu?|80;8080;443;21
+1-1-2|Mạng máy tính|Dễ|100|0|Địa chỉ MAC (Media Access Control) có độ dài bao nhiêu bit?|48 bit;32 bit;64 bit;128 bit
+1-1-2|Mạng máy tính|Dễ|100|3|Giao thức nào dùng để gửi thư điện tử (email) từ máy khách lên máy chủ?|POP3;IMAP;HTTP;SMTP
+1-1-2|Mạng máy tính|Dễ|100|1|Topo mạng nào mà khi một máy hỏng thì toàn bộ hệ thống vẫn hoạt động bình thường qua trung tâm?|Bus;Star (Sao);Ring (Vòng);Mesh (Lưới)
+1-1-2|Mạng máy tính|Dễ|100|0|Cáp mạng xoắn đôi phổ biến nhất hiện nay sử dụng đầu nối chuẩn gì?|RJ45;RJ11;BNC;USB
+1-1-2|Mạng máy tính|Dễ|100|2|Địa chỉ IPv6 có độ dài bao nhiêu bit?|32 bit;64 bit;128 bit;256 bit
+1-1-2|Mạng máy tính|Dễ|100|1|Giao thức FTP dùng để làm gì?|Duyệt web;Truyền nhận tệp tin;Gửi thư điện tử;Quản lý mạng
+1-1-2|Mạng máy tính|Dễ|100|3|Thiết bị mạng nào có chức năng định tuyến gói tin giữa các mạng khác nhau?|Hub;Repeater;Switch L2;Router
+1-1-2|Mạng máy tính|Dễ|100|0|Tầng nào nằm trên cùng trong mô hình mạng 7 tầng OSI?|Application;Presentation;Session;Transport
+
+# Bộ 1-2-1: Mạng máy tính - Mức Trung bình (Bộ 1)
+1-2-1|Mạng máy tính|Trung bình|150|2|Trong cơ chế bắt tay ba bước (3-Way Handshake) của TCP, thứ tự các cờ là gì?|ACK -> SYN -> SYN-ACK;SYN -> ACK -> SYN-ACK;SYN -> SYN-ACK -> ACK;SYN-ACK -> SYN -> ACK
+1-2-1|Mạng máy tính|Trung bình|150|1|Mặt nạ mạng /26 tương ứng với Subnet Mask dạng thập phân nào?|255.255.255.128;255.255.255.192;255.255.255.224;255.255.255.240
+1-2-1|Mạng máy tính|Trung bình|150|3|Giao thức ARP (Address Resolution Protocol) dùng để chuyển đổi gì?|Tên miền sang IP;IP sang Tên miền;Cổng sang IP;Địa chỉ IP sang địa chỉ MAC
+1-2-1|Mạng máy tính|Trung bình|150|0|Giao thức định tuyến RIP sử dụng metric nào để chọn đường đi tốt nhất?|Hop count (Số chặng);Băng thông (Bandwidth);Độ trễ (Delay);Chi phí (Cost)
+1-2-1|Mạng máy tính|Trung bình|150|1|Kích thước MTU mặc định phổ biến của gói tin Ethernet là bao nhiêu byte?|576 bytes;1500 bytes;4096 bytes;9000 bytes
+1-2-1|Mạng máy tính|Trung bình|150|2|Kỹ thuật NAT (Network Address Translation) chủ yếu giải quyết vấn đề gì?|Tăng tốc độ truyền tải;Mã hóa dữ liệu;Tiết kiệm địa chỉ IPv4 công cộng;Chống virus mạng
+1-2-1|Mạng máy tính|Trung bình|150|0|Bản ghi DNS loại MX (Mail Exchange) có vai trò gì?|Chỉ định máy chủ tiếp nhận email của tên miền;Phân giải tên miền sang IPv4;Phân giải tên miền sang IPv6;Tạo bí danh cho tên miền
+1-2-1|Mạng máy tính|Trung bình|150|3|Cờ nào trong TCP Header dùng để chủ động yêu cầu thiết lập lại kết nối khẩn cấp?|FIN;SYN;URG;RST
+1-2-1|Mạng máy tính|Trung bình|150|1|Dải địa chỉ IP nào sau đây thuộc dải mạng riêng (Private IP) Lớp C?|10.0.0.0/8;192.168.0.0/16;172.16.0.0/12;169.254.0.0/16
+1-2-1|Mạng máy tính|Trung bình|150|2|Trong Java Socket, lớp nào được sử dụng để tạo Server lắng nghe kết nối TCP?|Socket;DatagramSocket;ServerSocket;InetAddress
+
+# Bộ 1-2-2: Mạng máy tính - Mức Trung bình (Bộ 2)
+1-2-2|Mạng máy tính|Trung bình|150|1|Giao thức ICMP thường được sử dụng cho mục đích nào?|Truyền file dung lượng lớn;Báo cáo lỗi và chẩn đoán mạng;Mã hóa kênh truyền;Cấp phát địa chỉ động
+1-2-2|Mạng máy tính|Trung bình|150|0|Với mạng 192.168.1.0/24, địa chỉ Broadcast của mạng này là gì?|192.168.1.255;192.168.1.0;192.168.1.1;192.168.1.254
+1-2-2|Mạng máy tính|Trung bình|150|2|Giao thức OSPF hoạt động dựa trên thuật toán tìm đường nào?|Bellman-Ford;Floyd-Warshall;Dijkstra;Kruskal
+1-2-2|Mạng máy tính|Trung bình|150|3|Cửa sổ trượt (Sliding Window) trong giao thức TCP có công dụng chính là gì?|Mã hóa nội dung gói;Kiểm tra lỗi checksum;Phát hiện xung đột;Kiểm soát luồng dữ liệu (Flow Control)
+1-2-2|Mạng máy tính|Trung bình|150|1|Giao thức truyền file bảo mật SFTP chạy trên nền tảng của giao thức nào?|FTP;SSH;SSL/TLS;Telnet
+1-2-2|Mạng máy tính|Trung bình|150|0|Bản ghi DNS nào dùng để ánh xạ tên miền tới địa chỉ IPv6?|AAAA;A;CNAME;PTR
+1-2-2|Mạng máy tính|Trung bình|150|2|Quá trình đóng một kết nối TCP thông thường gồm bao nhiêu bước bắt tay?|2 bước;3 bước;4 bước (FIN - ACK - FIN - ACK);5 bước
+1-2-2|Mạng máy tính|Trung bình|150|3|Trong mạng LAN, miền quảng bá (Broadcast Domain) được giới hạn bởi thiết bị nào?|Hub;Repeater;Switch L2;Router
+1-2-2|Mạng máy tính|Trung bình|150|1|Độ dài tiêu đề (Header) tối thiểu của gói tin IPv4 là bao nhiêu byte?|16 bytes;20 bytes;24 bytes;32 bytes
+1-2-2|Mạng máy tính|Trung bình|150|0|Lớp DatagramPacket và DatagramSocket trong Java dùng để lập trình giao thức nào?|UDP;TCP;HTTP;ICMP
+
+# Bộ 1-3-1: Mạng máy tính - Mức Khó (Bộ 1)
+1-3-1|Mạng máy tính|Khó|200|2|Trong cơ chế TCP Congestion Control, giai đoạn Slow Start kết thúc khi cửa sổ cwnd chạm ngưỡng nào?|MSS;BDP;ssthresh;Receive Window
+1-3-1|Mạng máy tính|Khó|200|1|Thuật toán Nagle trong ngăn xếp TCP nhằm mục đích gì?|Chống tràn bộ đệm máy nhận;Giảm overhead gói tin nhỏ bằng cách gom dữ liệu;Tăng tốc độ bắt tay ba bước;Ưu tiên các gói tin âm thanh
+1-3-1|Mạng máy tính|Khó|200|0|Giao thức BGP (Border Gateway Protocol) hoạt động ở tầng nào và dùng cổng TCP nào?|Tầng Ứng dụng qua cổng TCP 179;Tầng Mạng qua giao thức IP 89;Tầng Giao vận qua cổng UDP 520;Tầng Liên kết qua cổng 8080
+1-3-1|Mạng máy tính|Khó|200|3|Tùy chọn TCP SYN Cookie được thiết kế để đối phó với hình thức tấn công nào?|Man-in-the-middle;DNS Poisoning;Smurf Attack;SYN Flood DoS
+1-3-1|Mạng máy tính|Khó|200|2|Trong giao thức TLS 1.3, thời gian bắt tay (Handshake latency) được tối ưu xuống còn bao nhiêu RTT?|2 RTT;3 RTT;1 RTT (hoặc 0-RTT);4 RTT
+1-3-1|Mạng máy tính|Khó|200|1|Khi MTU là 1500 byte, truyền gói tin IP kích thước 4000 byte (header 20 byte) thì số mảnh phân mảnh (fragment) là?|2 mảnh;3 mảnh;4 mảnh;5 mảnh
+1-3-1|Mạng máy tính|Khó|200|0|Trạng thái TIME_WAIT trong TCP tồn tại trong khoảng thời gian bằng bao nhiêu để đảm bảo an toàn?|2 MSL (Maximum Segment Lifetime);1 RTT;30 giây cố định;5 phút
+1-3-1|Mạng máy tính|Khó|200|3|Cơ chế ECN (Explicit Congestion Notification) trong IP Header sử dụng bao nhiêu bit để báo nghẽn?|8 bit;4 bit;1 bit;2 bit
+1-3-1|Mạng máy tính|Khó|200|1|Trong kiến trúc CDN, kỹ thuật Anycast dựa trên giao thức định tuyến nào để đưa người dùng đến điểm gần nhất?|RIP;BGP;OSPF;IS-IS
+1-3-1|Mạng máy tính|Khó|200|0|Header cố định của giao thức IPv6 có kích thước là bao nhiêu byte?|40 bytes;20 bytes;32 bytes;64 bytes
+
+# Bộ 1-3-2: Mạng máy tính - Mức Khó (Bộ 2)
+1-3-2|Mạng máy tính|Khó|200|3|Thuật toán chống nghẽn TCP BBR (Bottleneck Bandwidth and RTT) do tổ chức nào phát triển?|Cisco;IETF;Microsoft;Google
+1-3-2|Mạng máy tính|Khó|200|1|Giao thức HTTP/3 sử dụng giao thức truyền vận nào bên dưới thay thế cho TCP?|SCTP;QUIC (trên nền UDP);RTP;DCCP
+1-3-2|Mạng máy tính|Khó|200|0|Trong kỹ thuật tấn công DNS Cache Poisoning, kẻ tấn công khai thác trường nào trong DNS Header?|Transaction ID (16 bit);Opcode;Checksum;TTL
+1-3-2|Mạng máy tính|Khó|200|2|Tại sao TCP Header có trường Header Length (Data Offset) dài 4 bit biểu thị đơn vị là?|Số byte;Số bit;Số từ 32-bit (32-bit words);Số kilobyte
+1-3-2|Mạng máy tính|Khó|200|3|Kỹ thuật Path MTU Discovery (PMTUD) sử dụng cờ IP nào kết hợp với bản tin ICMP?|MF (More Fragments);RST (Reset);URG (Urgent);DF (Don't Fragment)
+1-3-2|Mạng máy tính|Khó|200|1|Giao thức STP (Spanning Tree Protocol) sử dụng gói tin nào để phát hiện và ngăn ngừa lặp vòng mạng (loop)?|LSA;BPDU;ARP Request;Keepalive
+1-3-2|Mạng máy tính|Khó|200|0|Vấn đề Silly Window Syndrome trong TCP được giải quyết bằng thuật toán nào ở phía người nhận?|Thuật toán Clark;Thuật toán Dijkstra;Thuật toán Bellman;Thuật toán Karn
+1-3-2|Mạng máy tính|Khó|200|2|Địa chỉ IPv6 ::1 tương đương với địa chỉ IPv4 nào?|0.0.0.0;255.255.255.255;127.0.0.1;192.168.1.1
+1-3-2|Mạng máy tính|Khó|200|3|Trong giao thức OSPF, Router ID được chọn theo thứ tự ưu tiên nào cao nhất?|Địa chỉ IP vật lý lớn nhất;Địa chỉ IP vật lý nhỏ nhất;Địa chỉ Loopback nhỏ nhất;Địa chỉ IP cấu hình thủ công hoặc Loopback lớn nhất
+1-3-2|Mạng máy tính|Khó|200|1|Trong Java NIO SocketChannel, chế độ Non-blocking kết hợp với thành phần nào để phục vụ hàng ngàn kết nối?|Thread;Selector;ThreadPool;ServerSocket
+
+# ==============================================================================
+# CHỦ ĐỀ 2: LẬP TRÌNH & CẤU TRÚC DỮ LIỆU
+# ==============================================================================
+# Bộ 2-1-1: Lập trình & Cấu trúc dữ liệu - Mức Dễ (Bộ 1)
+2-1-1|Lập trình & Cấu trúc dữ liệu|Dễ|100|0|Cấu trúc dữ liệu nào hoạt động theo nguyên lý LIFO (Last In First Out)?|Stack (Ngăn xếp);Queue (Hàng đợi);LinkedList;Array
+2-1-1|Lập trình & Cấu trúc dữ liệu|Dễ|100|1|Cấu trúc dữ liệu nào hoạt động theo nguyên lý FIFO (First In First Out)?|Stack;Queue (Hàng đợi);Tree;Graph
+2-1-1|Lập trình & Cấu trúc dữ liệu|Dễ|100|2|Trong Java, mã nguồn (.java) sau khi biên dịch bằng javac sẽ tạo ra tệp gì?|Mã máy (.exe);Mã nguồn C;Bytecode (.class);Tệp thư viện (.dll)
+2-1-1|Lập trình & Cấu trúc dữ liệu|Dễ|100|3|Độ phức tạp thời gian trung bình của thuật toán tìm kiếm nhị phân (Binary Search) là gì?|O(n);O(n^2);O(1);O(log n)
+2-1-1|Lập trình & Cấu trúc dữ liệu|Dễ|100|0|Chỉ số (index) đầu tiên của mảng trong hầu hết các ngôn ngữ (Java, C++, Python) là bao nhiêu?|0;1;-1;Không xác định
+2-1-1|Lập trình & Cấu trúc dữ liệu|Dễ|100|2|Tính chất nào trong OOP cho phép một đối tượng có nhiều hình thái thực thi khác nhau?|Đóng gói;Kế thừa;Đa hình (Polymorphism);Trừu tượng
+2-1-1|Lập trình & Cấu trúc dữ liệu|Dễ|100|1|Lớp HashMap trong Java lưu trữ dữ liệu dưới dạng cấu trúc nào?|Danh sách liên kết;Cặp Key - Value (Khóa - Giá trị);Mảng một chiều;Hàng đợi ưu tiên
+2-1-1|Lập trình & Cấu trúc dữ liệu|Dễ|100|3|Từ khóa nào trong Java dùng để kế thừa một lớp cha?|implements;exports;public;extends
+2-1-1|Lập trình & Cấu trúc dữ liệu|Dễ|100|0|Khối mã nào trong cấu trúc try-catch-finally luôn luôn được thực thi dù có lỗi hay không?|finally;catch;try;default
+2-1-1|Lập trình & Cấu trúc dữ liệu|Dễ|100|1|Kiểu dữ liệu nguyên thủy nào trong Java dùng để lưu trữ giá trị đúng hoặc sai?|int;boolean;char;float
+
+# Bộ 2-1-2: Lập trình & Cấu trúc dữ liệu - Mức Dễ (Bộ 2)
+2-1-2|Lập trình & Cấu trúc dữ liệu|Dễ|100|2|Từ khóa nào trong Java dùng để khai báo một hằng số không thể thay đổi giá trị?|static;const;final;immutable
+2-1-2|Lập trình & Cấu trúc dữ liệu|Dễ|100|0|Trong cấu trúc dữ liệu mảng động ArrayList của Java, thao tác get(index) có độ phức tạp là bao nhiêu?|O(1);O(n);O(log n);O(n^2)
+2-1-2|Lập trình & Cấu trúc dữ liệu|Dễ|100|3|Phương thức nào là điểm khởi đầu thực thi của một ứng dụng Java Console độc lập?|start();run();init();main(String[] args)
+2-1-2|Lập trình & Cấu trúc dữ liệu|Dễ|100|1|Tính chất nào của OOP ẩn đi các chi tiết cài đặt bên trong và chỉ cung cấp các hàm giao tiếp ngoài?|Kế thừa;Đóng gói (Encapsulation);Đa hình;Gán dữ liệu
+2-1-2|Lập trình & Cấu trúc dữ liệu|Dễ|100|2|Vòng lặp nào kiểm tra điều kiện sau khi đã thực thi thân vòng lặp ít nhất một lần?|for;while;do-while;foreach
+2-1-2|Lập trình & Cấu trúc dữ liệu|Dễ|100|0|Lớp cha cao nhất của tất cả các lớp trong ngôn ngữ lập trình Java là lớp nào?|java.lang.Object;java.lang.Class;java.lang.System;java.lang.String
+2-1-2|Lập trình & Cấu trúc dữ liệu|Dễ|100|3|Cấu trúc dữ liệu nào không cho phép lưu trữ các phần tử trùng lặp?|List;ArrayList;Queue;Set (HashSet)
+2-1-2|Lập trình & Cấu trúc dữ liệu|Dễ|100|1|Kích thước bộ nhớ của kiểu dữ liệu nguyên thủy int trong Java là bao nhiêu byte?|2 bytes;4 bytes (32 bits);8 bytes;1 byte
+2-1-2|Lập trình & Cấu trúc dữ liệu|Dễ|100|0|Để so sánh nội dung bằng nhau của hai đối tượng chuỗi String trong Java, ta dùng phương thức nào?|equals();==;compareTo() == 0;isSame()
+2-1-2|Lập trình & Cấu trúc dữ liệu|Dễ|100|2|Từ khóa nào được dùng để thực thi (triển khai) một Interface trong lớp Java?|extends;inherits;implements;abstract
+
+# Bộ 2-2-1: Lập trình & Cấu trúc dữ liệu - Mức Trung bình (Bộ 1)
+2-2-1|Lập trình & Cấu trúc dữ liệu|Trung bình|150|1|Độ phức tạp thời gian trong trường hợp xấu nhất (Worst case) của QuickSort là gì?|O(n log n);O(n^2);O(n);O(log n)
+2-2-1|Lập trình & Cấu trúc dữ liệu|Trung bình|150|2|Trong Cây nhị phân tìm kiếm (BST), phần tử ở nhánh con bên trái luôn có giá trị như thế nào so với nút gốc?|Lớn hơn;Bằng nhau;Nhỏ hơn;Gấp đôi
+2-2-1|Lập trình & Cấu trúc dữ liệu|Trung bình|150|0|Thuật toán sắp xếp nào hoạt động theo nguyên lý Chia để trị (Divide and Conquer)?|MergeSort;BubbleSort;InsertionSort;SelectionSort
+2-2-1|Lập trình & Cấu trúc dữ liệu|Trung bình|150|3|Kỹ thuật xử lý va chạm trong Bảng băm (Hash Table) bằng cách liên kết các nút tại cùng bucket gọi là gì?|Open Addressing;Linear Probing;Double Hashing;Chaining (Separate Chaining)
+2-2-1|Lập trình & Cấu trúc dữ liệu|Trung bình|150|1|Trong Java, sự khác biệt chính giữa StringBuilder và StringBuffer là gì?|StringBuilder lưu được nhiều ký tự hơn;StringBuffer đồng bộ hóa thread-safe còn StringBuilder thì không;StringBuilder là kiểu nguyên thủy;StringBuffer không thay đổi được chuỗi
+2-2-1|Lập trình & Cấu trúc dữ liệu|Trung bình|150|2|Độ phức tạp thời gian khi chèn một phần tử vào đầu danh sách liên kết đơn (Singly LinkedList) là gì?|O(n);O(log n);O(1);O(n^2)
+2-2-1|Lập trình & Cấu trúc dữ liệu|Trung bình|150|0|Từ khóa volatile trong đa luồng Java có ý nghĩa gì đối với biến?|Đảm bảo tính hiển thị (Visibility) tức thì giữa các luồng trong bộ nhớ chính;Tự động đồng bộ hóa synchronized toàn bộ hàm;Biến không thể thay đổi giá trị;Biến chỉ chạy trên một luồng duy nhất
+2-2-1|Lập trình & Cấu trúc dữ liệu|Trung bình|150|3|Thứ tự duyệt cây nào sau đây trả về danh sách các khóa của cây BST theo thứ tự tăng dần?|Pre-order (Tiền thứ tự);Post-order (Hậu thứ tự);Level-order (Theo tầng);In-order (Trung thứ tự)
+2-2-1|Lập trình & Cấu trúc dữ liệu|Trung bình|150|1|Mô hình thiết kế (Design Pattern) nào đảm bảo một lớp chỉ có duy nhất một thể hiện (Instance)?|Factory Pattern;Singleton Pattern;Observer Pattern;Decorator Pattern
+2-2-1|Lập trình & Cấu trúc dữ liệu|Trung bình|150|2|Cấu trúc dữ liệu Heap nhị phân cực đại (Max-Heap) thỏa mãn tính chất nào?|Nút lá luôn lớn hơn nút cha;Nút con trái luôn lớn hơn nút con phải;Giá trị nút cha luôn lớn hơn hoặc bằng các nút con;Tất cả các nút đều có giá trị âm
+
+# Bộ 2-2-2: Lập trình & Cấu trúc dữ liệu - Mức Trung bình (Bộ 2)
+2-2-2|Lập trình & Cấu trúc dữ liệu|Trung bình|150|2|Độ phức tạp không gian (Space Complexity) của thuật toán sắp xếp MergeSort cho mảng kích thước n là gì?|O(1);O(log n);O(n);O(n^2)
+2-2-2|Lập trình & Cấu trúc dữ liệu|Trung bình|150|0|Hàng đợi ưu tiên (PriorityQueue) trong Java mặc định cài đặt cấu trúc dữ liệu nào bên dưới?|Min-Heap;Max-Heap;Cây đỏ đen;Danh sách liên kết đôi
+2-2-2|Lập trình & Cấu trúc dữ liệu|Trung bình|150|3|Phương thức nào trong Java bắt đầu thực thi một luồng (Thread) mới một cách bất đồng bộ?|run();init();execute();start()
+2-2-2|Lập trình & Cấu trúc dữ liệu|Trung bình|150|1|Thuật toán duyệt đồ thị nào sử dụng cấu trúc dữ liệu Hàng đợi (Queue)?|DFS (Tìm kiếm theo chiều sâu);BFS (Tìm kiếm theo chiều rộng);Dijkstra;Bellman-Ford
+2-2-2|Lập trình & Cấu trúc dữ liệu|Trung bình|150|0|Trong Java, biến được khai báo static thuộc về đối tượng nào?|Thuộc về Lớp (Class);Thuộc về Thể hiện (Object);Thuộc về Thread đang chạy;Thuộc về Package
+2-2-2|Lập trình & Cấu trúc dữ liệu|Trung bình|150|2|Một Interface trong Java kể từ phiên bản 8 trở đi có thể chứa phương thức có thân hàm nếu có từ khóa nào?|public;static;default;concrete
+2-2-2|Lập trình & Cấu trúc dữ liệu|Trung bình|150|3|Cấu trúc dữ liệu nào tốt nhất để kiểm tra tính hợp lệ của dấu đóng mở ngoặc trong biểu thức toán học?|Queue;Array;LinkedList;Stack
+2-2-2|Lập trình & Cấu trúc dữ liệu|Trung bình|150|1|Cơ chế Garbage Collection (Bộ thu gom rác) của máy ảo JVM tự động giải phóng vùng nhớ nào?|Stack;Heap;Method Area;Program Counter Register
+2-2-2|Lập trình & Cấu trúc dữ liệu|Trung bình|150|0|Độ phức tạp thời gian trung bình của thao tác tìm kiếm, chèn, xóa trong cây nhị phân cân bằng AVL là gì?|O(log n);O(n);O(1);O(n log n)
+2-2-2|Lập trình & Cấu trúc dữ liệu|Trung bình|150|2|Khái niệm Đa hình lúc biên dịch (Compile-time Polymorphism) được thể hiện qua cơ chế nào?|Method Overriding;Interface Implementation;Method Overloading (Nạp chồng phương thức);Dynamic Binding
+
+# Bộ 2-3-1: Lập trình & Cấu trúc dữ liệu - Mức Khó (Bộ 1)
+2-3-1|Lập trình & Cấu trúc dữ liệu|Khó|200|2|Trong Cây đỏ đen (Red-Black Tree), số lượng nút đen trên mọi đường đi đơn từ nút gốc đến nút lá phải như thế nào?|Tăng dần theo độ sâu;Luôn bằng 2;Luôn bằng nhau;Luôn là số lẻ
+2-3-1|Lập trình & Cấu trúc dữ liệu|Khó|200|1|Thuật toán Dijkstra tìm đường đi ngắn nhất không thể hoạt động chính xác trong trường hợp nào?|Đồ thị vô hướng;Đồ thị có trọng số cạnh âm;Đồ thị có chu trình;Đồ thị có nhiều hơn 1000 đỉnh
+2-3-1|Lập trình & Cấu trúc dữ liệu|Khó|200|0|Thuật toán nào sau đây giải quyết bài toán Cây khung nhỏ nhất (Minimum Spanning Tree)?|Kruskal và Prim;Dijkstra và Floyd;Tarjan và Kosaraju;KMP và Rabin-Karp
+2-3-1|Lập trình & Cấu trúc dữ liệu|Khó|200|3|Hiện tượng Deadlock (Bế tắc) xảy ra khi thỏa mãn đồng thời bao nhiêu điều kiện Coffman?|2 điều kiện;3 điều kiện;5 điều kiện;4 điều kiện
+2-3-1|Lập trình & Cấu trúc dữ liệu|Khó|200|1|Trong Java Memory Model, vùng nhớ lưu trữ biến cục bộ (Local Variables) của hàm là gì?|Heap;Thread Stack;Metaspace;Native Memory
+2-3-1|Lập trình & Cấu trúc dữ liệu|Khó|200|0|Thuật toán Floyd-Warshall dùng để tìm đường đi ngắn nhất có độ phức tạp thời gian là bao nhiêu?|O(V^3);O(V^2);O(E log V);O(V * E)
+2-3-1|Lập trình & Cấu trúc dữ liệu|Khó|200|2|Cấu trúc dữ liệu Disjoint Set Union (DSU) với kỹ thuật gộp theo hạng và nén đường đi có độ phức tạp gần như là gì?|O(log n);O(n);O(alpha(n)) - Hàm nghịch đảo Ackermann;O(1)
+2-3-1|Lập trình & Cấu trúc dữ liệu|Khó|200|3|Lớp ConcurrentHashMap trong Java 8 đạt được khả năng đa luồng cao nhờ cơ chế khóa nào?|Khóa toàn bộ bảng ReentrantLock;Đồng bộ synchronized trên cả đối tượng;Phân đoạn ReentrantLock Segment;Khóa ở cấp độ từng Node (Bucket) và kết hợp CAS (Compare-And-Swap)
+2-3-1|Lập trình & Cấu trúc dữ liệu|Khó|200|1|Thuật toán tìm kiếm xâu con KMP (Knuth-Morris-Pratt) tiền xử lý mẫu (pattern) bằng mảng nào?|Bảng dịch chuyển Boyer;Mảng tiền tố dài nhất cũng là hậu tố (LPS array);Cây Suffix Tree;Hàm băm Rabin
+2-3-1|Lập trình & Cấu trúc dữ liệu|Khó|200|0|Trong kỹ thuật Quy hoạch động (Dynamic Programming), hai thuộc tính then chốt của bài toán là gì?|Cấu trúc con tối ưu và các bài toán con gối nhau (Overlapping Subproblems);Chia để trị và thuật toán tham lam;Đệ quy đuôi và nhánh cận;Đồ thị liên thông và thứ tự tô pô
+
+# Bộ 2-3-2: Lập trình & Cấu trúc dữ liệu - Mức Khó (Bộ 2)
+2-3-2|Lập trình & Cấu trúc dữ liệu|Khó|200|1|Cấu trúc dữ liệu Segment Tree (Cây đoạn) có thời gian truy vấn khoảng (Range Query) và cập nhật điểm là bao nhiêu?|O(n);O(log n);O(1);O(n log n)
+2-3-2|Lập trình & Cấu trúc dữ liệu|Khó|200|3|Cây Trie (Prefix Tree) phù hợp nhất với bài toán nào dưới đây?|Tìm đường đi ngắn nhất trên bản đồ;Sắp xếp số nguyên;Tính định thức ma trận;Tìm kiếm và tự động gợi ý từ điển theo tiền tố (Autocomplete)
+2-3-2|Lập trình & Cấu trúc dữ liệu|Khó|200|0|Thuật toán Tarjan sử dụng phép duyệt nào để tìm các Thành phần liên thông mạnh (SCC) trong đồ thị có hướng?|Duyệt theo chiều sâu DFS;Duyệt theo chiều rộng BFS;Duyệt theo mức Level-order;Duyệt tham lam Greedy
+2-3-2|Lập trình & Cấu trúc dữ liệu|Khó|200|2|Trong Java, cơ chế ForkJoinPool tối ưu hóa việc phân chia tác vụ đa luồng dựa trên kỹ thuật nào?|Round-Robin scheduling;LIFO stack priority;Work-Stealing (Đánh cắp công việc);Priority preemption
+2-3-2|Lập trình & Cấu trúc dữ liệu|Khó|200|1|Một cây B-Tree bậc m có đặc điểm nào sau đây về số lượng khóa tối đa trong một nút?|m khóa;m - 1 khóa;2m khóa;m / 2 khóa
+2-3-2|Lập trình & Cấu trúc dữ liệu|Khó|200|0|Vấn đề ABA trong lập trình đa luồng không khóa (Lock-free Programming) thường được khắc phục bằng gì?|AtomicStampedReference (Thêm số hiệu phiên bản/timestamp);Khóa synchronized;Biến volatile đơn thuần;Tăng kích thước biến
+2-3-2|Lập trình & Cấu trúc dữ liệu|Khó|200|3|Kỹ thuật Lazy Propagation trong Cây đoạn (Segment Tree) giải quyết bài toán nào với thời gian O(log n)?|Tìm kiếm nhị phân;Xóa toàn bộ cây;Tính chiều cao cây;Cập nhật giá trị trên cả một đoạn (Range Update)
+2-3-2|Lập trình & Cấu trúc dữ liệu|Khó|200|2|Bộ thu gom rác G1 GC (Garbage-First Garbage Collector) của JVM chia vùng nhớ Heap thành các phần như thế nào?|Chia thành 2 nửa cố định;Chia thành 3 thế hệ tuần tự;Chia thành hàng ngàn vùng nhỏ (Regions) có kích thước bằng nhau;Không phân chia mà dùng danh sách tự do
+2-3-2|Lập trình & Cấu trúc dữ liệu|Khó|200|0|Thuật toán Bellman-Ford có ưu điểm vượt trội nào so với thuật toán Dijkstra?|Hoạt động được trên đồ thị có cạnh trọng số âm và phát hiện chu trình âm;Chạy nhanh hơn thuật toán Dijkstra;Bộ nhớ sử dụng luôn là O(1);Không cần khởi tạo khoảng cách
+2-3-2|Lập trình & Cấu trúc dữ liệu|Khó|200|1|Độ phức tạp thời gian khi xây dựng Heap nhị phân từ một mảng n phần tử cho trước bằng hàm buildHeap là gì?|O(n log n);O(n);O(n^2);O(log n)
+
+# ==============================================================================
+# CHỦ ĐỀ 3: KHOA HỌC & ĐỜI SỐNG
+# ==============================================================================
+# Bộ 3-1-1: Khoa học & Đời sống - Mức Dễ (Bộ 1)
+3-1-1|Khoa học & Đời sống|Dễ|100|0|Hành tinh nào gần Mặt Trời nhất trong Hệ Mặt Trời?|Sao Thủy (Mercury);Sao Kim (Venus);Trái Đất (Earth);Sao Hỏa (Mars)
+3-1-1|Khoa học & Đời sống|Dễ|100|2|Công thức hóa học của nước cất là gì?|CO2;H2O2;H2O;NaCl
+3-1-1|Khoa học & Đời sống|Dễ|100|1|Đơn vị đo lực chuẩn trong Hệ thống đơn vị quốc tế (SI) là gì?|Joule;Newton (N);Pascal;Watt
+3-1-1|Khoa học & Đời sống|Dễ|100|3|Chất khí nào chiếm thể tích lớn nhất trong bầu khí quyển Trái Đất?|Oxy;Cacbonic;Argon;Nitơ (~78%)
+3-1-1|Khoa học & Đời sống|Dễ|100|0|Quá trình quang hợp của thực vật chủ yếu hấp thụ khí gì và thải ra khí gì?|Hấp thụ CO2 và thải ra O2;Hấp thụ O2 và thải ra CO2;Hấp thụ N2 và thải ra CO2;Hấp thụ H2 và thải ra O2
+3-1-1|Khoa học & Đời sống|Dễ|100|1|Nhiệt độ sôi của nước tinh khiết ở áp suất khí quyển tiêu chuẩn là bao nhiêu?|90°C;100°C;120°C;80°C
+3-1-1|Khoa học & Đời sống|Dễ|100|3|Cơ quan nào trong cơ thể con người chịu trách nhiệm bơm máu đi khắp cơ thể?|Phổi;Gan;Thận;Tim
+3-1-1|Khoa học & Đời sống|Dễ|100|2|Vận tốc ánh sáng truyền trong môi trường chân không xấp xỉ bằng bao nhiêu?|30.000 km/s;300.000 m/s;300.000 km/s;3.000.000 km/s
+3-1-1|Khoa học & Đời sống|Dễ|100|0|Phần lớn năng lượng tự nhiên trên Trái Đất có nguồn gốc từ đâu?|Mặt Trời;Địa nhiệt;Năng lượng gió;Mặt Trăng
+3-1-1|Khoa học & Đời sống|Dễ|100|1|Vitamin nào được cơ thể con người tổng hợp tự nhiên nhiều nhất khi tiếp xúc ánh nắng mặt trời?|Vitamin C;Vitamin D;Vitamin A;Vitamin B12
+
+# Bộ 3-1-2: Khoa học & Đời sống - Mức Dễ (Bộ 2)
+3-1-2|Khoa học & Đời sống|Dễ|100|2|Hành tinh nào được mệnh danh là Hành tinh Đỏ trong Hệ Mặt Trời?|Sao Mộc;Sao Kim;Sao Hỏa (Mars);Sao Thổ
+3-1-2|Khoa học & Đời sống|Dễ|100|0|Kim loại nào tồn tại ở thể lỏng ở điều kiện nhiệt độ phòng tiêu chuẩn?|Thủy ngân (Hg);Sắt (Fe);Đồng (Cu);Nhôm (Al)
+3-1-2|Khoa học & Đời sống|Dễ|100|3|Đơn vị đo tần số dao động của sóng âm là gì?|Decibel;Volt;Ampere;Hertz (Hz)
+3-1-2|Khoa học & Đời sống|Dễ|100|1|Loài động vật có vú nào duy nhất có khả năng bay lượn thực sự?|Sóc bay;Dơi;Chim cánh cụt;Vượn cáo
+3-1-2|Khoa học & Đời sống|Dễ|100|2|Hiện tượng Nhật thực xảy ra khi thiên thể nào nằm ở giữa hai thiên thể còn lại?|Mặt Trời;Trái Đất;Mặt Trăng;Sao Hỏa
+3-1-2|Khoa học & Đời sống|Dễ|100|0|Muối ăn gia đình thường dùng có tên hóa học là gì?|Natri Clorua (NaCl);Canxi Cacbonat;Axit Axetic;Natri Bicarbonat
+3-1-2|Khoa học & Đời sống|Dễ|100|1|Bộ phận nào của tế bào chứa vật chất di truyền DNA chủ yếu?|Không bào;Nhân tế bào (Nucleus);Thành tế bào;Lục lạp
+3-1-2|Khoa học & Đời sống|Dễ|100|3|Âm thanh không thể truyền qua môi trường nào sau đây?|Kim loại;Nước biển;Không khí;Chân không
+3-1-2|Khoa học & Đời sống|Dễ|100|0|Nhóm máu nào được coi là nhóm máu chuyên cho trong truyền máu thông thường?|Nhóm máu O;Nhóm máu AB;Nhóm máu A;Nhóm máu B
+3-1-2|Khoa học & Đời sống|Dễ|100|2|Thang đo pH có giá trị bằng 7 biểu thị dung dịch có tính chất gì?|Axit mạnh;Bazơ kiềm;Trung tính;Nhiễm mặn
+
+# Bộ 3-2-1: Khoa học & Đời sống - Mức Trung bình (Bộ 1)
+3-2-1|Khoa học & Đời sống|Trung bình|150|1|Định luật Vạn vật Hấp dẫn do nhà khoa học lỗi lạc nào phát hiện và công bố?|Albert Einstein;Isaac Newton;Galileo Galilei;Nikola Tesla
+3-2-1|Khoa học & Đời sống|Trung bình|150|2|Đơn vị thiên văn năm ánh sáng (Light-year) là đơn vị dùng để đo đại lượng nào?|Thời gian vũ trụ;Vận tốc di chuyển;Khoảng cách;Khối lượng ngôi sao
+3-2-1|Khoa học & Đời sống|Trung bình|150|0|Quá trình biến đổi từ chất rắn trực tiếp thành chất khí không qua thể lỏng gọi là gì?|Thăng hoa (Sublimation);Ngưng tụ;Bay hơi;Nóng chảy
+3-2-1|Khoa học & Đời sống|Trung bình|150|3|Nguyên tố hóa học nào có khối lượng chiếm tỷ lệ cao nhất trong vỏ Trái Đất?|Silic;Sắt;Nhôm;Oxy (~46.6%)
+3-2-1|Khoa học & Đời sống|Trung bình|150|1|Loại sóng nào sau đây có bước sóng ngắn hơn vùng ánh sáng nhìn thấy?|Sóng vô tuyến;Tia tử ngoại (UV);Sóng vi ba;Tia hồng ngoại
+3-2-1|Khoa học & Đời sống|Trung bình|150|0|Hiện tượng khúc xạ ánh sáng xảy ra do nguyên nhân chính nào?|Vận tốc ánh sáng thay đổi khi truyền qua hai môi trường khác nhau;Ánh sáng bị hấp thụ hoàn toàn;Giao thoa giữa các chùm sáng;Sự giãn nở của nguồn sáng
+3-2-1|Khoa học & Đời sống|Trung bình|150|2|Thành phần chính của khí thiên nhiên và khí sinh học Biogas là gì?|Propan;Etan;Metan (CH4);Butan
+3-2-1|Khoa học & Đời sống|Trung bình|150|3|Cơ quan nào trong cơ thể con người thực hiện chức năng lọc chất thải và bài tiết nước tiểu?|Dạ dày;Tụy;Gan;Thận
+3-2-1|Khoa học & Đời sống|Trung bình|150|1|Hạt nào trong cấu trúc nguyên tử mang điện tích âm?|Proton;Electron;Neutron;Positron
+3-2-1|Khoa học & Đời sống|Trung bình|150|0|Tầng ozone trong khí quyển đóng vai trò quan trọng gì đối với sự sống trên Trái Đất?|Ngăn chặn các tia cực tím (UV) có hại;Tạo ra mưa bão;Giữ ấm Trái Đất ban đêm;Cung cấp oxy hít thở
+
+# Bộ 3-2-2: Khoa học & Đời sống - Mức Trung bình (Bộ 2)
+3-2-2|Khoa học & Đời sống|Trung bình|150|2|Chất xúc tác sinh học trong cơ thể sống có bản chất là protein được gọi là gì?|Hormone;Kháng thể;Enzyme (Men sinh học);Lipid
+3-2-2|Khoa học & Đời sống|Trung bình|150|0|Thuyết Tương đối Hẹp được nhà vật lý Albert Einstein công bố vào năm nào?|1905;1915;1899;1921
+3-2-2|Khoa học & Đời sống|Trung bình|150|3|Loại bức xạ điện từ nào có năng lượng cao nhất và bước sóng ngắn nhất?|Tia X;Tia tử ngoại;Ánh sáng khả kiến;Tia Gamma
+3-2-2|Khoa học & Đời sống|Trung bình|150|1|Định luật bảo toàn năng lượng khẳng định năng lượng có đặc điểm gì?|Tự sinh ra khi có phản ứng;Không tự sinh ra cũng không tự mất đi, chỉ chuyển hóa;Luôn tăng dần trong vũ trụ;Mất đi hoàn toàn khi sinh công
+3-2-2|Khoa học & Đời sống|Trung bình|150|0|Hiện tượng thủy triều trên Trái Đất chủ yếu do lực hấp dẫn của thiên thể nào gây ra?|Mặt Trăng;Mặt Trời;Sao Hỏa;Sao Kim
+3-2-2|Khoa học & Đời sống|Trung bình|150|2|Trong cơ thể người, tế bào hồng cầu có chức năng chính là gì?|Bảo vệ cơ thể chống vi khuẩn;Đông máu khi có vết thương;Vận chuyển oxy và cacbonic;Tiết ra dịch tiêu hóa
+3-2-2|Khoa học & Đời sống|Trung bình|150|1|Kim loại dẫn điện tốt nhất ở điều kiện tiêu chuẩn là kim loại nào?|Đồng (Cu);Bạc (Ag);Vàng (Au);Nhôm (Al)
+3-2-2|Khoa học & Đời sống|Trung bình|150|3|Khí gây ra hiệu ứng nhà kính mạnh nhất và phổ biến nhất do hoạt động của con người là?|Ozon;CFC;Metan;Cacbon dioxit (CO2)
+3-2-2|Khoa học & Đời sống|Trung bình|150|0|Sóng âm mà tai người bình thường có thể nghe được nằm trong dải tần số nào?|20 Hz đến 20.000 Hz;Dưới 20 Hz;Trên 20.000 Hz;50 Hz đến 100.000 Hz
+3-2-2|Khoa học & Đời sống|Trung bình|150|2|Quá trình phân bào nguyên nhiễm (nguyên phân) tạo ra các tế bào con có số lượng NST như thế nào?|Giảm đi một nửa;Gấp đôi tế bào mẹ;Giữ nguyên giống tế bào mẹ;Tùy thuộc vào dinh dưỡng
+
+# Bộ 3-3-1: Khoa học & Đời sống - Mức Khó (Bộ 1)
+3-3-1|Khoa học & Đời sống|Khó|200|1|Nguyên lý bất định (Uncertainty Principle) trong Cơ học lượng tử do ai đề xuất?|Niels Bohr;Werner Heisenberg;Max Planck;Erwin Schrödinger
+3-3-1|Khoa học & Đời sống|Khó|200|3|Hằng số Planck (ký hiệu h) có giá trị xấp xỉ bằng bao nhiêu trong hệ đơn vị SI?|6.67 x 10^-11 N m^2/kg^2;1.60 x 10^-19 C;3.00 x 10^8 m/s;6.626 x 10^-34 J.s
+3-3-1|Khoa học & Đời sống|Khó|200|0|Phản ứng nhiệt hạch (Nuclear Fusion) tạo ra năng lượng trên các ngôi sao bằng cách nào?|Hợp nhất các hạt nhân nhẹ thành hạt nhân nặng hơn;Phân hạch hạt nhân nặng Urani;Oxy hóa khử hydro;Phân rã phóng xạ beta
+3-3-1|Khoa học & Đời sống|Khó|200|2|Công nghệ chỉnh sửa gen mang tính đột phá giành giải Nobel Hóa học 2020 có tên là gì?|PCR;Gel Electrophoresis;CRISPR-Cas9;Western Blot
+3-3-1|Khoa học & Đời sống|Khó|200|1|Hiện tượng Siêu dẫn (Superconductivity) là trạng thái vật liệu có đặc tính nào nổi bật?|Dẫn nhiệt hoàn hảo;Điện trở giảm về chính xác bằng 0;Hút tất cả các loại từ trường;Phát quang trong bóng tối
+3-3-1|Khoa học & Đời sống|Khó|200|0|Định luật thứ hai của Nhiệt động lực học khẳng định đại lượng nào của một hệ cô lập luôn tăng theo thời gian?|Entropy;Enthalpy;Nội năng;Nhiệt dung
+3-3-1|Khoa học & Đời sống|Khó|200|3|Bán kính Schwarzschild của một thiên thể biểu thị điều gì trong vật lý thiên văn?|Độ dày tầng khí quyển;Bán kính quỹ đạo vệ tinh;Tốc độ quay quanh trục;Bán kính giới hạn mà vật chất sụp đổ tạo thành Hố Đen (Black Hole)
+3-3-1|Khoa học & Đời sống|Khó|200|2|Phân tử ATP (Adenosine Triphosphate) đóng vai trò gì trong tế bào sinh học?|Lưu trữ mã di truyền;Tạo thành màng tế bào;Đồng tiền năng lượng hóa học của tế bào;Xúc tác phản ứng nhân đôi
+3-3-1|Khoa học & Đời sống|Khó|200|1|Trong vật lý hạt nhân, hạt nào là hạt sơ cấp không thể phân chia nhỏ hơn?|Proton;Quark;Neutron;Hạt Alpha
+3-3-1|Khoa học & Đời sống|Khó|200|0|Hiệu ứng Casimir trong lý thuyết trường lượng tử chứng minh sự tồn tại của hiện tượng nào?|Năng lượng chân không và các hạt ảo;Sóng hấp dẫn;Vật chất tối;Năng lượng tối
+
+# Bộ 3-3-2: Khoa học & Đời sống - Mức Khó (Bộ 2)
+3-3-2|Khoa học & Đời sống|Khó|200|2|Phương trình trường Einstein trong Thuyết Tương đối Rộng mô tả mối liên hệ giữa gì?|Vận tốc và gia tốc;Khối lượng và điện tích;Hình học không-thời gian và tensor năng lượng-động lượng;Ánh sáng và từ trường
+3-3-2|Khoa học & Đời sống|Khó|200|0|Bức xạ Hawking là khái niệm lý thuyết chứng minh điều gì về Hố Đen?|Hố đen có thể bốc hơi phát ra nhiệt lượng và dần biến mất;Hố đen hút mọi vật thể mãi mãi;Hố đen là cổng không gian nối vũ trụ khác;Hố đen không có entropy
+3-3-2|Khoa học & Đời sống|Khó|200|3|Cơ chế tác động của vaccine công nghệ mRNA (như Pfizer/Moderna) kích hoạt miễn dịch bằng cách nào?|Đưa virus sống đã làm yếu vào cơ thể;Đưa kháng thể nhân tạo sẵn có;Đưa protein vỏ virus tổng hợp;Đưa chuỗi RNA hướng dẫn tế bào tự tổng hợp kháng nguyên Spike
+3-3-2|Khoa học & Đời sống|Khó|200|1|Thí nghiệm hai khe Young với chùm electron đơn lẻ chứng minh tính chất cơ bản nào của lượng tử?|Tính tương đối của thời gian;Lưỡng tính sóng - hạt;Sự suy thoái năng lượng;Hiệu ứng Doppler
+3-3-2|Khoa học & Đời sống|Khó|200|2|Vật chất tối (Dark Matter) trong vũ trụ được suy đoán tồn tại chủ yếu dựa trên bằng chứng nào?|Quan sát trực tiếp qua kính thiên văn quang học;Sự sụp đổ của các sao lùn trắng;Đường cong quay bất thường của các thiên hà và thấu kính hấp dẫn;Năng lượng phát ra từ siêu tân tinh
+3-3-2|Khoa học & Đời sống|Khó|200|0|Nghịch lý Fermi trong thiên văn sinh học đề cập đến vấn đề nan giải nào?|Nếu sự sống ngoài Trái Đất phổ biến, tại sao ta chưa thấy bằng chứng về họ?;Tại sao vũ trụ lại giãn nở gia tốc?;Tại sao các hành tinh quay cùng chiều?;Nguồn gốc của các tia vũ trụ năng lượng siêu cao
+3-3-2|Khoa học & Đời sống|Khó|200|1|Kỹ thuật Polymerase Chain Reaction (PCR) do Kary Mullis phát minh sử dụng enzyme nào chịu nhiệt?|DNA Ligase;Taq Polymerase;Helicase;RNA Polymerase
+3-3-2|Khoa học & Đời sống|Khó|200|3|Trạng thái vật chất thứ 5 ngoài Rắn, Lỏng, Khí và Plasma có tên gọi là gì?|Quark-Gluon Plasma;Vật chất thoái hóa;Siêu chất rắn;Ngưng tụ Bose-Einstein (BEC)
+3-3-2|Khoa học & Đời sống|Khó|200|0|Hằng số Avogadro (khoảng 6.022 x 10^23) định nghĩa số lượng hạt trong bao nhiêu mol chất?|1 mol;10 mol;12 mol;0.5 mol
+3-3-2|Khoa học & Đời sống|Khó|200|2|Trong sinh học phân tử, codon nào trên phân tử m-RNA là mã mở đầu tổng hợp chuỗi polypeptide?|UAA;UGA;AUG (mã hóa Methionine);UAG
+
+# ==============================================================================
+# CHỦ ĐỀ 4: LỊCH SỬ & ĐỊA LÝ
+# ==============================================================================
+# Bộ 4-1-1: Lịch sử & Địa lý - Mức Dễ (Bộ 1)
+4-1-1|Lịch sử & Địa lý|Dễ|100|0|Chủ tịch Hồ Chí Minh đọc bản Tuyên ngôn Độc lập tại Quảng trường Ba Đình vào ngày tháng năm nào?|02/09/1945;19/08/1945;30/04/1975;07/05/1954
+4-1-1|Lịch sử & Địa lý|Dễ|100|1|Đỉnh núi nào được mệnh danh là Nóc nhà Đông Dương?|Núi Ngọc Linh;Fansipan (3.143m);Núi Bà Đen;Núi Bạch Mộc Lương Tử
+4-1-1|Lịch sử & Địa lý|Dễ|100|2|Thủ đô của nước Cộng hòa Xã hội Chủ nghĩa Việt Nam là thành phố nào?|TP. Hồ Chí Minh;Đà Nẵng;Hà Nội;Hải Phòng
+4-1-1|Lịch sử & Địa lý|Dễ|100|3|Dòng sông nào dài nhất thế giới chảy qua khu vực châu Phi?|Sông Amazon;Sông Trường Giang;Sông Mê Kông;Sông Nile
+4-1-1|Lịch sử & Địa lý|Dễ|100|0|Chiến thắng Điện Biên Phủ lừng lẫy năm châu chấn động địa cầu diễn ra vào năm nào?|1954;1945;1972;1975
+4-1-1|Lịch sử & Địa lý|Dễ|100|2|Quốc gia nào có diện tích lãnh thổ tự nhiên lớn nhất thế giới?|Canada;Hoa Kỳ;Liên bang Nga;Trung Quốc
+4-1-1|Lịch sử & Địa lý|Dễ|100|1|Đại dương nào có diện tích và độ sâu trung bình lớn nhất hành tinh?|Đại Tây Dương;Thái Bình Dương;Ấn Độ Dương;Bắc Băng Dương
+4-1-1|Lịch sử & Địa lý|Dễ|100|3|Vịnh Hạ Long - kỳ quan thiên nhiên thế giới thuộc tỉnh nào của Việt Nam?|Hải Phòng;Ninh Bình;Thanh Hóa;Quảng Ninh
+4-1-1|Lịch sử & Địa lý|Dễ|100|0|Vị vua nào đã ban Chiếu dời đô từ Hoa Lư về Thăng Long năm 1010?|Lý Thái Tổ (Lý Công Uẩn);Lý Thường Kiệt;Đinh Tiên Hoàng;Lê Lợi
+4-1-1|Lịch sử & Địa lý|Dễ|100|1|Châu lục nào có diện tích tự nhiên lớn nhất và đông dân nhất thế giới?|Châu Phi;Châu Á;Châu Âu;Châu Mỹ
+
+# Bộ 4-1-2: Lịch sử & Địa lý - Mức Dễ (Bộ 2)
+4-1-2|Lịch sử & Địa lý|Dễ|100|2|Chiến dịch Hồ Chí Minh lịch sử giải phóng hoàn toàn miền Nam thống nhất đất nước kết thúc vào ngày nào?|02/09/1945;07/05/1954;30/04/1975;19/08/1945
+4-1-2|Lịch sử & Địa lý|Dễ|100|0|Việt Nam có đường bờ biển dài khoảng bao nhiêu km?|Khoảng 3.260 km;Khoảng 2.500 km;Khoảng 4.200 km;Khoảng 1.800 km
+4-1-2|Lịch sử & Địa lý|Dễ|100|3|Thành phố nào là trung tâm kinh tế lớn nhất ở miền Nam Việt Nam?|Cần Thơ;Biên Hòa;Vũng Tàu;TP. Hồ Chí Minh
+4-1-2|Lịch sử & Địa lý|Dễ|100|1|Kim tự tháp Giza nổi tiếng thế giới nằm ở quốc gia nào?|Hy Lạp;Ai Cập;Thổ Nhĩ Kỳ;Ý
+4-1-2|Lịch sử & Địa lý|Dễ|100|0|Hai quần đảo Hoàng Sa và Trường Sa thuộc chủ quyền của quốc gia nào?|Việt Nam;Philippines;Malaysia;Indonesia
+4-1-2|Lịch sử & Địa lý|Dễ|100|2|Thủ đô của nước Pháp là thành phố nào?|London;Berlin;Paris;Rome
+4-1-2|Lịch sử & Địa lý|Dễ|100|1|Sông Mê Kông trước khi đổ ra biển Đông chảy qua đồng bằng nào của Việt Nam?|Đồng bằng sông Hồng;Đồng bằng sông Cửu Long;Đồng bằng Duyên hải miền Trung;Tây Nguyên
+4-1-2|Lịch sử & Địa lý|Dễ|100|3|Vị anh hùng dân tộc nào gắn liền với 3 lần đánh đuổi quân xâm lược Nguyên Mông trên sông Bạch Đằng?|Lê Lợi;Quang Trung;Ngô Quyền;Trần Hưng Đạo (Trần Quốc Tuấn)
+4-1-2|Lịch sử & Địa lý|Dễ|100|0|Đất nước nào có biệt danh là Xứ sở Mặt trời mọc?|Nhật Bản;Hàn Quốc;Thái Lan;Mông Cổ
+4-1-2|Lịch sử & Địa lý|Dễ|100|2|Tỉnh nào có diện tích tự nhiên lớn nhất Việt Nam hiện nay?|Đắk Lắk;Sơn La;Nghệ An;Thanh Hóa
+
+# Bộ 4-2-1: Lịch sử & Địa lý - Mức Trung bình (Bộ 1)
+4-2-1|Lịch sử & Địa lý|Trung bình|150|1|Trận quyết chiến chiến lược trên sông Bạch Đằng năm 938 do vị tướng nào lãnh đạo chấm dứt 1000 năm Bắc thuộc?|Đinh Bộ Lĩnh;Ngô Quyền;Lê Hoàn;Trần Hưng Đạo
+4-2-1|Lịch sử & Địa lý|Trung bình|150|2|Kênh đào Suez nối liền Biển Đỏ (Red Sea) với biển nào?|Biển Đen;Biển Baltic;Địa Trung Hải (Mediterranean Sea);Biển Caspi
+4-2-1|Lịch sử & Địa lý|Trung bình|150|0|Chiến thắng Ngọc Hồi - Đống Đa quét sạch 29 vạn quân Thanh vào mùa xuân năm nào?|Kỷ Dậu 1789;Mậu Thân 1788;Tân Hợi 1791;Giáp Ngọ 1774
+4-2-1|Lịch sử & Địa lý|Trung bình|150|3|Dãy núi nào được coi là ranh giới tự nhiên ngăn cách giữa châu Âu và châu Á?|Dãy Alps;Dãy Andes;Dãy Himalaya;Dãy Ural
+4-2-1|Lịch sử & Địa lý|Trung bình|150|1|Hiệp định Paris về chấm dứt chiến tranh, lập lại hòa bình ở Việt Nam được ký kết vào năm nào?|1954;1973;1972;1975
+4-2-1|Lịch sử & Địa lý|Trung bình|150|0|Hồ nước ngọt sâu nhất và chứa lượng nước ngọt mặt lớn nhất thế giới là hồ nào?|Hồ Baikal (Nga);Hồ Superior (Bắc Mỹ);Hồ Victoria (Châu Phi);Hồ Michigan
+4-2-1|Lịch sử & Địa lý|Trung bình|150|2|Cuộc Cách mạng Công nghiệp lần thứ nhất khởi phát đầu tiên ở quốc gia nào?|Hoa Kỳ;Đức;Vương quốc Anh;Pháp
+4-2-1|Lịch sử & Địa lý|Trung bình|150|3|Đèo nào là ranh giới khí hậu tự nhiên giữa miền Bắc và miền Nam Việt Nam?|Đèo Ngang;Đèo Cù Mông;Đèo Cả;Đèo Hải Vân
+4-2-1|Lịch sử & Địa lý|Trung bình|150|1|Vương triều nào đặt tên nước ta là Đại Cồ Việt?|Nhà Tiền Lê;Nhà Đinh (Đinh Tiên Hoàng);Nhà Lý;Nhà Trần
+4-2-1|Lịch sử & Địa lý|Trung bình|150|0|Thác nước tự nhiên lớn nhất Đông Nam Á nằm trên dòng sông Mê Kông ở biên giới Lào - Campuchia là thác gì?|Thác Khone Phapheng;Thác Bản Giốc;Thác Kuang Si;Thác Dambri
+
+# Bộ 4-2-2: Lịch sử & Địa lý - Mức Trung bình (Bộ 2)
+4-2-2|Lịch sử & Địa lý|Trung bình|150|2|Chiến dịch Điện Biên Phủ trên không bảo vệ bầu trời Hà Nội diễn ra trong bao nhiêu ngày đêm năm 1972?|10 ngày đêm;15 ngày đêm;12 ngày đêm;20 ngày đêm
+4-2-2|Lịch sử & Địa lý|Trung bình|150|0|Eo biển nào là yết hầu hàng hải kết nối Ấn Độ Dương và Biển Đông quan trọng nhất Đông Nam Á?|Eo biển Malacca;Eo biển Bosphorus;Eo biển Gibraltar;Eo biển Hormuz
+4-2-2|Lịch sử & Địa lý|Trung bình|150|3|Bản tuyên ngôn độc lập đầu tiên trong lịch sử dân tộc Nam quốc sơn hà tương truyền gắn liền với ai?|Trần Hưng Đạo;Quang Trung;Ngô Quyền;Lý Thường Kiệt
+4-2-2|Lịch sử & Địa lý|Trung bình|150|1|Cao nguyên đá Đồng Văn - Công viên địa chất toàn cầu UNESCO nằm ở tỉnh nào?|Cao Bằng;Hà Giang;Lạng Sơn;Lào Cai
+4-2-2|Lịch sử & Địa lý|Trung bình|150|0|Khối liên minh quân sự NATO được thành lập vào năm nào thời kỳ đầu Chiến tranh Lạnh?|1949;1955;1945;1960
+4-2-2|Lịch sử & Địa lý|Trung bình|150|2|Thành phố nào được mệnh danh là Thành phố ngàn hoa của Việt Nam?|Sa Pa;Tam Đảo;Đà Lạt;Pleiku
+4-2-2|Lịch sử & Địa lý|Trung bình|150|1|Cuộc khởi nghĩa Lam Sơn chống quân Minh xâm lược do ai khởi xướng và lãnh đạo?|Nguyễn Trãi;Lê Lợi;Trần Nguyên Hãn;Lê Lai
+4-2-2|Lịch sử & Địa lý|Trung bình|150|3|Quốc gia nào có đường bờ biển dài nhất thế giới?|Nga;Hoa Kỳ;Australia;Canada
+4-2-2|Lịch sử & Địa lý|Trung bình|150|0|Hội nghị Diên Hồng lịch sử biểu thị ý chí quyết chiến của toàn dân diễn ra dưới triều đại nào?|Nhà Trần;Nhà Lý;Nhà Hậu Lê;Nhà Tây Sơn
+4-2-2|Lịch sử & Địa lý|Trung bình|150|2|Dãy núi Andes - dãy núi dài nhất trên cạn nằm ở châu lục nào?|Bắc Mỹ;Châu Âu;Nam Mỹ;Châu Phi
+
+# Bộ 4-3-1: Lịch sử & Địa lý - Mức Khó (Bộ 1)
+4-3-1|Lịch sử & Địa lý|Khó|200|1|Hiệp định Genève năm 1954 quy định vĩ tuyến nào làm giới tuyến quân sự tạm thời tại Việt Nam?|Vĩ tuyến 16;Vĩ tuyến 17;Vĩ tuyến 18;Vĩ tuyến 15
+4-3-1|Lịch sử & Địa lý|Khó|200|3|Vùng biển sâu nhất từng được con người phát hiện là rãnh Mariana thuộc đại dương nào?|Đại Tây Dương;Ấn Độ Dương;Nam Đại Dương;Thái Bình Dương (sâu gần 11.000m)
+4-3-1|Lịch sử & Địa lý|Khó|200|0|Trận đánh nổi tiếng nào trong lịch sử thế giới cổ đại ghi nhận 300 chiến binh Sparta cản bước quân Ba Tư?|Trận Thermopylae;Trận Marathon;Trận Salamis;Trận Gaugamela
+4-3-1|Lịch sử & Địa lý|Khó|200|2|Địa danh Ngã ba Đồng Lộc huyền thoại gắn liền với sự hy sinh anh dũng của bao nhiêu nữ thanh niên xung phong?|8 cô gái;12 cô gái;10 cô gái;14 cô gái
+4-3-1|Lịch sử & Địa lý|Khó|200|1|Hiện tượng sa mạc hóa Atacama - nơi khô cằn nhất Trái Đất chịu tác động trực tiếp của dòng hải lưu lạnh nào?|Dòng hải lưu Benguela;Dòng hải lưu Humboldt (Peru);Dòng hải lưu California;Dòng hải lưu Canaries
+4-3-1|Lịch sử & Địa lý|Khó|200|3|Bộ luật Hồng Đức (Quốc triều hình luật) - đỉnh cao pháp luật phong kiến Việt Nam được ban hành dưới triều vua nào?|Lê Thái Tổ;Lê Nhân Tông;Lê Hiến Tông;Lê Thánh Tông
+4-3-1|Lịch sử & Địa lý|Khó|200|0|Hồ nước mặn kín nằm thấp nhất trên bề mặt đất liền của Trái Đất (khoảng -430m) là hồ nào?|Biển Chết (Dead Sea);Hồ Aral;Biển Caspi;Hồ Assal
+4-3-1|Lịch sử & Địa lý|Khó|200|2|Chiến dịch quân sự nào mở màn cho Đại thắng Mùa Xuân năm 1975 của quân và dân ta?|Chiến dịch Huế - Đà Nẵng;Chiến dịch Đường 9 - Khe Sanh;Chiến dịch Tây Nguyên;Chiến dịch Quảng Trị
+4-3-1|Lịch sử & Địa lý|Khó|200|1|Thành phố cổ Petra độc đáo được tạc vào vách đá sa thạch đỏ nằm ở quốc gia Trung Đông nào?|Syria;Jordan;Liban;Iraq
+4-3-1|Lịch sử & Địa lý|Khó|200|0|Đại hội đại biểu toàn quốc lần thứ VI của Đảng Cộng sản Việt Nam khởi xướng công cuộc Đổi mới diễn ra vào năm nào?|1986;1982;1991;1976
+
+# Bộ 4-3-2: Lịch sử & Địa lý - Mức Khó (Bộ 2)
+4-3-2|Lịch sử & Địa lý|Khó|200|2|Nền văn hóa Đông Sơn thời kỳ đồ đồng rực rỡ ở miền Bắc Việt Nam có niên đại nổi bật gắn liền với cổ vật nào?|Trống đồng Cảnh Thịnh;Bia đá Tiến sĩ;Trống đồng Ngọc Lũ;Cửu đỉnh Huế
+4-3-2|Lịch sử & Địa lý|Khó|200|0|Quốc gia nào sau đây là quốc gia nội lục (không giáp biển) có diện tích lớn nhất thế giới?|Kazakhstan;Mông Cổ;Uzbekistan;Bolivia
+4-3-2|Lịch sử & Địa lý|Khó|200|3|Hòa ước Westphalia ký kết năm 1648 đã kết thúc cuộc chiến tranh tàn khốc nào tại châu Âu?|Chiến tranh Trăm Năm;Chiến tranh Bảy Năm;Chiến tranh Hoa Hồng;Chiến tranh Ba Mươi Năm
+4-3-2|Lịch sử & Địa lý|Khó|200|1|Đảo lớn nhất thế giới xét về diện tích địa lý tự nhiên là đảo nào?|Madagascar;Greenland (Đảo Băng);New Guinea;Borneo
+4-3-2|Lịch sử & Địa lý|Khó|200|2|Vị danh tướng nào của nước ta được phong là Thái úy, tác giả bài thơ thần Nam quốc sơn hà và Lý Thường Kiệt phá Tống trên sông Như Nguyệt?|Trần Quang Khải;Tô Hiến Thành;Lý Thường Kiệt;Phạm Ngũ Lão
+4-3-2|Lịch sử & Địa lý|Khó|200|0|Hệ thống rạn san hô ngầm lớn nhất thế giới Great Barrier Reef nằm ngoài khơi bờ biển của quốc gia nào?|Australia;Indonesia;Philippines;Madagascar
+4-3-2|Lịch sử & Địa lý|Khó|200|3|Hiệp ước Patenôtre ký năm 1884 giữa triều đình Huế và thực dân Pháp đã đánh dấu điều gì?|Thực dân Pháp bắt đầu nổ súng xâm lược;Quân ta hoàn toàn thất bại trong phong trào Cần Vương;Thực dân Pháp thất bại bước đầu;Sự đầu hàng hoàn toàn của triều đình phong kiến nhà Nguyễn trước thực dân Pháp
+4-3-2|Lịch sử & Địa lý|Khó|200|1|Vùng lõm Danakil - một trong những nơi nóng và khắc nghiệt nhất Trái Đất thuộc lãnh thổ quốc gia nào?|Sudan;Ethiopia;Somalia;Ai Cập
+4-3-2|Lịch sử & Địa lý|Khó|200|0|Trận hải chiến Midway năm 1942 được coi là bước ngoặt quyết định của chiến trường nào trong CTTG II?|Mặt trận Thái Bình Dương;Mặt trận Tây Âu;Mặt trận Bắc Phi;Mặt trận Đại Tây Dương
+4-3-2|Lịch sử & Địa lý|Khó|200|2|Sông Dương Tử (Trường Giang) - dòng sông dài nhất châu Á bắt nguồn từ cao nguyên nào?|Cao nguyên Vân Quý;Cao nguyên Mông Cổ;Cao nguyên Thanh Tạng (Tây Tạng);Cao nguyên Hoàng Thổ
