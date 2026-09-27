@@ -66,12 +66,20 @@ Dự án đã được nâng cấp toàn diện lên kiến trúc **Quiz Arena**
    - **Chế độ Luyện tập đơn (`Solo Practice Mode`)**: Nút `"🎯 Luyện Tập Đơn"` tại Sảnh chờ cho phép người chơi vào ngay phòng luyện tập 10 câu hỏi với Bot AI theo chủ đề và cấp độ đã chọn, không cần chờ đối thủ online. Bot có khả năng phản hồi emote và tính điểm đối chiếu trực tiếp.
    - **Bộ test tự động Phase 7 (`TestPhase7.java`)**: Kiểm tra tính toàn vẹn 240 câu hỏi, giao thức gói RESULT 15 trường và liên kết giao diện review.
 
+8. **Phase 8 — Tích hợp Hệ quản trị CSDL Quan hệ PostgreSQL (`schema_postgres.sql`, `DB.java`, `db.properties`)**:
+   - **Mô hình CSDL quan hệ chuẩn hóa**: 4 bảng nghiệp vụ gồm `users` (tài khoản, mật khẩu băm SHA-256 + Salt, điểm), `question_sets` (bộ đề, chủ đề, thời gian), `questions` (240 câu hỏi, 4 đáp án A/B/C/D, foreign key CASCADE), và `match_results` (lịch sử đối kháng 1v1).
+   - **Tự động khởi tạo & Seed dữ liệu (Auto-DDL & Auto-Migration)**: Khi server khởi động và kết nối PostgreSQL, hệ thống tự động chạy DDL tạo bảng nếu chưa có, tự động nạp toàn bộ 240 câu hỏi từ `questions.txt` và chuyển đổi tài khoản từ `users.dat` vào PostgreSQL.
+   - **Cơ chế Fallback an toàn (Fault Tolerance)**: Khi chưa bật PostgreSQL service hoặc cấu hình sai, Server tự động ghi log cảnh báo và chuyển mượt mà về chế độ lưu trữ file cục bộ (`users.dat`, `questions.txt`), đảm bảo hệ thống không bao giờ bị dừng đột ngột.
+   - **Tương thích toàn diện**: Hỗ trợ đầy đủ JDBC Driver `postgresql-42.7.3.jar` trong cả Maven (`pom.xml`) và file thực thi nhanh `run-server.bat`.
+
 ## Lệnh kiểm thử tự động
 
 ```bat
-javac -encoding UTF-8 -cp "out;src" -d out tests\*.java
-java -cp out TestPhase7
-java -cp out TestE2E
-java -cp out TestMatch
-java -cp out quiz.ui.UIPreview
+javac -encoding UTF-8 -cp "lib/*" -sourcepath src -d out src\quiz\*.java src\quiz\ui\*.java
+javac -encoding UTF-8 -cp "out;src;lib/*" -d out tests\*.java
+java -cp "out;lib/*" TestPostgreSQL
+java -cp "out;lib/*" TestPhase7
+java -cp "out;lib/*" TestE2E
+java -cp "out;lib/*" TestMatch
+java -cp "out;lib/*" quiz.ui.UIPreview
 ```

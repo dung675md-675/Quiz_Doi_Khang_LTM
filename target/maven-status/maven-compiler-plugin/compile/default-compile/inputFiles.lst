@@ -1,21 +1,28 @@
-C:\Users\Admin\Downloads\QuizDoiKhang_Nhom5\QuizDoiKhang\src\quiz\Bank.java
-C:\Users\Admin\Downloads\QuizDoiKhang_Nhom5\QuizDoiKhang\src\quiz\Client.java
-C:\Users\Admin\Downloads\QuizDoiKhang_Nhom5\QuizDoiKhang\src\quiz\Model.java
-C:\Users\Admin\Downloads\QuizDoiKhang_Nhom5\QuizDoiKhang\src\quiz\Server.java
-C:\Users\Admin\Downloads\QuizDoiKhang_Nhom5\QuizDoiKhang\src\quiz\ui\AuthScreen.java
-C:\Users\Admin\Downloads\QuizDoiKhang_Nhom5\QuizDoiKhang\src\quiz\ui\HistoryDialog.java
-C:\Users\Admin\Downloads\QuizDoiKhang_Nhom5\QuizDoiKhang\src\quiz\ui\InviteDialog.java
-C:\Users\Admin\Downloads\QuizDoiKhang_Nhom5\QuizDoiKhang\src\quiz\ui\LeaderboardDialog.java
-C:\Users\Admin\Downloads\QuizDoiKhang_Nhom5\QuizDoiKhang\src\quiz\ui\LobbyScreen.java
-C:\Users\Admin\Downloads\QuizDoiKhang_Nhom5\QuizDoiKhang\src\quiz\ui\ModernBadge.java
-C:\Users\Admin\Downloads\QuizDoiKhang_Nhom5\QuizDoiKhang\src\quiz\ui\ModernButton.java
-C:\Users\Admin\Downloads\QuizDoiKhang_Nhom5\QuizDoiKhang\src\quiz\ui\ModernCard.java
-C:\Users\Admin\Downloads\QuizDoiKhang_Nhom5\QuizDoiKhang\src\quiz\ui\ModernPasswordField.java
-C:\Users\Admin\Downloads\QuizDoiKhang_Nhom5\QuizDoiKhang\src\quiz\ui\ModernTextField.java
-C:\Users\Admin\Downloads\QuizDoiKhang_Nhom5\QuizDoiKhang\src\quiz\ui\PlayerCard.java
-C:\Users\Admin\Downloads\QuizDoiKhang_Nhom5\QuizDoiKhang\src\quiz\ui\Theme.java
-C:\Users\Admin\Downloads\QuizDoiKhang_Nhom5\QuizDoiKhang\src\quiz\ui\ToastManager.java
-C:\Users\Admin\Downloads\QuizDoiKhang_Nhom5\QuizDoiKhang\src\quiz\ui\ToastNotification.java
-C:\Users\Admin\Downloads\QuizDoiKhang_Nhom5\QuizDoiKhang\src\quiz\ui\UIPreview.java
-C:\Users\Admin\Downloads\QuizDoiKhang_Nhom5\QuizDoiKhang\src\quiz\ui\WaitingChallengeDialog.java
-C:\Users\Admin\Downloads\QuizDoiKhang_Nhom5\QuizDoiKhang\src\quiz\Wire.java
+C:\Users\Admin\OneDrive\Máy tính\QuizDoiKhang\src\quiz\Bank.java
+C:\Users\Admin\OneDrive\Máy tính\QuizDoiKhang\src\quiz\Client.java
+C:\Users\Admin\OneDrive\Máy tính\QuizDoiKhang\src\quiz\DB.java
+C:\Users\Admin\OneDrive\Máy tính\QuizDoiKhang\src\quiz\Model.java
+C:\Users\Admin\OneDrive\Máy tính\QuizDoiKhang\src\quiz\Security.java
+C:\Users\Admin\OneDrive\Máy tính\QuizDoiKhang\src\quiz\Server.java
+C:\Users\Admin\OneDrive\Máy tính\QuizDoiKhang\src\quiz\ui\AuthScreen.java
+C:\Users\Admin\OneDrive\Máy tính\QuizDoiKhang\src\quiz\ui\HistoryDialog.java
+C:\Users\Admin\OneDrive\Máy tính\QuizDoiKhang\src\quiz\ui\InviteDialog.java
+C:\Users\Admin\OneDrive\Máy tính\QuizDoiKhang\src\quiz\ui\LeaderboardDialog.java
+C:\Users\Admin\OneDrive\Máy tính\QuizDoiKhang\src\quiz\ui\LobbyScreen.java
+C:\Users\Admin\OneDrive\Máy tính\QuizDoiKhang\src\quiz\ui\MatchQuestion.java
+C:\Users\Admin\OneDrive\Máy tính\QuizDoiKhang\src\quiz\ui\MatchScreen.java
+C:\Users\Admin\OneDrive\Máy tính\QuizDoiKhang\src\quiz\ui\ModernBadge.java
+C:\Users\Admin\OneDrive\Máy tính\QuizDoiKhang\src\quiz\ui\ModernButton.java
+C:\Users\Admin\OneDrive\Máy tính\QuizDoiKhang\src\quiz\ui\ModernCard.java
+C:\Users\Admin\OneDrive\Máy tính\QuizDoiKhang\src\quiz\ui\ModernPasswordField.java
+C:\Users\Admin\OneDrive\Máy tính\QuizDoiKhang\src\quiz\ui\ModernTextField.java
+C:\Users\Admin\OneDrive\Máy tính\QuizDoiKhang\src\quiz\ui\PlayerCard.java
+C:\Users\Admin\OneDrive\Máy tính\QuizDoiKhang\src\quiz\ui\ResultDialog.java
+C:\Users\Admin\OneDrive\Máy tính\QuizDoiKhang\src\quiz\ui\ReviewAnswersDialog.java
+C:\Users\Admin\OneDrive\Máy tính\QuizDoiKhang\src\quiz\ui\SoundManager.java
+C:\Users\Admin\OneDrive\Máy tính\QuizDoiKhang\src\quiz\ui\Theme.java
+C:\Users\Admin\OneDrive\Máy tính\QuizDoiKhang\src\quiz\ui\ToastManager.java
+C:\Users\Admin\OneDrive\Máy tính\QuizDoiKhang\src\quiz\ui\ToastNotification.java
+C:\Users\Admin\OneDrive\Máy tính\QuizDoiKhang\src\quiz\ui\UIPreview.java
+C:\Users\Admin\OneDrive\Máy tính\QuizDoiKhang\src\quiz\ui\WaitingChallengeDialog.java
+C:\Users\Admin\OneDrive\Máy tính\QuizDoiKhang\src\quiz\Wire.java
