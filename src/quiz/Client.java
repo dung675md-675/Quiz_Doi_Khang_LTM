@@ -17,11 +17,15 @@ public final class Client {
     // --- SESSION FIELDS (reset on logout) ---
     volatile DataOutputStream out;
     volatile String name;
+    volatile String lastLoginUser;
+    volatile String lastLoginPass;
+    volatile boolean reconnecting = false;
     volatile String myAvatarId="avatar_01";
     String matchId;
     String currentMatchLeft;
     String currentOpponent;
     final Map<String, String> userAvatars = new java.util.concurrent.ConcurrentHashMap<>();
+    final java.util.concurrent.BlockingQueue<String[]> sendQueue = new java.util.concurrent.LinkedBlockingQueue<>();
 
     public String getAvatarFor(String username) {
         if (username == null || username.isBlank()) return "avatar_01";
@@ -29,16 +33,19 @@ public final class Client {
         if (username.equalsIgnoreCase("Bot Luyện Tập")) return "avatar_02";
         return userAvatars.getOrDefault(username, "avatar_01");
     }
-    Bank localBank;
+    volatile boolean userLeftMatch = false;
+    final Set<String> abandonedMatchIds = Collections.synchronizedSet(new HashSet<>());
     java.util.List<MatchQuestion> currentQuestions;
     int[] currentSubmittedAnswers;
     // --- CONNECTION FIELDS ---
     final String host;
     final int port;
     volatile Thread readerThread;
+    final javax.swing.Timer pingTimer;
 
  Client(String host,int port)throws Exception{
   this.host=host;this.port=port;
+  startAsyncWriterThread();
   frame.setDefaultCloseOperation(JFrame.DO_NOTHING_ON_CLOSE);
   frame.addWindowListener(new java.awt.event.WindowAdapter() {
    @Override public void windowClosing(java.awt.event.WindowEvent e) {
@@ -48,13 +55,17 @@ public final class Client {
    }
   });
   frame.setLayout(new BorderLayout());
-  frame.setSize(960, 720);
-  frame.setMinimumSize(new Dimension(880, 640));
+  frame.setSize(1080, 760);
+  frame.setMinimumSize(new Dimension(900, 640));
   frame.setLocationRelativeTo(null);
   frame.getContentPane().setBackground(Theme.OFF_WHITE);
 
   // Cấu hình AuthScreen
-  authScreen.setOnLogin((u, p) -> send("LOGIN", u, p));
+  authScreen.setOnLogin((u, p) -> {
+   lastLoginUser = u;
+   lastLoginPass = p;
+   send("LOGIN", u, p);
+  });
   authScreen.setOnRegister((u, p) -> send("REGISTER", u, p));
   frame.add(authScreen, BorderLayout.CENTER);
 
@@ -68,6 +79,44 @@ public final class Client {
   lobbyScreen.setOnTabChanged(tabName -> {
    if (tabName.equals("Bảng Xếp Hạng")) send("LEADERBOARD");
    else if (tabName.equals("Lịch Sử")) send("HISTORY");
+   else if (tabName.equals("Quản Lý Người Chơi")) send("USER_LIST");
+   else if (tabName.equals("Ngân Hàng Câu Hỏi")) send("QUESTION_LIST");
+  });
+  lobbyScreen.getPlayerManagementPanel().setUserActionListener(new PlayerManagementPanel.UserActionListener() {
+   @Override
+   public void onRefresh() {
+    send("USER_LIST");
+   }
+   @Override
+   public void onAddUser(String username, String password, int score, String avatarId, String fullName, String email, String bio) {
+    send("ADD_USER", username, password, String.valueOf(score), avatarId, fullName, email, bio);
+   }
+   @Override
+   public void onUpdateUser(String username, String newPassword, int score, String avatarId, String fullName, String email, String bio) {
+    send("UPDATE_USER", username, newPassword, String.valueOf(score), avatarId, fullName, email, bio);
+   }
+   @Override
+   public void onDeleteUser(String targetUsername) {
+    send("DELETE_USER", targetUsername);
+   }
+  });
+  lobbyScreen.getQuestionManagementPanel().setQuestionActionListener(new QuestionManagementPanel.QuestionActionListener() {
+   @Override
+   public void onRefresh() {
+    send("QUESTION_LIST");
+   }
+   @Override
+   public void onAddQuestion(String topic, String level, String type, String text, String choicesRaw, String answerRaw, String explanation, String blanksRaw, String fillMapRaw) {
+    send("ADD_QUESTION", topic, level, type, text, choicesRaw, answerRaw, explanation, blanksRaw, fillMapRaw);
+   }
+   @Override
+   public void onUpdateQuestion(String id, String topic, String level, String type, String text, String choicesRaw, String answerRaw, String explanation, String blanksRaw, String fillMapRaw) {
+    send("UPDATE_QUESTION", id, topic, level, type, text, choicesRaw, answerRaw, explanation, blanksRaw, fillMapRaw);
+   }
+   @Override
+   public void onDeleteQuestion(String id) {
+    send("DELETE_QUESTION", id);
+   }
   });
   lobbyScreen.setOnLogout(this::doLogout);
   lobbyScreen.setOnSoloPractice(() -> {
@@ -79,18 +128,54 @@ public final class Client {
   lobbyScreen.setOnCancelMatchmaking(() -> send("CANCEL_MATCHMAKING"));
   lobbyScreen.setOnUpdateAvatar(avatarId -> send("UPDATE_AVATAR", avatarId));
 
+  pingTimer = new javax.swing.Timer(3000, e -> {
+   if (out != null && name != null && !reconnecting) {
+    send("PING", String.valueOf(System.nanoTime()));
+   }
+  });
+  pingTimer.start();
+
   frame.setVisible(true);
+  frame.setExtendedState(JFrame.NORMAL);
+  frame.setAlwaysOnTop(true);
+  frame.toFront();
+  frame.requestFocus();
+  SwingUtilities.invokeLater(() -> frame.setAlwaysOnTop(false));
   connectAndStartReader();
  }
 
- /** Tạo socket mới và khởi động reader thread. Gọi khi khởi động hoặc sau logout. */
+ /** Luồng gửi gói tin bất đồng bộ (P2 - Item 10) tránh chặn Swing EDT */
+ void startAsyncWriterThread() {
+  Thread writer = new Thread(() -> {
+   while (true) {
+    try {
+     String[] pkt = sendQueue.take();
+     DataOutputStream currentOut = out;
+     if (currentOut != null) {
+      Wire.send(currentOut, pkt);
+     }
+    } catch (InterruptedException ie) {
+     Thread.currentThread().interrupt();
+     break;
+    } catch (IOException ioe) {
+     if (!"PING".equals( ioe.getMessage() )) {
+      System.err.println("[Client] Lỗi gửi gói tin: " + ioe.getMessage());
+     }
+    }
+   }
+  }, "Client-Async-Writer");
+  writer.setDaemon(true);
+  writer.start();
+ }
+
+ /** Tạo socket mới và khởi động reader thread. Gọi khi khởi động, sau logout, hoặc khi reconnect. */
  void connectAndStartReader() throws Exception {
   Socket socket = new Socket(host, port);
+  sendQueue.clear();
   out = new DataOutputStream(socket.getOutputStream());
   DataInputStream in = new DataInputStream(socket.getInputStream());
-  // Dừng reader thread cũ nếu có
   Thread old = readerThread;
-  if (old != null) old.interrupt();
+  if (old != null && old != Thread.currentThread()) old.interrupt();
   Thread reader = new Thread(() -> {
    try {
     while (true) {
@@ -98,55 +183,91 @@ public final class Client {
      SwingUtilities.invokeLater(() -> handle(a));
     }
    } catch (Exception e) {
-    e.printStackTrace();
     SwingUtilities.invokeLater(() -> {
      if (name != null) {
-      // Chỉ hiện disconnect nếu đang trong session
-      if (frame.getGlassPane() instanceof DisconnectOverlay) return;
-      frame.setGlassPane(new DisconnectOverlay(() -> System.exit(0)));
-      frame.getGlassPane().setVisible(true);
+      attemptAutoReconnect();
+     } else {
+      authScreen.showError("Mất kết nối server");
      }
-     if (name == null) authScreen.showError("Mất kết nối server");
     });
    }
-  });
+  }, "Client-Reader");
   reader.setDaemon(true);
   reader.start();
   readerThread = reader;
  }
 
+ /** Tự động kết nối lại trong 25 giây khi rớt mạng (P2 - Item 9) */
+ void attemptAutoReconnect() {
+  if (reconnecting || name == null) return;
+  reconnecting = true;
+  out = null;
+  ToastManager.warning(frame, "Mất kết nối mạng! Đang tự động kết nối lại (25s)...");
+  Thread reconThread = new Thread(() -> {
+   long deadlineMs = System.currentTimeMillis() + 25_000L;
+   int attempt = 0;
+   while (System.currentTimeMillis() < deadlineMs && name != null) {
+    attempt++;
+    try {
+     Thread.sleep(2000L);
+     if (name == null) return;
+     connectAndStartReader();
+     if (lastLoginUser != null && lastLoginPass != null) {
+      send("LOGIN", lastLoginUser, lastLoginPass, "RECONNECT");
+     }
+     return;
+    } catch (Exception ignored) {
+     final int att = attempt;
+     SwingUtilities.invokeLater(() -> {
+      if (name != null) {
+       ToastManager.info(frame, "Đang thử kết nối lại lần " + att + "...");
+      }
+     });
+    }
+   }
+   SwingUtilities.invokeLater(() -> {
+    reconnecting = false;
+    if (name != null) {
+     if (frame.getGlassPane() instanceof DisconnectOverlay) return;
+     frame.setGlassPane(new DisconnectOverlay(() -> System.exit(0), this::doLogout));
+     frame.getGlassPane().setVisible(true);
+    }
+   });
+  }, "Client-Reconnect");
+  reconThread.setDaemon(true);
+  reconThread.start();
+ }
+
  /** Logout: đóng socket hiện tại, reset session, tạo socket mới, quay về AuthScreen */
  void doLogout() {
-   MusicManager.stopMusic();
-   SoundManager.stopCountdown();
-  // 1. Gửi tín hiệu cho server (nếu còn kết nối)
-  // Không cần gửi gì vì đóng socket sẽ trigger cleanup phía server
-  // 2. Đặt name = null TRƯỚC khi đóng socket để reader thread không hiện DisconnectOverlay
+  MusicManager.stopMusic();
+  SoundManager.stopCountdown();
   name = null;
+  lastLoginUser = null;
+  lastLoginPass = null;
+  reconnecting = false;
   myAvatarId = "avatar_01";
   matchId = null;
   currentQuestions = null;
   currentSubmittedAnswers = null;
-  // 3. Đóng socket cũ (sẽ khiến reader thread thoát)
+  sendQueue.clear();
   DataOutputStream oldOut = out;
   out = null;
   if (oldOut != null) {
    try { oldOut.close(); } catch (Exception ignored) {}
   }
-  // 4. Dừng các dialog/screen đang mở
   if (currentMatchScreen != null) { currentMatchScreen.stopTimer(); currentMatchScreen = null; }
   if (currentResultDialog != null) { currentResultDialog.dispose(); currentResultDialog = null; }
+  abandonedMatchIds.clear();
   if (waitingDialog != null) { waitingDialog.closeDialog(); waitingDialog = null; }
   if (currentInviteDialog != null) { currentInviteDialog.dispose(); currentInviteDialog = null; }
-  // 5. Quay về AuthScreen
-  frame.setGlassPane(new JPanel()); // Xóa DisconnectOverlay nếu có
+  frame.setGlassPane(new JPanel());
   frame.getGlassPane().setVisible(false);
   frame.getContentPane().removeAll();
   frame.getContentPane().setLayout(new BorderLayout());
   frame.getContentPane().add(authScreen, BorderLayout.CENTER);
   authScreen.resetForReuse();
   refresh();
-  // 6. Tạo socket mới cho lần đăng nhập tiếp theo
   SwingUtilities.invokeLater(() -> {
    try {
     connectAndStartReader();
@@ -157,13 +278,8 @@ public final class Client {
  }
 
  void send(String... a){
-  DataOutputStream currentOut = out;
-  if (currentOut == null) return;
-  try{
-   Wire.send(currentOut,a);
-  }catch(IOException e){
-   ToastManager.error(frame, "Không gửi được: "+e.getMessage());
-  }
+  if (a == null || a.length == 0) return;
+  sendQueue.offer(a);
  }
 
  void log(String s){System.out.println("[Client] "+s);}
@@ -174,6 +290,32 @@ public final class Client {
   p.add(b);
  }
 
+ void leaveCurrentMatch() {
+  userLeftMatch = true;
+  String leavingMatchId = matchId;
+  if (leavingMatchId != null) {
+   abandonedMatchIds.add(leavingMatchId);
+  }
+  matchId = null;
+  currentMatchLeft = null;
+  currentOpponent = null;
+  currentQuestions = null;
+  currentSubmittedAnswers = null;
+  SoundManager.stopCountdown();
+  MusicManager.stopMusic();
+  if (currentMatchScreen != null) {
+   currentMatchScreen.cleanupAndStop();
+   currentMatchScreen = null;
+  }
+  if (currentResultDialog != null) {
+   currentResultDialog.dispose();
+   currentResultDialog = null;
+  }
+  send("LEAVE", leavingMatchId != null ? leavingMatchId : "");
+  showLobby();
+  ToastManager.info(frame, "Bạn đã rời khỏi trận đấu.");
+ }
+
  void showLobby(){
   if(currentMatchScreen!=null){currentMatchScreen.stopTimer();currentMatchScreen=null;}
   if(currentResultDialog!=null){currentResultDialog.dispose();currentResultDialog=null;}
@@ -181,7 +323,6 @@ public final class Client {
   frame.getContentPane().setLayout(new BorderLayout());
   frame.getContentPane().add(lobbyScreen, BorderLayout.CENTER);
   refresh();
-  // Phát nhạc sảnh (không phát lại nếu đang phát rồi)
   MusicManager.playLobbyMusic();
  }
 
@@ -190,17 +331,48 @@ public final class Client {
  void handle(String[] a){
   try{
   switch(a[0]){
+   case "PONG"->{
+    try{
+     long sentNano=Long.parseLong(Wire.field(a,1));
+     long rttMs=Math.max(1L,java.util.concurrent.TimeUnit.NANOSECONDS.toMillis(System.nanoTime()-sentNano));
+     lobbyScreen.updatePing(rttMs);
+     if(currentMatchScreen!=null)currentMatchScreen.updatePing(rttMs);
+    }catch(Exception ignored){}
+   }
    case "WELCOME"->{
+    boolean wasReconnecting=reconnecting;
+    reconnecting=false;
+    if(frame.getGlassPane() instanceof DisconnectOverlay){
+     frame.setGlassPane(new JPanel());
+     frame.getGlassPane().setVisible(false);
+    }
     name=Wire.field(a,1);
     String rawTopics=Wire.field(a,2);
     myAvatarId=Wire.field(a,3);
-    if(myAvatarId==null||myAvatarId.isBlank())myAvatarId="avatar_01";userAvatars.put(name,myAvatarId);
+    if(myAvatarId==null||myAvatarId.isBlank())myAvatarId="avatar_01";
+    userAvatars.put(name,myAvatarId);
     String scoreStr=Wire.field(a,4);
     int score=0;try{score=Integer.parseInt(scoreStr);}catch(Exception ignored){}
-    lobbyScreen.setCurrentUser(name,score,myAvatarId);
-    ToastManager.success(frame, "Đăng nhập thành công! Chào mừng "+name);
+    String fullName=Wire.field(a,5);
+    String email=Wire.field(a,6);
+    String bio=Wire.field(a,7);
+    String role=Wire.field(a,8);
+    if(role==null||role.isBlank())role="admin".equalsIgnoreCase(name)?"ADMIN":"PLAYER";
+    lobbyScreen.setCurrentUser(name,score,myAvatarId,fullName,email,bio,role);
     if(!rawTopics.isBlank()){lobbyScreen.setTopics(Arrays.asList(rawTopics.split("\\|")));}
-    showLobby();
+    if(wasReconnecting){
+     ToastManager.success(frame, "Đã kết nối lại với máy chủ!");
+     if(matchId==null)showLobby();
+    }else{
+     ToastManager.success(frame, "Đăng nhập thành công! Chào mừng "+name);
+     showLobby();
+    }
+    send("USER_LIST");
+    send("PING",String.valueOf(System.nanoTime()));
+   }
+   case "TOPICS"->{
+    String rawTopics=Wire.field(a,1);
+    if(!rawTopics.isBlank()){lobbyScreen.setTopics(Arrays.asList(rawTopics.split("\\|")));}
    }
    case "INFO"->{
     String msg=Wire.field(a,1);
@@ -228,6 +400,28 @@ public final class Client {
     }
    case "LEADERBOARD"->{lobbyScreen.getLeaderboardPanel().updateData(Wire.field(a,1), name);}
    case "HISTORY"->{lobbyScreen.getHistoryPanel().updateData(Wire.field(a,1), name);}
+   case "USER_LIST"->{lobbyScreen.getPlayerManagementPanel().updateData(Wire.field(a,1), name);}
+   case "USER_SAVED"->{ToastManager.success(frame, Wire.field(a,1));}
+   case "QUESTION_LIST"->{lobbyScreen.getQuestionManagementPanel().updateFromWire(a);}
+   case "QUESTION_SAVED"->{ToastManager.success(frame, Wire.field(a,1));}
+   case "PROFILE_SYNC"->{
+    String newName=Wire.field(a,1);
+    int newScore=0;try{newScore=Integer.parseInt(Wire.field(a,2));}catch(Exception ignored){}
+    String newAvatar=Wire.field(a,3);
+    String uFull=Wire.field(a,4);
+    String uEmail=Wire.field(a,5);
+    String uBio=Wire.field(a,6);
+    String role=Wire.field(a,7);
+    if(newName!=null&&!newName.isBlank())name=newName;
+    if(newAvatar!=null&&!newAvatar.isBlank()){myAvatarId=newAvatar;userAvatars.put(name,myAvatarId);}
+    if(role==null||role.isBlank())role="admin".equalsIgnoreCase(name)?"ADMIN":"PLAYER";
+    lobbyScreen.setCurrentUser(name,newScore,myAvatarId,uFull,uEmail,uBio,role);
+   }
+   case "ACCOUNT_DELETED"->{
+    String msg=Wire.field(a,1);
+    ToastManager.warning(frame, msg.isBlank()?"Tài khoản đã bị xóa.":msg);
+    doLogout();
+   }
    case "DECLINED"->{
     if(waitingDialog!=null){waitingDialog.closeDialog();waitingDialog=null;}
     if(currentInviteDialog!=null){currentInviteDialog.dispose();currentInviteDialog=null;}
@@ -256,7 +450,7 @@ public final class Client {
     try{myScore=Integer.parseInt(Wire.field(a,2));}catch(Exception ignored){}
     try{oppScore=Integer.parseInt(Wire.field(a,3));}catch(Exception ignored){}
     lobbyScreen.onMatchFound(opponent,myScore,oppScore);
-     SoundManager.playMatchFound();
+    SoundManager.playMatchFound();
    }
    case "MATCHMAKING_CANCELLED"->{
     lobbyScreen.onMatchmakingCancelled(Wire.field(a,1));
@@ -267,32 +461,90 @@ public final class Client {
     ToastManager.success(frame, "Đã cập nhật avatar!");
    }
    case "MATCH"->{
+    userLeftMatch = false;
     if(waitingDialog!=null){waitingDialog.closeDialog();waitingDialog=null;}
     if(currentInviteDialog!=null){currentInviteDialog.dispose();currentInviteDialog=null;}
     if(currentResultDialog!=null){currentResultDialog.dispose();currentResultDialog=null;}
     lobbyScreen.onMatchmakingCancelled(""); // reset quick match UI
-     MusicManager.playBattleMusic();
+    MusicManager.playBattleMusic();
     match(a);
    }
+   case "MATCH_RESUME"->{
+    if(userLeftMatch || currentMatchScreen==null) return;
+    String resumeId=Wire.field(a,1);
+    if(resumeId.equals(matchId)){
+     int curQ=0;try{curQ=Integer.parseInt(Wire.field(a,2));}catch(Exception ignored){}
+     int remSec=60;try{remSec=Integer.parseInt(Wire.field(a,3));}catch(Exception ignored){}
+     boolean isSub=Boolean.parseBoolean(Wire.field(a,4));
+     int[] savedAns=new int[10];
+     Arrays.fill(savedAns,-1);
+     for(int k=0;k<10;k++){
+      try{savedAns[k]=Integer.parseInt(Wire.field(a,5+k));}catch(Exception ignored){}
+     }
+     currentSubmittedAnswers=savedAns.clone();
+     currentMatchScreen.restoreState(curQ,savedAns,isSub);
+     ToastManager.success(frame,"Đã khôi phục trạng thái trận đấu (Câu "+(curQ+1)+"/10)!");
+    }
+   }
    case "SCORE"->{
-    int s0=0,s1=0;
+    if(userLeftMatch || currentMatchScreen==null) return;
+    int s0=0,s1=0,pts0=0,pts1=0,strk0=0,strk1=0;
     try{s0=Integer.parseInt(Wire.field(a,1));}catch(Exception ignored){}
     try{s1=Integer.parseInt(Wire.field(a,2));}catch(Exception ignored){}
+    try{pts0=Integer.parseInt(Wire.field(a,3));}catch(Exception ignored){}
+    try{pts1=Integer.parseInt(Wire.field(a,4));}catch(Exception ignored){}
+    try{strk0=Integer.parseInt(Wire.field(a,5));}catch(Exception ignored){}
+    try{strk1=Integer.parseInt(Wire.field(a,6));}catch(Exception ignored){}
     if(currentMatchScreen!=null){
      boolean isLeft=name!=null&&name.equals(currentMatchLeft);
      int myScore=isLeft?s0:s1;
      int oppScore=isLeft?s1:s0;
-     currentMatchScreen.updateScores(myScore,oppScore);
+     int myPts=isLeft?pts0:pts1;
+     int oppPts=isLeft?pts1:pts0;
+     int myStrk=isLeft?strk0:strk1;
+     int oppStrk=isLeft?strk1:strk0;
+     currentMatchScreen.updateScores(myScore,oppScore,myPts,oppPts,myStrk,oppStrk);
+    }
+   }
+   case "PROGRESS"->{
+    if(userLeftMatch || currentMatchScreen==null) return;
+    int q0=0,q1=0;
+    try{q0=Integer.parseInt(Wire.field(a,1));}catch(Exception ignored){}
+    try{q1=Integer.parseInt(Wire.field(a,2));}catch(Exception ignored){}
+    String st0=Wire.field(a,3);
+    String st1=Wire.field(a,4);
+    if(currentMatchScreen!=null){
+     boolean isLeft=name!=null&&name.equals(currentMatchLeft);
+     int myCurQ=isLeft?q0:q1;
+     int oppCurQ=isLeft?q1:q0;
+     String mySt=isLeft?st0:st1;
+     String oppSt=isLeft?st1:st0;
+     currentMatchScreen.updateProgress(myCurQ,oppCurQ,mySt,oppSt);
     }
    }
    case "SUBMITTED"->{
+    if(userLeftMatch || currentMatchScreen==null) return;
     if(currentMatchScreen!=null){currentMatchScreen.onSubmittedAcknowledged();}
     ToastManager.success(frame, Wire.field(a,1));
    }
    case "RESULT"->{
+    String resultMatchId=(a.length>=26)?Wire.field(a,25):null;
+    if(resultMatchId!=null&&abandonedMatchIds.contains(resultMatchId)){
+     log("Bỏ qua gói RESULT từ trận đã thoát: "+resultMatchId);
+     return;
+    }
+    if(resultMatchId!=null&&matchId!=null&&!resultMatchId.equals(matchId)){
+     log("Bỏ qua gói RESULT không khớp trận hiện tại (packet: "+resultMatchId+", current: "+matchId+")");
+     return;
+    }
+    if(userLeftMatch || currentMatchScreen==null || matchId==null){
+     return;
+    }
     MusicManager.stopMusic();
+    String[] fillInInputs = null;
     if(currentMatchScreen!=null){
-     currentMatchScreen.stopTimer();
+     currentMatchScreen.onMatchFinished();
+     fillInInputs = currentMatchScreen.getUserFillInAnswers();
      if(currentSubmittedAnswers==null){currentSubmittedAnswers=currentMatchScreen.getSelectedAnswers();}
      if(currentQuestions==null){currentQuestions=currentMatchScreen.getQuestions();}
     }
@@ -305,21 +557,32 @@ public final class Client {
      for(int i=0;i<currentQuestions.size()&&i<10;i++){
       quiz.ui.MatchQuestion oldQ=currentQuestions.get(i);
       String exp=Wire.field(a,15+i);
-      enriched.add(new quiz.ui.MatchQuestion(oldQ.text(),oldQ.choices(),exp,oldQ.type()));
+      int cAns=(correctAnswers!=null&&i<correctAnswers.length)?correctAnswers[i]:oldQ.correctAnswer();
+      enriched.add(new quiz.ui.MatchQuestion(oldQ.text(),oldQ.choices(),exp,oldQ.type(),oldQ.blanks(),oldQ.fillMap(),cAns));
      }
      currentQuestions=enriched;
     }
     if(currentResultDialog!=null){currentResultDialog.dispose();}
-    String oppAvatar=(currentMatchScreen!=null&&currentMatchScreen.getOpponentAvatarId()!=null)?currentMatchScreen.getOpponentAvatarId():getAvatarFor(currentOpponent);currentResultDialog=new ResultDialog(frame,name,winner,leftInfo,rightInfo,()->send("REMATCH","YES"),()->{send("REMATCH","NO");showLobby();},currentQuestions,currentSubmittedAnswers,correctAnswers,myAvatarId,oppAvatar);
+    String oppAvatar=(currentMatchScreen!=null&&currentMatchScreen.getOpponentAvatarId()!=null)?currentMatchScreen.getOpponentAvatarId():getAvatarFor(currentOpponent);
+    currentResultDialog=new ResultDialog(frame,name,winner,leftInfo,rightInfo,()->send("REMATCH","YES"),()->{send("REMATCH","NO");showLobby();},currentQuestions,currentSubmittedAnswers,correctAnswers,myAvatarId,oppAvatar,fillInInputs);
     currentResultDialog.setVisible(true);
    }
    case "CLOSED"->{
-    if(currentMatchScreen!=null){currentMatchScreen.stopTimer();currentMatchScreen=null;}
-    if(currentResultDialog!=null){currentResultDialog.dispose();currentResultDialog=null;}
-    matchId=null;
+    if(userLeftMatch){
+     return;
+    }
+    String closeMsg = Wire.field(a,1);
     SoundManager.stopCountdown();
-    ToastManager.info(frame, Wire.field(a,1));
-    showLobby();
+    matchId=null;
+    if(currentResultDialog!=null && currentResultDialog.isDisplayable()){
+     currentResultDialog.onOpponentLeft(closeMsg);
+     ToastManager.info(frame, closeMsg);
+    } else {
+     if(currentMatchScreen!=null){currentMatchScreen.cleanupAndStop();currentMatchScreen=null;}
+     if(currentResultDialog!=null){currentResultDialog.dispose();currentResultDialog=null;}
+     ToastManager.info(frame, closeMsg);
+     showLobby();
+    }
    }
    default->log(a[0]+": "+Wire.field(a,1));
   }
@@ -330,75 +593,41 @@ public final class Client {
  }
 
  void match(String[] a){
+  if(currentResultDialog!=null){currentResultDialog.dispose();currentResultDialog=null;}
   matchId=a[1];String left=a[2];String right=a[3];currentMatchLeft=left;String topic=a[4];String level=a[5];String setId=a[6];int totalSec=Integer.parseInt(a[7]);String opponent=name.equals(left)?right:left;currentOpponent=opponent;String oppAvatar=getAvatarFor(opponent);
   java.util.List<MatchQuestion> qList=new ArrayList<>();
   int idx=8;for(int i=0;i<10&&idx<a.length;i++){String qType=a[idx++];String qText=a[idx++];int chCount=Integer.parseInt(a[idx++]);String[] choices=new String[chCount];for(int c=0;c<chCount;c++)choices[c]=a[idx++];int correctAns=Integer.parseInt(a[idx++]);int blanksCount=Integer.parseInt(a[idx++]);String[] blanks=null;if(blanksCount>0){blanks=new String[blanksCount];for(int b=0;b<blanksCount;b++)blanks[b]=a[idx++];}int fmCount=Integer.parseInt(a[idx++]);java.util.Map<String,String> fillMap=null;if(fmCount>0){fillMap=new java.util.LinkedHashMap<>();for(int f=0;f<fmCount;f++){String pair=a[idx++];int eq=pair.indexOf('=');if(eq>=0)fillMap.put(pair.substring(0,eq),pair.substring(eq+1));}}qList.add(new MatchQuestion(qText,choices,"",qType,blanks,fillMap,correctAns));}
   currentQuestions=qList;currentSubmittedAnswers=new int[10];Arrays.fill(currentSubmittedAnswers,-1);
-  if(currentMatchScreen!=null){currentMatchScreen.stopTimer();}
-  currentMatchScreen=new MatchScreen(matchId,name,opponent,myAvatarId,oppAvatar,topic,level,setId,totalSec,qList,answers->{currentSubmittedAnswers=answers.clone();String[] payload=new String[12];payload[0]="SUBMIT";payload[1]=matchId;for(int i=0;i<10;i++){payload[i+2]=""+answers[i];}send(payload);},()->send("LEAVE"));
-  currentMatchScreen.setOnEmoteListener(emote->send("EMOTE",emote));
+  if(currentMatchScreen!=null){currentMatchScreen.cleanupAndStop();}
+  currentMatchScreen=new MatchScreen(matchId,name,opponent,myAvatarId,oppAvatar,topic,level,setId,totalSec,qList,answers->{currentSubmittedAnswers=answers.clone();String[] payload=new String[12];payload[0]="SUBMIT";payload[1]=matchId;for(int i=0;i<10;i++){payload[i+2]=""+answers[i];}send(payload);},this::leaveCurrentMatch);
+  currentMatchScreen.setOnEmoteListener(emote->{
+   send("EMOTE",emote);
+   if("Bot Luyện Tập".equalsIgnoreCase(opponent)){
+    String[] botReplies={"👏","🔥","💪","😎","👍"};
+    String botEmote=botReplies[new Random().nextInt(botReplies.length)];
+    javax.swing.Timer botTimer=new javax.swing.Timer(800,ev->{
+     if(currentMatchScreen!=null)currentMatchScreen.showOpponentEmote(opponent,botEmote);
+    });
+    botTimer.setRepeats(false);
+    botTimer.start();
+   }
+  });
   currentMatchScreen.setOnAnswerListener((qIndex,choice)->send("ANSWER",matchId,""+qIndex,""+choice));
   frame.getContentPane().removeAll();frame.getContentPane().setLayout(new BorderLayout());frame.getContentPane().add(currentMatchScreen,BorderLayout.CENTER);refresh();
  }
 
+ /** Solo Practice chạy trên Server để chống gian lận (P1 - Item 8) */
  void startSoloPractice(String topic, String level) {
-  if (topic == null || topic.isBlank()) {ToastManager.warning(frame, "Vui lòng chọn chủ đề luyện tập!");return;}
-  if (level == null || level.isBlank()) level = "Dễ";
-  if (localBank == null) {
-   java.nio.file.Path p = java.nio.file.Path.of("data/questions.txt");
-   if (!java.nio.file.Files.exists(p)) p = java.nio.file.Path.of("../data/questions.txt");
-   if (java.nio.file.Files.exists(p)) {try {localBank = new Bank(p);} catch (Exception e) {log("Lỗi tải ngân hàng câu hỏi: " + e.getMessage());}}
+  if (currentResultDialog != null) {
+   currentResultDialog.dispose();
+   currentResultDialog = null;
   }
-  if (localBank == null) {ToastManager.error(frame, "Không tìm thấy file ngân hàng câu hỏi data/questions.txt!");return;}
-  Model.SetData set = localBank.pick(topic, level, new HashSet<>());
-  if (set == null) {ToastManager.error(frame, "Không có bộ đề cho chủ đề: " + topic + " (" + level + ")");return;}
-  matchId = "SOLO-" + System.currentTimeMillis();
-  java.util.List<MatchQuestion> qList = new ArrayList<>();int[] soloCorrect = new int[10];
-  for (int i = 0; i < set.questions().size() && i < 10; i++) {Model.Question q = set.questions().get(i);qList.add(new MatchQuestion(q.text(), q.choices(), q.explanation() != null ? q.explanation() : "", q.type() != null ? q.type().name() : "MULTIPLE_CHOICE", q.blanks(), q.fillMap(), q.answer()));soloCorrect[i] = q.answer();}
-  currentQuestions = qList;currentSubmittedAnswers = new int[10];Arrays.fill(currentSubmittedAnswers, -1);long startTime = System.currentTimeMillis();
-  final String chosenTopic = topic;final String chosenLevel = level;
-  if (currentMatchScreen != null) {currentMatchScreen.stopTimer();}
-  if (currentResultDialog != null) {currentResultDialog.dispose();}
-  String playerName = (name != null && !name.isBlank()) ? name : "Học Viên";String botName = "Bot Luyện Tập";
-  final int[] botLiveScore = {0};
-  currentOpponent = botName;
-  MusicManager.playBattleMusic();
-  currentMatchScreen = new MatchScreen(matchId,playerName,botName,myAvatarId,"avatar_02",topic,level,set.id(),set.duration(),qList,answers -> {long elapsed = System.currentTimeMillis() - startTime;currentSubmittedAnswers = answers.clone();finishSoloMatch(playerName, botName, set, answers, elapsed, soloCorrect, chosenTopic, chosenLevel, botLiveScore[0]);},() -> showLobby());
-  currentMatchScreen.setOnAnswerListener((qIndex, choice) -> {
-   if (qIndex >= 0 && qIndex < 10 && currentMatchScreen != null) {
-    int userCount = 0;
-    for (int i = 0; i < 10; i++) {
-     if (currentMatchScreen.getSelectedAnswers()[i] != -1 && currentMatchScreen.getSelectedAnswers()[i] == soloCorrect[i]) userCount++;
-    }
-    currentMatchScreen.setMyScore(userCount);
-
-    // Bot cũng cập nhật kết quả câu này sau khi kết thúc câu
-    boolean botRight = new Random().nextInt(100) < (chosenLevel.equalsIgnoreCase("Dễ") ? 60 : chosenLevel.equalsIgnoreCase("Khó") ? 80 : 70);
-    if (botRight) {
-     botLiveScore[0]++;
-     currentMatchScreen.setOpponentScore(botLiveScore[0]);
-    }
-   }
-  });
-  currentMatchScreen.setOnEmoteListener(emote -> {String[] botReplies = {"👏", "🔥", "💪", "😎", "👍"};String botEmote = botReplies[new Random().nextInt(botReplies.length)];javax.swing.Timer botTimer = new javax.swing.Timer(800, ev -> {if (currentMatchScreen != null) currentMatchScreen.showOpponentEmote(botName, botEmote);});botTimer.setRepeats(false);botTimer.start();});
-  frame.getContentPane().removeAll();frame.getContentPane().setLayout(new BorderLayout());frame.getContentPane().add(currentMatchScreen, BorderLayout.CENTER);refresh();
-  ToastManager.info(frame, "Bắt đầu luyện tập đơn: " + topic + " - " + level);
- }
-
- void finishSoloMatch(String playerName, String botName, Model.SetData set, int[] answers, long elapsedMs, int[] correctAnswers, String topic, String level, int botScore) {
-  MusicManager.stopMusic();
-  if (currentMatchScreen != null) {currentMatchScreen.stopTimer();}
-  int userScore = 0;for (int i = 0; i < 10; i++) {if (answers[i] != -1 && answers[i] == correctAnswers[i]) userScore++;}
-  long botElapsed;
-  if (level.equalsIgnoreCase("Dễ")) {botElapsed = (set.duration() * 1000L * (45 + new Random().nextInt(30))) / 100;}
-  else if (level.equalsIgnoreCase("Khó")) {botElapsed = (set.duration() * 1000L * (55 + new Random().nextInt(35))) / 100;}
-  else {botElapsed = (set.duration() * 1000L * (50 + new Random().nextInt(35))) / 100;}
-  String winner = "HÒA";
-  if (userScore > botScore) winner = playerName;else if (userScore < botScore) winner = botName;else if (Math.abs(elapsedMs - botElapsed) > 1000) winner = (elapsedMs < botElapsed) ? playerName : botName;
-  String leftRaw = playerName + ": " + userScore + " câu, " + elapsedMs + " ms";String rightRaw = botName + ": " + botScore + " câu, " + botElapsed + " ms";
-  if (currentResultDialog != null) {currentResultDialog.dispose();}
-  currentResultDialog = new ResultDialog(frame,playerName,winner,leftRaw,rightRaw,() -> startSoloPractice(topic, level),() -> showLobby(),currentQuestions,currentSubmittedAnswers,correctAnswers,myAvatarId,"avatar_02");
-  currentResultDialog.setVisible(true);
+  if (topic == null || topic.isBlank()) {
+   ToastManager.warning(frame, "Vui lòng chọn chủ đề luyện tập!");
+   return;
+  }
+  if (level == null || level.isBlank()) level = "Dễ";
+  send("SOLO_MATCH", topic, level);
  }
 
  public static void main(String[] args)throws Exception{

@@ -9,7 +9,7 @@ import javax.swing.border.EmptyBorder;
 import quiz.Rank;
 
 /**
- * LobbyScreen — Màn hình Sảnh chờ với Quick Match, Rank, Avatar.
+ * LobbyScreen — Màn hình Sảnh chờ với Quick Match, Rank, Avatar, và Quản lý Người chơi.
  */
 public class LobbyScreen extends JPanel {
 
@@ -20,13 +20,20 @@ public class LobbyScreen extends JPanel {
     private String currentUsername = "";
     private int currentScore = 0;
     private String currentAvatarId = "avatar_01";
+    private String currentFullName = "";
+    private String currentEmail = "";
+    private String currentBio = "";
+    private String currentRole = "PLAYER";
 
     // Header Components
     private final JLabel lblUsername;
     private final JLabel lblRankBadge;
     private final ModernBadge badgeScore;
+    private final ModernBadge badgeRole;
+    private final ModernBadge badgePing;
     private final JLabel lblAvatarEmoji;
     private final JPanel avatarCircle;
+    private final NavigationBar navBar;
 
     // Filter & Match Config Components
     private final TopicSelector topicSelector;
@@ -54,6 +61,8 @@ public class LobbyScreen extends JPanel {
     // Tab panels
     private final LeaderboardPanel leaderboardPanel;
     private final HistoryPanel historyPanel;
+    private final PlayerManagementPanel playerManagementPanel;
+    private final QuestionManagementPanel questionManagementPanel;
 
     // Listeners
     private ChallengeListener challengeListener;
@@ -77,7 +86,7 @@ public class LobbyScreen extends JPanel {
                 BorderFactory.createMatteBorder(0, 0, 1, 0, Theme.BORDER_LIGHT),
                 new EmptyBorder(12, 24, 12, 24)));
 
-        // Left: Game Logo
+        // Left: Game Logo + Online Badge + Ping Badge
         JPanel brandPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 12, 0));
         brandPanel.setOpaque(false);
         JLabel logo = new JLabel("QUIZ ARENA");
@@ -86,41 +95,33 @@ public class LobbyScreen extends JPanel {
         brandPanel.add(logo);
         ModernBadge onlineBadge = new ModernBadge("Sảnh Online", ModernBadge.Type.READY);
         brandPanel.add(onlineBadge);
+        badgePing = new ModernBadge("Ping: -- ms", ModernBadge.Type.INFO);
+        brandPanel.add(badgePing);
         topHeader.add(brandPanel, BorderLayout.WEST);
 
         // Right: Profile + Actions
         JPanel rightPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
         rightPanel.setOpaque(false);
 
-        JButton btnSound = new JButton(SoundManager.isMuted() ? "Tắt âm" : "Bật âm");
-        btnSound.setToolTipText("Bật/Tắt âm thanh");
-        btnSound.setFont(Theme.SMALL_BOLD);
-        btnSound.setPreferredSize(new Dimension(72, 36));
-        btnSound.setFocusPainted(false);
-        btnSound.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-        btnSound.setBackground(Theme.WHITE);
-        btnSound.setBorder(BorderFactory.createLineBorder(Theme.BORDER_LIGHT, 1));
-        btnSound.addActionListener(e -> {
-            SoundManager.toggleMute();
-            btnSound.setText(SoundManager.isMuted() ? "Tắt âm" : "Bật âm");
-        });
-
-        JButton btnSoundSettings = new JButton("⚙");
-        btnSoundSettings.setToolTipText("Cài đặt âm thanh & nhạc nền");
-        btnSoundSettings.setFont(Theme.SMALL_BOLD);
-        btnSoundSettings.setPreferredSize(new Dimension(42, 36));
-        btnSoundSettings.setFocusPainted(false);
-        btnSoundSettings.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-        btnSoundSettings.setBackground(Theme.WHITE);
-        btnSoundSettings.setBorder(BorderFactory.createLineBorder(Theme.BORDER_LIGHT, 1));
+        ModernButton btnSoundSettings = new ModernButton(getSoundButtonLabel(), ModernButton.Style.SECONDARY);
+        btnSoundSettings.setPreferredSize(new Dimension(108, 36));
+        btnSoundSettings.setToolTipText("Cài đặt âm thanh & nhạc nền (Bật/Tắt & Âm lượng)");
         btnSoundSettings.addActionListener(e -> {
             SoundManager.playClick();
             new SoundSettingsDialog(SwingUtilities.getWindowAncestor(this)).setVisible(true);
-            btnSound.setText(SoundManager.isMuted() ? "Tắt âm" : "Bật âm");
+            btnSoundSettings.setText(getSoundButtonLabel());
+        });
+
+        ModernButton btnProfile = new ModernButton("Hồ Sơ", ModernButton.Style.SECONDARY);
+        btnProfile.setPreferredSize(new Dimension(88, 36));
+        btnProfile.setToolTipText("Sửa thông tin cá nhân, mật khẩu hoặc xóa tài khoản");
+        btnProfile.addActionListener(e -> {
+            SoundManager.playClick();
+            openCurrentUserProfileDialog();
         });
 
         ModernButton btnLogout = new ModernButton("Đăng Xuất", ModernButton.Style.SECONDARY);
-        btnLogout.setPreferredSize(new Dimension(120, 36));
+        btnLogout.setPreferredSize(new Dimension(110, 36));
         btnLogout.addActionListener(e -> {
             SoundManager.playClick();
             if (logoutListener != null)
@@ -170,21 +171,32 @@ public class LobbyScreen extends JPanel {
         lblRankBadge.setForeground(Theme.PURPLE);
 
         badgeScore = new ModernBadge("0 điểm", ModernBadge.Type.RANK);
+        badgeRole = new ModernBadge("ADMIN", ModernBadge.Type.WARNING);
+        badgeRole.setVisible(false);
 
         // Stack name + rank vertically
         JPanel profileInfo = new JPanel();
         profileInfo.setLayout(new BoxLayout(profileInfo, BoxLayout.Y_AXIS));
         profileInfo.setOpaque(false);
+        profileInfo.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        profileInfo.setToolTipText("Nhấn để sửa thông tin cá nhân");
+        profileInfo.addMouseListener(new java.awt.event.MouseAdapter() {
+            @Override
+            public void mouseClicked(java.awt.event.MouseEvent e) {
+                openCurrentUserProfileDialog();
+            }
+        });
         lblUsername.setAlignmentX(Component.LEFT_ALIGNMENT);
         lblRankBadge.setAlignmentX(Component.LEFT_ALIGNMENT);
         profileInfo.add(lblUsername);
         profileInfo.add(lblRankBadge);
 
-        rightPanel.add(btnSound);
         rightPanel.add(btnSoundSettings);
+        rightPanel.add(btnProfile);
         rightPanel.add(btnLogout);
         rightPanel.add(avatarCircle);
         rightPanel.add(profileInfo);
+        rightPanel.add(badgeRole);
         rightPanel.add(badgeScore);
         topHeader.add(rightPanel, BorderLayout.EAST);
         add(topHeader, BorderLayout.NORTH);
@@ -195,10 +207,14 @@ public class LobbyScreen extends JPanel {
         KahootBackgroundPanel centerContent = new KahootBackgroundPanel(new BorderLayout());
         centerContent.setOpaque(false);
 
-        NavigationBar navBar = new NavigationBar();
+        navBar = new NavigationBar();
         navBar.addTab("Người Chơi");
         navBar.addTab("Bảng Xếp Hạng");
         navBar.addTab("Lịch Sử");
+        navBar.addTab("Quản Lý Người Chơi");
+        navBar.addTab("Ngân Hàng Câu Hỏi");
+        navBar.setTabVisible("Quản Lý Người Chơi", false);
+        navBar.setTabVisible("Ngân Hàng Câu Hỏi", false);
         navBar.setBorder(BorderFactory.createCompoundBorder(
                 BorderFactory.createMatteBorder(0, 0, 1, 0, Theme.BORDER_LIGHT),
                 new EmptyBorder(10, 24, 0, 24)));
@@ -208,16 +224,17 @@ public class LobbyScreen extends JPanel {
         cardPanel = new JPanel(cardLayout);
         cardPanel.setOpaque(false);
 
-        // --- Tab 1: Players Panel ---
-        JPanel playersWrapper = new JPanel();
-        playersWrapper.setLayout(new BoxLayout(playersWrapper, BoxLayout.Y_AXIS));
+        // --- Tab 1: Players Panel (Responsive BorderLayout on resize/maximize) ---
+        JPanel playersWrapper = new JPanel(new BorderLayout(0, 14));
         playersWrapper.setOpaque(false);
-        playersWrapper.setBorder(new EmptyBorder(14, 24, 14, 24));
+        playersWrapper.setBorder(new EmptyBorder(16, 24, 16, 24));
+
+        JPanel topControls = new JPanel(new BorderLayout(0, 12));
+        topControls.setOpaque(false);
 
         // ---- QUICK MATCH CARD ----
-        ModernCard quickMatchCard = new ModernCard(new BorderLayout(12, 0));
-        quickMatchCard.setCardPadding(14, 20, 14, 20);
-        quickMatchCard.setMaximumSize(new Dimension(Integer.MAX_VALUE, 90));
+        ModernCard quickMatchCard = new ModernCard(new BorderLayout(16, 0));
+        quickMatchCard.setCardPadding(14, 22, 14, 22);
         quickMatchCard.setCardBackground(new Color(0xF0, 0xEB, 0xFF));
         quickMatchCard.setBorderColor(Theme.PURPLE);
 
@@ -225,13 +242,14 @@ public class LobbyScreen extends JPanel {
         qmLeft.setLayout(new BoxLayout(qmLeft, BoxLayout.Y_AXIS));
         qmLeft.setOpaque(false);
 
-        JLabel qmTitle = new JLabel("QUICK MATCH");
+        JLabel qmTitle = new JLabel("QUICK MATCH — GHÉP TRẬN TỰ ĐỘNG");
         qmTitle.setFont(Theme.SUBTITLE);
         qmTitle.setForeground(Theme.PURPLE);
-        JLabel qmDesc = new JLabel("Tìm đối thủ có điểm gần bạn nhất");
+        JLabel qmDesc = new JLabel("Tìm ngay đối thủ trực tuyến có thứ hạng và điểm số tương đương bạn");
         qmDesc.setFont(Theme.SMALL);
         qmDesc.setForeground(Theme.MUTED_GRAY);
         qmLeft.add(qmTitle);
+        qmLeft.add(Box.createVerticalStrut(2));
         qmLeft.add(qmDesc);
         quickMatchCard.add(qmLeft, BorderLayout.WEST);
 
@@ -250,11 +268,11 @@ public class LobbyScreen extends JPanel {
         quickMatchStatusPanel.setVisible(false);
         quickMatchCard.add(quickMatchStatusPanel, BorderLayout.CENTER);
 
-        JPanel qmRight = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 0));
+        JPanel qmRight = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 2));
         qmRight.setOpaque(false);
 
         btnQuickMatch = new ModernButton("GHÉP TRẬN", ModernButton.Style.PRIMARY);
-        btnQuickMatch.setPreferredSize(new Dimension(140, 40));
+        btnQuickMatch.setPreferredSize(new Dimension(148, 40));
         btnQuickMatch.addActionListener(e -> {
             SoundManager.playClick();
             if (quickMatchListener != null)
@@ -274,14 +292,11 @@ public class LobbyScreen extends JPanel {
         qmRight.add(btnCancelMatchmaking);
         quickMatchCard.add(qmRight, BorderLayout.EAST);
 
-        playersWrapper.add(quickMatchCard);
-        playersWrapper.add(Box.createVerticalStrut(10));
+        topControls.add(quickMatchCard, BorderLayout.NORTH);
 
         // ---- Topic & Level Selection Card ----
         ModernCard topicSectionCard = new ModernCard(new BorderLayout(0, 10));
-        topicSectionCard.setCardPadding(12, 18, 12, 18);
-        topicSectionCard.setMaximumSize(new Dimension(Integer.MAX_VALUE, 330));
-        topicSectionCard.setPreferredSize(new Dimension(880, 300));
+        topicSectionCard.setCardPadding(14, 20, 14, 20);
         topicSectionCard.setCardBackground(Theme.WHITE);
         topicSectionCard.setBorderColor(Theme.BORDER_LIGHT);
 
@@ -308,7 +323,7 @@ public class LobbyScreen extends JPanel {
 
         JPanel rightAction = new JPanel(new FlowLayout(FlowLayout.RIGHT, 12, 0));
         rightAction.setOpaque(false);
-        JLabel lblNotice = new JLabel("10 câu • Đếm giờ");
+        JLabel lblNotice = new JLabel("10 câu • Đếm giờ • Speed Bonus");
         lblNotice.setFont(Theme.SMALL);
         lblNotice.setForeground(Theme.MUTED_GRAY);
         rightAction.add(lblNotice);
@@ -323,14 +338,16 @@ public class LobbyScreen extends JPanel {
         bottomActionRow.add(rightAction, BorderLayout.EAST);
 
         topicSectionCard.add(bottomActionRow, BorderLayout.SOUTH);
+        topControls.add(topicSectionCard, BorderLayout.CENTER);
 
-        playersWrapper.add(topicSectionCard);
-        playersWrapper.add(Box.createVerticalStrut(12));
+        playersWrapper.add(topControls, BorderLayout.NORTH);
 
-        // ---- Section header ----
+        // ---- Online Players Section (Expands dynamically on resize/maximize) ----
+        JPanel onlineSection = new JPanel(new BorderLayout(0, 8));
+        onlineSection.setOpaque(false);
+
         JPanel sectionHeader = new JPanel(new BorderLayout());
         sectionHeader.setOpaque(false);
-        sectionHeader.setMaximumSize(new Dimension(Integer.MAX_VALUE, 30));
         JLabel lblSection = new JLabel("DANH SÁCH NGƯỜI CHƠI TRỰC TUYẾN");
         lblSection.setFont(Theme.SUBTITLE);
         lblSection.setForeground(Theme.DARK_TEXT);
@@ -339,8 +356,7 @@ public class LobbyScreen extends JPanel {
         lblOnlineCount.setFont(Theme.SMALL_BOLD);
         lblOnlineCount.setForeground(Theme.MUTED_GRAY);
         sectionHeader.add(lblOnlineCount, BorderLayout.EAST);
-        playersWrapper.add(sectionHeader);
-        playersWrapper.add(Box.createVerticalStrut(8));
+        onlineSection.add(sectionHeader, BorderLayout.NORTH);
 
         playersListPanel = new JPanel();
         playersListPanel.setLayout(new BoxLayout(playersListPanel, BoxLayout.Y_AXIS));
@@ -348,11 +364,11 @@ public class LobbyScreen extends JPanel {
 
         emptyStateCard = new ModernCard(new BorderLayout(0, 10));
         emptyStateCard.setCardPadding(36, 20, 36, 20);
-        emptyStateCard.setMaximumSize(new Dimension(Integer.MAX_VALUE, 220));
+        emptyStateCard.setMaximumSize(new Dimension(Integer.MAX_VALUE, 180));
         JLabel lblEmptyTitle = new JLabel("Chưa có người chơi nào khác đang online", SwingConstants.CENTER);
         lblEmptyTitle.setFont(Theme.BODY_BOLD);
         lblEmptyTitle.setForeground(Theme.DARK_TEXT);
-        JLabel lblEmptySub = new JLabel("Hãy mở thêm cửa sổ Client hoặc rủ bạn bè kết nối!", SwingConstants.CENTER);
+        JLabel lblEmptySub = new JLabel("Hãy mở thêm cửa sổ Client hoặc bấm Ghép Trận / Luyện Tập Đơn!", SwingConstants.CENTER);
         lblEmptySub.setFont(Theme.SMALL);
         lblEmptySub.setForeground(Theme.MUTED_GRAY);
         JPanel emptyTextPanel = new JPanel(new GridLayout(2, 1, 0, 4));
@@ -367,38 +383,102 @@ public class LobbyScreen extends JPanel {
         scrollPane.setOpaque(false);
         scrollPane.getViewport().setOpaque(false);
         scrollPane.getVerticalScrollBar().setUnitIncrement(16);
-        playersWrapper.add(scrollPane);
+        onlineSection.add(scrollPane, BorderLayout.CENTER);
+
+        playersWrapper.add(onlineSection, BorderLayout.CENTER);
 
         leaderboardPanel = new LeaderboardPanel();
         historyPanel = new HistoryPanel();
+        playerManagementPanel = new PlayerManagementPanel();
+        questionManagementPanel = new QuestionManagementPanel();
 
         cardPanel.add(playersWrapper, "Người Chơi");
         cardPanel.add(leaderboardPanel, "Bảng Xếp Hạng");
         cardPanel.add(historyPanel, "Lịch Sử");
+        cardPanel.add(playerManagementPanel, "Quản Lý Người Chơi");
+        cardPanel.add(questionManagementPanel, "Ngân Hàng Câu Hỏi");
 
         centerContent.add(cardPanel, BorderLayout.CENTER);
         add(centerContent, BorderLayout.CENTER);
 
         navBar.setOnTabChanged(tabName -> {
+            if (("Quản Lý Người Chơi".equals(tabName) || "Ngân Hàng Câu Hỏi".equals(tabName)) && !isAdmin()) {
+                return;
+            }
             cardLayout.show(cardPanel, tabName);
             if (tabChangedListener != null)
                 tabChangedListener.accept(tabName);
         });
     }
 
-    public void setCurrentUser(String username) {
-        setCurrentUser(username, 0, "avatar_01");
+    public boolean isAdmin() {
+        return "ADMIN".equalsIgnoreCase(currentRole) || "admin".equalsIgnoreCase(currentUsername);
     }
 
-    // --- Setter for current user (with score + avatarId) ---
+    public void updatePing(long ms) {
+        if (badgePing != null) {
+            badgePing.setText("Ping: " + ms + " ms");
+        }
+    }
+
+    public void openCurrentUserProfileDialog() {
+        PlayerManagementPanel.PlayerRecord rec = playerManagementPanel.findRecord(currentUsername);
+        if (rec == null) {
+            rec = new PlayerManagementPanel.PlayerRecord(
+                    currentUsername,
+                    currentScore,
+                    currentAvatarId,
+                    Rank.fromScore(currentScore).getDisplayName(),
+                    "Trực tuyến",
+                    currentFullName,
+                    currentEmail,
+                    currentBio,
+                    currentRole);
+        }
+        playerManagementPanel.openEditDialog(rec);
+    }
+
+    public void setCurrentUser(String username) {
+        setCurrentUser(username, 0, "avatar_01", "", "", "", "PLAYER");
+    }
+
     public void setCurrentUser(String username, int score, String avatarId) {
-        this.currentUsername = username;
+        setCurrentUser(username, score, avatarId, this.currentFullName, this.currentEmail, this.currentBio, this.currentRole);
+    }
+
+    public void setCurrentUser(String username, int score, String avatarId, String role) {
+        setCurrentUser(username, score, avatarId, this.currentFullName, this.currentEmail, this.currentBio, role);
+    }
+
+    public void setCurrentUser(String username, int score, String avatarId, String fullName, String email, String bio) {
+        setCurrentUser(username, score, avatarId, fullName, email, bio, this.currentRole);
+    }
+
+    // --- Setter for current user (with score + avatarId + profile info + role) ---
+    public void setCurrentUser(String username, int score, String avatarId, String fullName, String email, String bio, String role) {
+        this.currentUsername = username != null ? username : "";
         this.currentScore = score;
-        this.currentAvatarId = avatarId != null ? avatarId : "avatar_01";
-        lblUsername.setText(username);
+        this.currentAvatarId = avatarId != null && !avatarId.isBlank() ? avatarId : "avatar_01";
+        this.currentFullName = fullName != null ? fullName : "";
+        this.currentEmail = email != null ? email : "";
+        this.currentBio = bio != null ? bio : "";
+        this.currentRole = (role != null && !role.isBlank()) ? role : ("admin".equalsIgnoreCase(this.currentUsername) ? "ADMIN" : "PLAYER");
+        boolean admin = isAdmin();
+
+        String displayLabel = (!this.currentFullName.isBlank())
+                ? (this.currentUsername + " (" + this.currentFullName + ")")
+                : this.currentUsername;
+        lblUsername.setText(displayLabel);
         Rank rank = Rank.fromScore(score);
         lblRankBadge.setText(rank.getLabel());
         badgeScore.setText(score + " điểm");
+        badgeRole.setVisible(admin);
+        navBar.setTabVisible("Quản Lý Người Chơi", admin);
+        navBar.setTabVisible("Ngân Hàng Câu Hỏi", admin);
+        playerManagementPanel.setAdminMode(admin);
+        if (!admin && ("Quản Lý Người Chơi".equals(navBar.getActiveTab()) || "Ngân Hàng Câu Hỏi".equals(navBar.getActiveTab()))) {
+            cardLayout.show(cardPanel, "Người Chơi");
+        }
         avatarCircle.repaint();
     }
 
@@ -507,6 +587,14 @@ public class LobbyScreen extends JPanel {
         return historyPanel;
     }
 
+    public PlayerManagementPanel getPlayerManagementPanel() {
+        return playerManagementPanel;
+    }
+
+    public QuestionManagementPanel getQuestionManagementPanel() {
+        return questionManagementPanel;
+    }
+
     public void updatePlayersFromLobbyData(String lobbyData) {
         updatePlayersFromLobbyData(lobbyData, currentUsername);
     }
@@ -584,5 +672,10 @@ public class LobbyScreen extends JPanel {
 
         playersListPanel.revalidate();
         playersListPanel.repaint();
+    }
+
+    private String getSoundButtonLabel() {
+        boolean allMuted = SoundManager.isMuted() && MusicManager.isMusicMuted();
+        return allMuted ? "Âm Thanh: Tắt" : "Âm Thanh";
     }
 }

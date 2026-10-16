@@ -210,7 +210,11 @@ public final class SoundManager {
     /** Tiếng tích tắc đồng hồ (khi còn <= 3 giây) */
     public static void playTick() {
         if (sfxMuted) return;
-        sfxPool.submit(() -> playTone(1100, 30, 0.35 * sfxVolume, ToneShape.CLICK));
+        sfxPool.submit(() -> {
+            playTone(1000, 45, 0.6 * sfxVolume, ToneShape.SMOOTH);
+            sleep(15);
+            playTone(1400, 55, 0.7 * sfxVolume, ToneShape.DECAY);
+        });
     }
 
     /** Cảnh báo hết giờ (fallback khi không có countdown) */
@@ -572,7 +576,7 @@ public final class SoundManager {
     private static void playTone(int frequency, int durationMs, double maxVolume, ToneShape shape) {
         try {
             int numSamples = (int) (SAMPLE_RATE * durationMs / 1000.0);
-            byte[] buffer = new byte[numSamples];
+            byte[] buffer = new byte[numSamples * 2];
 
             for (int i = 0; i < numSamples; i++) {
                 double time = i / SAMPLE_RATE;
@@ -591,10 +595,12 @@ public final class SoundManager {
                 }
 
                 sample *= envelope * maxVolume;
-                buffer[i] = (byte) Math.max(-127, Math.min(127, (int) (sample * 127.0)));
+                short val = (short) Math.max(-32767, Math.min(32767, (int) (sample * 32767.0)));
+                buffer[i * 2] = (byte) (val & 0xFF);
+                buffer[i * 2 + 1] = (byte) ((val >> 8) & 0xFF);
             }
 
-            AudioFormat format = new AudioFormat(SAMPLE_RATE, 8, 1, true, false);
+            AudioFormat format = new AudioFormat(SAMPLE_RATE, 16, 1, true, false);
             DataLine.Info info = new DataLine.Info(SourceDataLine.class, format);
 
             if (!AudioSystem.isLineSupported(info)) return;

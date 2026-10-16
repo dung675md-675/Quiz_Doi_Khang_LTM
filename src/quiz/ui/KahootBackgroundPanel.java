@@ -23,44 +23,54 @@ public class KahootBackgroundPanel extends JPanel {
         int w = getWidth();
         int h = getHeight();
 
-        // Nền chính màu tím nhạt/xám sáng Kahoot
-        g2.setColor(new Color(242, 243, 248)); // Màu nền pastel sáng
+        // 1. Nền chuyển sắc nhẹ nhàng phong cách game hiện đại
+        GradientPaint bgGradient = new GradientPaint(
+            0, 0, new Color(245, 247, 252),
+            w, h, new Color(236, 240, 249)
+        );
+        g2.setPaint(bgGradient);
         g2.fillRect(0, 0, w, h);
 
-        // Đặt độ trong suốt mờ để các hình khối không che chữ
-        g2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.25f));
+        // 2. Vẽ lưới chấm hạt mịn tinh tế (dot grid pattern)
+        g2.setColor(new Color(180, 195, 220, 45));
+        for (int x = 20; x < w; x += 36) {
+            for (int y = 20; y < h; y += 36) {
+                g2.fillOval(x, y, 2, 2);
+            }
+        }
 
-        // Khối 1: Hình vuông đỏ (Kahoot Red: e21b3c)
-        g2.setColor(new Color(226, 27, 60));
-        g2.fillRoundRect(w - 180, h - 150, 120, 120, 20, 20);
+        // 3. Các khối hình biểu tượng Kahoot Quiz với độ trong suốt mềm mại
+        // Khối 1: Hình vuông đỏ (Kahoot Red: e21b3c) góc dưới phải
+        g2.setColor(new Color(226, 27, 60, 40));
+        g2.fillRoundRect(w - 180, h - 160, 130, 130, 26, 26);
 
-        // Khối 2: Hình tròn vàng (Kahoot Yellow: d89e00)
-        g2.setColor(new Color(216, 158, 0));
-        g2.fillOval(40, h - 200, 140, 140);
+        // Khối 2: Hình tròn vàng (Kahoot Yellow: d89e00) góc dưới trái
+        g2.setColor(new Color(216, 158, 0, 42));
+        g2.fillOval(35, h - 190, 130, 130);
 
-        // Khối 3: Hình thoi xanh dương (Kahoot Blue: 1368ce)
-        g2.setColor(new Color(19, 104, 206));
+        // Khối 3: Hình thoi xanh dương (Kahoot Blue: 1368ce) góc trên trái
+        g2.setColor(new Color(19, 104, 206, 42));
         Polygon diamond = new Polygon();
-        diamond.addPoint(150, 60);
-        diamond.addPoint(220, 130);
-        diamond.addPoint(150, 200);
-        diamond.addPoint(80, 130);
+        diamond.addPoint(120, 40);
+        diamond.addPoint(180, 100);
+        diamond.addPoint(120, 160);
+        diamond.addPoint(60, 100);
         g2.fillPolygon(diamond);
 
-        // Khối 4: Hình tam giác xanh lá (Kahoot Green: 26890c)
-        g2.setColor(new Color(38, 137, 12));
+        // Khối 4: Hình tam giác xanh lá (Kahoot Green: 26890c) góc trên phải
+        g2.setColor(new Color(38, 137, 12, 42));
         Polygon triangle = new Polygon();
-        triangle.addPoint(w - 80, 40);
-        triangle.addPoint(w - 20, 130);
-        triangle.addPoint(w - 140, 130);
+        triangle.addPoint(w - 90, 35);
+        triangle.addPoint(w - 25, 125);
+        triangle.addPoint(w - 155, 125);
         g2.fillPolygon(triangle);
         
-        // Khối phụ: Chấm tròn trang trí
-        g2.setColor(Theme.PURPLE);
-        g2.fillOval(w / 2 - 20, 80, 40, 40);
+        // Khối phụ: Vòng sáng tím và cyan
+        g2.setColor(new Color(134, 76, 191, 35));
+        g2.fillOval(w / 2 - 250, h / 2 - 200, 100, 100);
         
-        g2.setColor(Theme.BLUE);
-        g2.fillRoundRect(w / 2 + 150, h - 80, 60, 60, 15, 15);
+        g2.setColor(new Color(14, 165, 233, 35));
+        g2.fillRoundRect(w / 2 + 180, h / 2 + 60, 80, 80, 20, 20);
 
         g2.dispose();
     }

@@ -47,12 +47,24 @@ public class MatchScreen extends JPanel {
     private final int[] selectedAnswers = new int[10];
     private final boolean[] questionFinalized = new boolean[10];
     private boolean isSubmitted = false;
+    private volatile boolean hasLeft = false;
 
-    // Real-time scores
+    // Opponent 10-question real-time progress
+    private int opponentCurrentQuestion = 0;
+    private final int[] opponentStates = new int[10]; // 0 = chưa làm, 1 = đúng, 2 = sai
+    private final JLabel lblOpponentProgress;
+    private final JPanel opponentProgressStrip;
+
+    // Real-time scores, speed bonus points, streak & ping
     private int myScore = 0;
     private int opponentScore = 0;
+    private int myPoints = 0;
+    private int opponentPoints = 0;
+    private int myStreak = 0;
+    private int opponentStreak = 0;
     private final ScoreBadge myScoreBadge;
     private final ScoreBadge oppScoreBadge;
+    private final ModernBadge badgePing;
 
     // Per-question countdown timer components
     private int currentQuestionTimeRemaining;
@@ -82,6 +94,7 @@ public class MatchScreen extends JPanel {
     private final JPanel bottomOptionsCard;
     private final JPanel dndPoolContainer;
     private DragDropPanel currentDragDropPanel = null;
+    private final DragDropPanel[] dndPanels = new DragDropPanel[10];
 
     // Entrance Animation state
     private Timer animTimer;
@@ -156,6 +169,7 @@ public class MatchScreen extends JPanel {
         for (int i = 0; i < 10; i++) {
             selectedAnswers[i] = -1;
             userFillInAnswers[i] = "";
+            dndPanels[i] = null;
         }
 
         setLayout(new BorderLayout());
@@ -183,6 +197,8 @@ public class MatchScreen extends JPanel {
         badgesRow.setOpaque(false);
         badgesRow.add(new ModernBadge(topic, ModernBadge.Type.INFO));
         badgesRow.add(new ModernBadge(level + " • Bộ " + setId, ModernBadge.Type.RANK));
+        badgePing = new ModernBadge("Ping: -- ms", ModernBadge.Type.READY);
+        badgesRow.add(badgePing);
 
         leftMeta.add(lblGameMode);
         leftMeta.add(Box.createVerticalStrut(4));
@@ -200,30 +216,28 @@ public class MatchScreen extends JPanel {
         JLabel vsBadge = createVsBadge();
         JPanel p2 = createPlayerBadge(opponentName, false, oppScoreBadge);
 
-        // Emote bubble containers
-        myEmoteContainer = new JPanel(null);
+        // Emote bubble containers (inline để không đẩy chiều cao HUD gây lệch nút VS)
+        myEmoteContainer = new JPanel(new FlowLayout(FlowLayout.CENTER, 0, 0));
         myEmoteContainer.setOpaque(false);
-        myEmoteContainer.setPreferredSize(new Dimension(80, 52));
+        myEmoteContainer.setPreferredSize(new Dimension(48, 38));
 
-        opponentEmoteContainer = new JPanel(null);
+        opponentEmoteContainer = new JPanel(new FlowLayout(FlowLayout.CENTER, 0, 0));
         opponentEmoteContainer.setOpaque(false);
-        opponentEmoteContainer.setPreferredSize(new Dimension(80, 52));
+        opponentEmoteContainer.setPreferredSize(new Dimension(48, 38));
 
-        JPanel p1Stack = new JPanel();
-        p1Stack.setLayout(new BoxLayout(p1Stack, BoxLayout.Y_AXIS));
-        p1Stack.setOpaque(false);
-        p1Stack.add(myEmoteContainer);
-        p1Stack.add(p1);
+        JPanel p1Row = new JPanel(new FlowLayout(FlowLayout.CENTER, 4, 0));
+        p1Row.setOpaque(false);
+        p1Row.add(myEmoteContainer);
+        p1Row.add(p1);
 
-        JPanel p2Stack = new JPanel();
-        p2Stack.setLayout(new BoxLayout(p2Stack, BoxLayout.Y_AXIS));
-        p2Stack.setOpaque(false);
-        p2Stack.add(opponentEmoteContainer);
-        p2Stack.add(p2);
+        JPanel p2Row = new JPanel(new FlowLayout(FlowLayout.CENTER, 4, 0));
+        p2Row.setOpaque(false);
+        p2Row.add(p2);
+        p2Row.add(opponentEmoteContainer);
 
-        centerHud.add(p1Stack);
+        centerHud.add(p1Row);
         centerHud.add(vsBadge);
-        centerHud.add(p2Stack);
+        centerHud.add(p2Row);
         topHud.add(centerHud, BorderLayout.CENTER);
 
         // 1.3 Right: Countdown Timer for Question & Sound Toggle
@@ -258,24 +272,10 @@ public class MatchScreen extends JPanel {
         rightTimer.add(Box.createVerticalStrut(3));
         rightTimer.add(timeProgressBar);
 
-        JButton btnSound = new JButton(SoundManager.isMuted() ? "Tắt âm" : "Bật âm");
-        btnSound.setToolTipText("Bật/Tắt âm thanh");
-        btnSound.setFont(Theme.SMALL_BOLD);
-        btnSound.setPreferredSize(new Dimension(72, 38));
-        btnSound.setFocusPainted(false);
-        btnSound.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-        btnSound.setBackground(new Color(0x2A, 0x37, 0x59));
-        btnSound.setForeground(Theme.WHITE);
-        btnSound.setBorder(BorderFactory.createLineBorder(Theme.BORDER_DARK, 1));
-        btnSound.addActionListener(e -> {
-            SoundManager.toggleMute();
-            btnSound.setText(SoundManager.isMuted() ? "Tắt âm" : "Bật âm");
-        });
-
-        JButton btnSoundSettings = new JButton("⚙");
-        btnSoundSettings.setToolTipText("Cài đặt âm thanh & nhạc nền");
+        JButton btnSoundSettings = new JButton(getMatchSoundText());
+        btnSoundSettings.setToolTipText("Cài đặt âm thanh & nhạc nền (Bật/Tắt & Âm lượng)");
         btnSoundSettings.setFont(Theme.SMALL_BOLD);
-        btnSoundSettings.setPreferredSize(new Dimension(42, 38));
+        btnSoundSettings.setPreferredSize(new Dimension(92, 38));
         btnSoundSettings.setFocusPainted(false);
         btnSoundSettings.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         btnSoundSettings.setBackground(new Color(0x2A, 0x37, 0x59));
@@ -284,11 +284,10 @@ public class MatchScreen extends JPanel {
         btnSoundSettings.addActionListener(e -> {
             SoundManager.playClick();
             new SoundSettingsDialog(SwingUtilities.getWindowAncestor(this)).setVisible(true);
-            btnSound.setText(SoundManager.isMuted() ? "Tắt âm" : "Bật âm");
+            btnSoundSettings.setText(getMatchSoundText());
         });
 
         rightSection.add(rightTimer);
-        rightSection.add(btnSound);
         rightSection.add(btnSoundSettings);
         topHud.add(rightSection, BorderLayout.EAST);
 
@@ -323,6 +322,7 @@ public class MatchScreen extends JPanel {
 
                     boolean isCurrent = (qIndex == currentQuestionIndex);
                     boolean isAnswered = (selectedAnswers[qIndex] != -1);
+                    boolean isFinal = questionFinalized[qIndex];
 
                     Color bg;
                     Color fg;
@@ -332,6 +332,9 @@ public class MatchScreen extends JPanel {
                         bg = Theme.PURPLE;
                         fg = Theme.WHITE;
                         border = Theme.WHITE;
+                    } else if (isFinal) {
+                        bg = Theme.EMERALD_DARK;
+                        fg = Theme.WHITE;
                     } else if (isAnswered) {
                         bg = Theme.BLUE;
                         fg = Theme.WHITE;
@@ -364,13 +367,71 @@ public class MatchScreen extends JPanel {
             btn.setBorderPainted(false);
             btn.setContentAreaFilled(false);
             btn.setOpaque(false);
+            btn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+            btn.setToolTipText("Chuyển tới Câu " + (i + 1));
+            btn.addActionListener(e -> {
+                if (!isSubmitted && !isAnimating && !isRevealing && qIndex != currentQuestionIndex) {
+                    SoundManager.playClick();
+                    syncCurrentAnswerInput();
+                    navigateToQuestion(qIndex);
+                }
+            });
             navButtons[i] = btn;
             navGrid.add(btn);
         }
         navStrip.add(navGrid, BorderLayout.CENTER);
 
-        JLabel dummyRight = new JLabel("             ");
-        navStrip.add(dummyRight, BorderLayout.EAST);
+        JPanel oppProgPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 3));
+        oppProgPanel.setOpaque(false);
+
+        lblOpponentProgress = new JLabel("Đối thủ: 0/10", SwingConstants.RIGHT);
+        lblOpponentProgress.setFont(Theme.SMALL_BOLD);
+        lblOpponentProgress.setForeground(new Color(0xE9, 0xD5, 0xFF));
+        oppProgPanel.add(lblOpponentProgress);
+
+        opponentProgressStrip = new JPanel() {
+            @Override
+            protected void paintComponent(Graphics g) {
+                super.paintComponent(g);
+                Graphics2D g2 = (Graphics2D) g.create();
+                Theme.setupAntiAliasing(g2);
+                int w = getWidth();
+                int h = getHeight();
+                int gap = 3;
+                int segW = Math.max(8, (w - gap * 9) / 10);
+                int segH = h - 4;
+                int y = 2;
+                for (int i = 0; i < 10; i++) {
+                    int x = i * (segW + gap);
+                    int st = opponentStates[i];
+                    boolean isOppCur = (i == opponentCurrentQuestion);
+                    Color segColor;
+                    if (st == 1) {
+                        segColor = new Color(0x22, 0xC5, 0x5E); // Đúng (Green)
+                    } else if (st == 2) {
+                        segColor = new Color(0xEF, 0x44, 0x44); // Sai (Red)
+                    } else if (isOppCur) {
+                        segColor = new Color(0xA8, 0x55, 0xF7); // Đang làm câu này (Purple)
+                    } else {
+                        segColor = new Color(0x2A, 0x37, 0x59); // Chưa làm
+                    }
+                    g2.setColor(segColor);
+                    g2.fill(new RoundRectangle2D.Float(x, y, segW, segH, 5, 5));
+                    if (isOppCur) {
+                        g2.setColor(Theme.WHITE);
+                        g2.setStroke(new BasicStroke(1.5f));
+                        g2.draw(new RoundRectangle2D.Float(x + 0.5f, y + 0.5f, segW - 1, segH - 1, 5, 5));
+                    }
+                }
+                g2.dispose();
+            }
+        };
+        opponentProgressStrip.setOpaque(false);
+        opponentProgressStrip.setPreferredSize(new Dimension(145, 22));
+        opponentProgressStrip.setToolTipText("Tiến độ 10 câu hỏi thời gian thực của đối thủ");
+        oppProgPanel.add(opponentProgressStrip);
+
+        navStrip.add(oppProgPanel, BorderLayout.EAST);
 
         // ==========================================
         // 3. CENTER CONTENT (Question + 4 Kahoot Answers)
@@ -410,7 +471,7 @@ public class MatchScreen extends JPanel {
         qHeader.add(lblHint, BorderLayout.EAST);
 
         // Multi-select notice label (appears directly above question text)
-        lblMultiSelectNotice = new JLabel("✦ Câu hỏi có thể chọn nhiều đáp án");
+        lblMultiSelectNotice = new JLabel("[Nhiều đáp án] Câu hỏi có thể chọn nhiều đáp án");
         lblMultiSelectNotice.setFont(new Font("Segoe UI", Font.BOLD, 13));
         lblMultiSelectNotice.setForeground(new Color(0x38, 0xBD, 0xF8)); // Bright Sky Cyan
         lblMultiSelectNotice.setBorder(new EmptyBorder(0, 0, 4, 0));
@@ -489,12 +550,19 @@ public class MatchScreen extends JPanel {
         fillInBox.setLayout(new BoxLayout(fillInBox, BoxLayout.Y_AXIS));
         fillInBox.setOpaque(false);
 
-        txtFillInInput = new ModernFillInField("Nhập đáp án");
+        txtFillInInput = new ModernFillInField("Nhập đáp án (Nhấn Enter để nộp)");
         txtFillInInput.setPreferredSize(new Dimension(540, 58));
         txtFillInInput.setMaximumSize(new Dimension(540, 58));
         txtFillInInput.setAlignmentX(Component.CENTER_ALIGNMENT);
         txtFillInInput.addActionListener(e -> {
-            if (!isRevealing && !isSubmitted && !isAnimating) {
+            if (!isRevealing && !isSubmitted) {
+                if (isAnimating && animTimer != null) {
+                    animTimer.stop();
+                    isAnimating = false;
+                    questionCard.setAnimState(1.0f, 0, 1.0f);
+                    txtFillInInput.setAnimScale(1.0f);
+                }
+                SoundManager.playClick();
                 revealAnswerAndAdvance();
             }
         });
@@ -621,17 +689,133 @@ public class MatchScreen extends JPanel {
         add(bottomBar, BorderLayout.SOUTH);
 
         // ==========================================
-        // 5. START FIRST QUESTION WITH ENTRANCE ANIMATION
+        // 5. RESPONSIVE RESIZE / MAXIMIZE SCALING
+        // ==========================================
+        addComponentListener(new java.awt.event.ComponentAdapter() {
+            @Override
+            public void componentResized(java.awt.event.ComponentEvent e) {
+                int h = getHeight();
+                int w = getWidth();
+                if (h <= 0 || w <= 0) return;
+                int optH = Math.max(160, Math.min(260, (int) (h * 0.27)));
+                bottomOptionsCard.setPreferredSize(new Dimension(w - 48, optH));
+                answersGrid.setPreferredSize(new Dimension(w - 48, optH));
+                tfPanel.setPreferredSize(new Dimension(w - 48, optH));
+                fillInPanel.setPreferredSize(new Dimension(w - 48, optH));
+                int qFontSize = Math.max(20, Math.min(28, 16 + h / 95));
+                txtQuestion.setFont(Theme.TITLE.deriveFont((float) qFontSize));
+                int btnFontSize = Math.max(15, Math.min(20, 12 + h / 130));
+                Font btnFont = Theme.BODY_BOLD.deriveFont((float) btnFontSize);
+                for (ModernButton b : answerButtons) {
+                    if (b != null) b.setFont(btnFont);
+                }
+                revalidate();
+            }
+        });
+
+        // ==========================================
+        // 6. START FIRST QUESTION WITH ENTRANCE ANIMATION
         // ==========================================
         SwingUtilities.invokeLater(() -> startQuestionEntrance());
     }
 
     // ==========================================
-    // SCORE MANAGEMENT & REAL-TIME DISPLAY
+    // SCORE & PROGRESS MANAGEMENT & REAL-TIME DISPLAY
     // ==========================================
+    public void updateProgress(int myCurrentQ, int oppCurrentQ, String myStateStr, String oppStateStr) {
+        this.opponentCurrentQuestion = Math.max(0, Math.min(9, oppCurrentQ));
+        int oppDoneCount = 0;
+        if (oppStateStr != null) {
+            for (int i = 0; i < 10 && i < oppStateStr.length(); i++) {
+                char c = oppStateStr.charAt(i);
+                if (c == '1') {
+                    opponentStates[i] = 1;
+                    oppDoneCount++;
+                } else if (c == '2') {
+                    opponentStates[i] = 2;
+                    oppDoneCount++;
+                } else {
+                    opponentStates[i] = 0;
+                }
+            }
+        }
+        if (lblOpponentProgress != null) {
+            lblOpponentProgress.setText("Đối thủ: " + oppDoneCount + "/10");
+        }
+        if (opponentProgressStrip != null) {
+            opponentProgressStrip.repaint();
+        }
+    }
+
+    public void updatePing(long ms) {
+        if (badgePing != null) {
+            badgePing.setText("Ping: " + ms + " ms");
+        }
+    }
+
+    /** Khôi phục trạng thái sau khi reconnect (đáp án từ Server, điểm/tiến độ đến qua gói SCORE/PROGRESS). */
+    public void restoreState(int myCurQ, int[] savedAnswers, boolean alreadySubmitted) {
+        if (savedAnswers != null) {
+            for (int i = 0; i < 10 && i < savedAnswers.length && i < selectedAnswers.length; i++) {
+                selectedAnswers[i] = savedAnswers[i];
+                if (savedAnswers[i] != -1) questionFinalized[i] = true;
+            }
+        }
+        if (alreadySubmitted) {
+            stopCountdownTimer();
+            onSubmittedAcknowledged();
+            return;
+        }
+        int targetQ = Math.max(0, Math.min(9, myCurQ));
+        for (int i = 0; i < 10 && i < questionFinalized.length; i++) {
+            if (!questionFinalized[i]) { targetQ = i; break; }
+        }
+        navigateToQuestion(targetQ);
+    }
+
+    public void restoreState(int myCurQ, int[] savedAnswers, int myScore, int oppScore,
+                             int myPts, int oppPts, int myStrk, int oppStrk,
+                             int oppCurQ, String mySt, String oppSt) {
+        if (savedAnswers != null) {
+            for (int i = 0; i < 10 && i < savedAnswers.length; i++) {
+                selectedAnswers[i] = savedAnswers[i];
+                if (savedAnswers[i] != -1) {
+                    questionFinalized[i] = true;
+                }
+            }
+        }
+        updateScores(myScore, oppScore, myPts, oppPts, myStrk, oppStrk);
+        updateProgress(myCurQ, oppCurQ, mySt, oppSt);
+        int targetQ = Math.max(0, Math.min(9, myCurQ));
+        for (int i = 0; i < 10; i++) {
+            if (!questionFinalized[i]) {
+                targetQ = i;
+                break;
+            }
+        }
+        navigateToQuestion(targetQ);
+    }
+
     public void updateScores(int myScore, int opponentScore) {
-        setMyScore(myScore);
-        setOpponentScore(opponentScore);
+        updateScores(myScore, opponentScore, myScore * 100, opponentScore * 100, this.myStreak, this.opponentStreak);
+    }
+
+    public void updateScores(int myScore, int opponentScore, int myPts, int oppPts, int myStrk, int oppStrk) {
+        if (myScore > this.myScore || myPts > this.myPoints) {
+            SoundManager.playScorePoint();
+        }
+        this.myScore = myScore;
+        this.opponentScore = opponentScore;
+        this.myPoints = myPts;
+        this.opponentPoints = oppPts;
+        this.myStreak = myStrk;
+        this.opponentStreak = oppStrk;
+        if (myScoreBadge != null) {
+            myScoreBadge.setStats(myScore, myPts, myStrk);
+        }
+        if (oppScoreBadge != null) {
+            oppScoreBadge.setStats(opponentScore, oppPts, oppStrk);
+        }
     }
 
     public void setMyScore(int score) {
@@ -736,6 +920,10 @@ public class MatchScreen extends JPanel {
         updateTimerDisplay();
 
         questionCountdownTimer = new Timer(1000, (ActionEvent e) -> {
+            if (hasLeft || isSubmitted) {
+                stopCountdownTimer();
+                return;
+            }
             currentQuestionTimeRemaining--;
             updateTimerDisplay();
 
@@ -784,7 +972,7 @@ public class MatchScreen extends JPanel {
     // QUESTION NAVIGATION & ENTRANCE ANIMATION
     // ==========================================
     public void navigateToQuestion(int index) {
-        if (questions == null || index < 0 || index >= questions.size()) {
+        if (hasLeft || questions == null || index < 0 || index >= questions.size()) {
             return;
         }
         currentQuestionIndex = index;
@@ -792,7 +980,7 @@ public class MatchScreen extends JPanel {
     }
 
     private void startQuestionEntrance() {
-        if (questions == null || currentQuestionIndex >= questions.size()) {
+        if (hasLeft || questions == null || currentQuestionIndex >= questions.size()) {
             return;
         }
 
@@ -809,21 +997,29 @@ public class MatchScreen extends JPanel {
 
         MatchQuestion q = questions.get(currentQuestionIndex);
         lblQuestionIndex.setText("CÂU HỎI " + (currentQuestionIndex + 1) + " / " + questions.size());
+        if (onQuestionChangeListener != null) {
+            onQuestionChangeListener.accept(currentQuestionIndex);
+        }
 
         if (q.isDragAndDrop()) {
             lblMultiSelectNotice.setVisible(false);
             lblHint.setText("Kéo thả các đáp án phía dưới vào chỗ trống tương ứng");
-            currentDragDropPanel = new DragDropPanel(q);
-            currentDragDropPanel.setOnStateChangeListener(() -> {
-                if (currentDragDropPanel.isAllCorrect()) {
-                    selectedAnswers[currentQuestionIndex] = 1;
-                } else if (currentDragDropPanel.hasAnyAnswer()) {
-                    selectedAnswers[currentQuestionIndex] = 0;
-                } else {
-                    selectedAnswers[currentQuestionIndex] = -1;
-                }
-                updateNavState();
-            });
+            if (dndPanels[currentQuestionIndex] == null) {
+                DragDropPanel panel = new DragDropPanel(q);
+                final int qIdx = currentQuestionIndex;
+                panel.setOnStateChangeListener(() -> {
+                    if (panel.isAllCorrect()) {
+                        selectedAnswers[qIdx] = 1;
+                    } else if (panel.hasAnyAnswer()) {
+                        selectedAnswers[qIdx] = 0;
+                    } else {
+                        selectedAnswers[qIdx] = -1;
+                    }
+                    updateNavState();
+                });
+                dndPanels[currentQuestionIndex] = panel;
+            }
+            currentDragDropPanel = dndPanels[currentQuestionIndex];
 
             dndQuestionContainer.removeAll();
             dndQuestionContainer.add(currentDragDropPanel.getSentencePanel(), BorderLayout.CENTER);
@@ -847,6 +1043,7 @@ public class MatchScreen extends JPanel {
             txtQuestion.setText(q.text());
 
             txtFillInInput.resetReveal();
+            txtFillInInput.setAnimScale(1.0f);
             txtFillInInput.setEnabled(false);
             txtFillInInput.setText(userFillInAnswers[currentQuestionIndex] != null ? userFillInAnswers[currentQuestionIndex] : "");
             lblFillInCorrectAnswer.setVisible(false);
@@ -860,6 +1057,11 @@ public class MatchScreen extends JPanel {
             currentDragDropPanel = null;
             txtQuestion.setText(q.text());
 
+            tfPanel.removeAll();
+            tfPanel.add(btnTrue);
+            tfPanel.add(btnFalse);
+            tfPanel.revalidate();
+
             int selected = selectedAnswers[currentQuestionIndex];
             btnTrue.setSelectedState(selected == 0);
             btnFalse.setSelectedState(selected == 1);
@@ -867,6 +1069,8 @@ public class MatchScreen extends JPanel {
             btnFalse.setEnabled(false);
             btnTrue.resetReveal();
             btnFalse.resetReveal();
+            btnTrue.setAnimScale(1.0f);
+            btnFalse.setAnimScale(1.0f);
             btnTrue.setAnimState(0.0f, 40);
             btnFalse.setAnimState(0.0f, 40);
 
@@ -878,6 +1082,12 @@ public class MatchScreen extends JPanel {
             currentDragDropPanel = null;
             txtQuestion.setText(q.text());
 
+            answersGrid.removeAll();
+            for (int i = 0; i < 4; i++) {
+                answersGrid.add(answerButtons[i]);
+            }
+            answersGrid.revalidate();
+
             String[] choices = q.choices();
             String[] prefixes = { "A", "B", "C", "D" };
             int mask = selectedAnswers[currentQuestionIndex];
@@ -888,6 +1098,7 @@ public class MatchScreen extends JPanel {
                 answerButtons[i].setSelectedState(mask != -1 && ((mask & (1 << i)) != 0));
                 answerButtons[i].setEnabled(false);
                 answerButtons[i].resetReveal();
+                answerButtons[i].setAnimScale(1.0f);
                 answerButtons[i].setAnimState(0.0f, 40);
             }
 
@@ -899,6 +1110,12 @@ public class MatchScreen extends JPanel {
             currentDragDropPanel = null;
             txtQuestion.setText(q.text());
 
+            answersGrid.removeAll();
+            for (int i = 0; i < 4; i++) {
+                answersGrid.add(answerButtons[i]);
+            }
+            answersGrid.revalidate();
+
             String[] choices = q.choices();
             String[] prefixes = { "A", "B", "C", "D" };
             int selected = selectedAnswers[currentQuestionIndex];
@@ -909,6 +1126,7 @@ public class MatchScreen extends JPanel {
                 answerButtons[i].setSelectedState(selected == i);
                 answerButtons[i].setEnabled(false);
                 answerButtons[i].resetReveal();
+                answerButtons[i].setAnimScale(1.0f);
                 answerButtons[i].setAnimState(0.0f, 40);
             }
 
@@ -919,9 +1137,8 @@ public class MatchScreen extends JPanel {
         btnNext.setEnabled(false);
         updateNavState();
 
-        // Tính khoảng cách dịch chuyển để đưa questionCard về vị trí giữa
-        int gridH = bottomOptionsCard.getHeight() > 0 ? bottomOptionsCard.getHeight() : 160;
-        final int centerOffsetY = Math.max(70, (gridH + 14) / 2);
+        // Dịch chuyển nhẹ trong phạm vi card để không bị cắt bởi bottomOptionsCard
+        final int centerOffsetY = 14;
 
         // Reset hiển thị timer chuẩn bị cho câu hỏi mới
         currentQuestionTimeRemaining = perQuestionSeconds;
@@ -936,95 +1153,101 @@ public class MatchScreen extends JPanel {
     }
 
     private void onAnimTick(int centerOffsetY) {
+        if (hasLeft) {
+            if (animTimer != null && animTimer.isRunning()) {
+                animTimer.stop();
+            }
+            return;
+        }
         long elapsed = System.currentTimeMillis() - animStartTime;
         boolean isDnd = (currentDragDropPanel != null);
         MatchQuestion q = (questions != null && currentQuestionIndex < questions.size()) ? questions.get(currentQuestionIndex) : null;
         boolean isTf = (q != null && q.isTrueFalse());
         boolean isFill = (q != null && q.isFillIn());
 
-        // Phase 1: 0ms - 400ms: NỔI NỔI ĐÀN HỒI Ở VỊ TRÍ GIỮA (BackEaseOut with overshoot)
-        if (elapsed <= 400) {
-            float p = Math.min(1.0f, elapsed / 400.0f);
+        // Phase 1: 0ms - 360ms: NỔI ĐÀN HỒI (BackEaseOut)
+        if (elapsed <= 360) {
+            float p = Math.min(1.0f, elapsed / 360.0f);
             float c1 = 1.70158f;
             float c3 = c1 + 1.0f;
             float eased = (float) (1.0 + c3 * Math.pow(p - 1.0, 3) + c1 * Math.pow(p - 1.0, 2));
-            float scale = 0.35f + 0.65f * eased;
+            float scale = 0.82f + 0.18f * eased;
             float alpha = Math.min(1.0f, p * 2.5f);
             questionCard.setAnimState(scale, centerOffsetY, alpha);
             if (isDnd) {
-                currentDragDropPanel.setChipsAnimState(0.0f, 40);
+                currentDragDropPanel.setChipsAnimState(0.0f, 30);
             } else if (isTf) {
-                btnTrue.setAnimState(0.0f, 40);
-                btnFalse.setAnimState(0.0f, 40);
+                btnTrue.setAnimState(0.0f, 30);
+                btnFalse.setAnimState(0.0f, 30);
             } else if (isFill) {
                 txtFillInInput.setAnimScale(0.0f);
             } else {
                 for (ModernButton b : answerButtons) {
-                    b.setAnimState(0.0f, 40);
+                    b.setAnimState(0.0f, 30);
                 }
             }
         }
-        // Phase 2: 400ms - 660ms: CHUYỂN LÊN VỊ TRÍ MẶC ĐỊNH TRÊN CÙNG
-        else if (elapsed <= 660) {
-            float p = Math.min(1.0f, (elapsed - 400.0f) / 260.0f);
+        // Phase 2: 360ms - 560ms: CHUYỂN LÊN VỊ TRÍ CHUẨN
+        else if (elapsed <= 560) {
+            float p = Math.min(1.0f, (elapsed - 360.0f) / 200.0f);
             float eased = 1.0f - (1.0f - p) * (1.0f - p);
             int curOffsetY = (int) (centerOffsetY * (1.0f - eased));
             questionCard.setAnimState(1.0f, curOffsetY, 1.0f);
             if (isDnd) {
-                currentDragDropPanel.setChipsAnimState(0.0f, 40);
+                currentDragDropPanel.setChipsAnimState(0.0f, 30);
             } else if (isTf) {
-                btnTrue.setAnimState(0.0f, 40);
-                btnFalse.setAnimState(0.0f, 40);
+                btnTrue.setAnimState(0.0f, 30);
+                btnFalse.setAnimState(0.0f, 30);
             } else if (isFill) {
                 txtFillInInput.setAnimScale(0.0f);
             } else {
                 for (ModernButton b : answerButtons) {
-                    b.setAnimState(0.0f, 40);
+                    b.setAnimState(0.0f, 30);
                 }
             }
         }
-        // Phase 3: 660ms - 1050ms: CÁC ĐÁP ÁN LẦN LƯỢT HIỆN DẦN TỪ DƯỚI LÊN (Staggered)
-        else if (elapsed < 1050) {
+        // Phase 3: 560ms - 920ms: CÁC ĐÁP ÁN LẦN LƯỢT HIỆN DẦN TỪ DƯỚI LÊN (Staggered)
+        else if (elapsed < 920) {
             questionCard.setAnimState(1.0f, 0, 1.0f);
             if (isDnd) {
-                float bp = Math.min(1.0f, (elapsed - 660.0f) / 300.0f);
+                float bp = Math.min(1.0f, (elapsed - 560.0f) / 280.0f);
                 float bEased = 1.0f - (1.0f - bp) * (1.0f - bp);
-                int bOffset = (int) (40 * (1.0f - bEased));
+                int bOffset = (int) (30 * (1.0f - bEased));
                 currentDragDropPanel.setChipsAnimState(bp, bOffset);
             } else if (isTf) {
-                int bStart0 = 660;
-                int bStart1 = 740;
+                int bStart0 = 560;
+                int bStart1 = 630;
                 if (elapsed < bStart0) {
-                    btnTrue.setAnimState(0.0f, 40);
-                } else if (elapsed < bStart0 + 170) {
-                    float bp = (elapsed - bStart0) / 170.0f;
+                    btnTrue.setAnimState(0.0f, 30);
+                } else if (elapsed < bStart0 + 160) {
+                    float bp = (elapsed - bStart0) / 160.0f;
                     float bEased = 1.0f - (1.0f - bp) * (1.0f - bp);
-                    btnTrue.setAnimState(bp, (int) (40 * (1.0f - bEased)));
+                    btnTrue.setAnimState(bp, (int) (30 * (1.0f - bEased)));
                 } else {
                     btnTrue.setAnimState(1.0f, 0);
                 }
 
                 if (elapsed < bStart1) {
-                    btnFalse.setAnimState(0.0f, 40);
-                } else if (elapsed < bStart1 + 170) {
-                    float bp = (elapsed - bStart1) / 170.0f;
+                    btnFalse.setAnimState(0.0f, 30);
+                } else if (elapsed < bStart1 + 160) {
+                    float bp = (elapsed - bStart1) / 160.0f;
                     float bEased = 1.0f - (1.0f - bp) * (1.0f - bp);
-                    btnFalse.setAnimState(bp, (int) (40 * (1.0f - bEased)));
+                    btnFalse.setAnimState(bp, (int) (30 * (1.0f - bEased)));
                 } else {
                     btnFalse.setAnimState(1.0f, 0);
                 }
             } else if (isFill) {
-                float bp = Math.min(1.0f, (elapsed - 660.0f) / 300.0f);
+                float bp = Math.min(1.0f, (elapsed - 560.0f) / 280.0f);
                 txtFillInInput.setAnimScale(bp);
             } else {
                 for (int i = 0; i < 4; i++) {
-                    int bStart = 660 + i * 65;
+                    int bStart = 560 + i * 55;
                     if (elapsed < bStart) {
-                        answerButtons[i].setAnimState(0.0f, 40);
-                    } else if (elapsed < bStart + 170) {
-                        float bp = (elapsed - bStart) / 170.0f;
+                        answerButtons[i].setAnimState(0.0f, 30);
+                    } else if (elapsed < bStart + 160) {
+                        float bp = (elapsed - bStart) / 160.0f;
                         float bEased = 1.0f - (1.0f - bp) * (1.0f - bp);
-                        int bOffset = (int) (40 * (1.0f - bEased));
+                        int bOffset = (int) (30 * (1.0f - bEased));
                         answerButtons[i].setAnimState(bp, bOffset);
                     } else {
                         answerButtons[i].setAnimState(1.0f, 0);
@@ -1037,29 +1260,37 @@ public class MatchScreen extends JPanel {
             animTimer.stop();
             isAnimating = false;
             questionCard.setAnimState(1.0f, 0, 1.0f);
+            boolean isLocked = isSubmitted || questionFinalized[currentQuestionIndex];
             if (isDnd) {
                 currentDragDropPanel.setChipsAnimState(1.0f, 0);
-                currentDragDropPanel.setInteractive(!isSubmitted);
+                currentDragDropPanel.setInteractive(!isLocked);
             } else if (isTf) {
                 btnTrue.setAnimState(1.0f, 0);
                 btnFalse.setAnimState(1.0f, 0);
-                btnTrue.setEnabled(!isSubmitted);
-                btnFalse.setEnabled(!isSubmitted);
+                btnTrue.setEnabled(!isLocked);
+                btnFalse.setEnabled(!isLocked);
             } else if (isFill) {
                 txtFillInInput.setAnimScale(1.0f);
-                txtFillInInput.setEnabled(!isSubmitted);
-                txtFillInInput.requestFocusInWindow();
+                txtFillInInput.setEnabled(!isLocked);
+                if (!isLocked) txtFillInInput.requestFocusInWindow();
             } else {
                 for (int i = 0; i < 4; i++) {
                     answerButtons[i].setAnimState(1.0f, 0);
-                    answerButtons[i].setEnabled(!isSubmitted);
+                    answerButtons[i].setEnabled(!isLocked);
                 }
             }
             btnNext.setEnabled(!isSubmitted);
             updateNavState();
 
-            // Khởi động bộ đếm ngược thời gian câu hỏi
-            startPerQuestionTimer();
+            if (questionFinalized[currentQuestionIndex]) {
+                lblHint.setText("Câu hỏi này đã chốt đáp án");
+                lblTimer.setText("ĐÃ CHỐT");
+                lblTimer.setForeground(Theme.GREEN);
+                timeProgressBar.setValue(0);
+            } else if (!isSubmitted) {
+                // Khởi động bộ đếm ngược thời gian câu hỏi
+                startPerQuestionTimer();
+            }
 
             if (onQuestionChangeListener != null) {
                 onQuestionChangeListener.accept(currentQuestionIndex);
@@ -1083,7 +1314,7 @@ public class MatchScreen extends JPanel {
     }
 
     private void selectAnswer(int choiceIndex) {
-        if (isSubmitted || isAnimating || isRevealing) {
+        if (isSubmitted || isAnimating || isRevealing || questionFinalized[currentQuestionIndex]) {
             return;
         }
         SoundManager.playAnswerSelect();
@@ -1123,8 +1354,8 @@ public class MatchScreen extends JPanel {
         // Không cập nhật hay gửi điểm ở đây để người chơi không thể thử từng đáp án!
     }
 
-    private void finishCurrentQuestion() {
-        if (currentQuestionIndex >= 0 && currentQuestionIndex < 10) {
+    private void syncCurrentAnswerInput() {
+        if (currentQuestionIndex >= 0 && currentQuestionIndex < 10 && !questionFinalized[currentQuestionIndex]) {
             MatchQuestion q = (questions != null && currentQuestionIndex < questions.size())
                     ? questions.get(currentQuestionIndex)
                     : null;
@@ -1149,6 +1380,12 @@ public class MatchScreen extends JPanel {
                     }
                 }
             }
+        }
+    }
+
+    private void finishCurrentQuestion() {
+        if (currentQuestionIndex >= 0 && currentQuestionIndex < 10) {
+            syncCurrentAnswerInput();
             if (!questionFinalized[currentQuestionIndex]) {
                 questionFinalized[currentQuestionIndex] = true;
                 int choice = selectedAnswers[currentQuestionIndex];
@@ -1177,6 +1414,17 @@ public class MatchScreen extends JPanel {
         if (currentQuestionTimeRemaining > 0) {
             SoundManager.stopCountdown();
         }
+
+        // Nếu câu hỏi này đã từng chốt trước đó, chuyển thẳng sang câu kế tiếp
+        if (questionFinalized[currentQuestionIndex]) {
+            if (currentQuestionIndex + 1 < questions.size()) {
+                navigateToQuestion(currentQuestionIndex + 1);
+            } else {
+                doSubmit();
+            }
+            return;
+        }
+
         isRevealing = true;
 
         finishCurrentQuestion();
@@ -1215,6 +1463,7 @@ public class MatchScreen extends JPanel {
             revealTimer = new Timer(750, e -> {
                 ((Timer) e.getSource()).stop();
                 isRevealing = false;
+                if (hasLeft) return;
                 if (currentQuestionIndex + 1 < questions.size()) {
                     navigateToQuestion(currentQuestionIndex + 1);
                 } else {
@@ -1238,7 +1487,7 @@ public class MatchScreen extends JPanel {
             } else {
                 SoundManager.playWrong();
                 String displayTarget = (q.choices() != null && q.choices().length > 0) ? q.choices()[0] : "";
-                lblFillInCorrectAnswer.setText("✓ Đáp án chính xác: " + displayTarget);
+                lblFillInCorrectAnswer.setText("Đáp án chính xác: " + displayTarget);
                 lblFillInCorrectAnswer.setVisible(true);
             }
 
@@ -1247,14 +1496,19 @@ public class MatchScreen extends JPanel {
             final int totalDuration = 850;
 
             revealTimer = new Timer(16, e -> {
+                if (hasLeft) {
+                    revealTimer.stop();
+                    isRevealing = false;
+                    return;
+                }
                 long elapsed = System.currentTimeMillis() - animStart;
                 if (elapsed < growDuration) {
                     float p = (float) elapsed / growDuration;
-                    float scale = 1.0f + 0.15f * (float) Math.sin(p * Math.PI / 2.0);
+                    float scale = 1.0f + 0.12f * (float) Math.sin(p * Math.PI / 2.0);
                     txtFillInInput.setAnimScale(scale);
                     fillInPanel.repaint();
                 } else if (elapsed < totalDuration) {
-                    txtFillInInput.setAnimScale(1.15f);
+                    txtFillInInput.setAnimScale(1.12f);
                     fillInPanel.repaint();
                 } else {
                     revealTimer.stop();
@@ -1263,6 +1517,7 @@ public class MatchScreen extends JPanel {
                     lblFillInCorrectAnswer.setVisible(false);
                     fillInPanel.repaint();
 
+                    if (hasLeft) return;
                     if (currentQuestionIndex + 1 < questions.size()) {
                         navigateToQuestion(currentQuestionIndex + 1);
                     } else {
@@ -1293,11 +1548,9 @@ public class MatchScreen extends JPanel {
                 if (isThisCorrect) {
                     answerButtons[c].setRevealColors(correctBg, whiteText);
                     scalingButtons.add(answerButtons[c]);
-                    try { answersGrid.setComponentZOrder(answerButtons[c], 0); } catch (Exception ignored) {}
                 } else if (isThisSelected) {
                     answerButtons[c].setRevealColors(wrongBg, whiteText);
                     scalingButtons.add(answerButtons[c]);
-                    try { answersGrid.setComponentZOrder(answerButtons[c], 0); } catch (Exception ignored) {}
                 }
             }
 
@@ -1312,14 +1565,19 @@ public class MatchScreen extends JPanel {
             final int totalDuration = 850;
 
             revealTimer = new Timer(16, e -> {
+                if (hasLeft) {
+                    revealTimer.stop();
+                    isRevealing = false;
+                    return;
+                }
                 long elapsed = System.currentTimeMillis() - animStart;
                 if (elapsed < growDuration) {
                     float p = (float) elapsed / growDuration;
-                    float scale = 1.0f + 0.18f * (float) Math.sin(p * Math.PI / 2.0);
+                    float scale = 1.0f + 0.08f * (float) Math.sin(p * Math.PI / 2.0);
                     for (ModernButton b : scalingButtons) b.setAnimScale(scale);
                     answersGrid.repaint();
                 } else if (elapsed < totalDuration) {
-                    for (ModernButton b : scalingButtons) b.setAnimScale(1.18f);
+                    for (ModernButton b : scalingButtons) b.setAnimScale(1.08f);
                     answersGrid.repaint();
                 } else {
                     revealTimer.stop();
@@ -1327,6 +1585,7 @@ public class MatchScreen extends JPanel {
                     for (ModernButton b : answerButtons) b.resetReveal();
                     answersGrid.repaint();
 
+                    if (hasLeft) return;
                     if (currentQuestionIndex + 1 < questions.size()) {
                         navigateToQuestion(currentQuestionIndex + 1);
                     } else {
@@ -1376,31 +1635,21 @@ public class MatchScreen extends JPanel {
             SoundManager.playWrong();
         }
 
-        // Đảm bảo nút phóng to nằm trên cùng Z-order của container
-        if (correctBtn != null && parentContainer != null) {
-            try {
-                parentContainer.setComponentZOrder(correctBtn, 0);
-            } catch (Exception ignored) {}
-        }
-        if (userBtn != null && parentContainer != null && userBtn != correctBtn) {
-            try {
-                parentContainer.setComponentZOrder(userBtn, 0);
-            } catch (Exception ignored) {}
-        }
-
-        // Animation phóng to:
-        // Giai đoạn nở lớn: 400ms (0.4s) scale từ 1.0f lên 1.18f
-        // Giai đoạn giữ nguyên: 450ms ở 1.18f
-        // Tổng thời gian: ~850ms, sau đó reset màu sắc và chuyển câu tiếp theo
+        // Animation phóng to vừa vặn không tràn biên:
         final long animStart = System.currentTimeMillis();
         final int growDuration = 400;
         final int totalDuration = 850;
 
         revealTimer = new Timer(16, e -> {
+            if (hasLeft) {
+                revealTimer.stop();
+                isRevealing = false;
+                return;
+            }
             long elapsed = System.currentTimeMillis() - animStart;
             if (elapsed < growDuration) {
                 float p = (float) elapsed / growDuration;
-                float scale = 1.0f + 0.18f * (float) Math.sin(p * Math.PI / 2.0);
+                float scale = 1.0f + 0.08f * (float) Math.sin(p * Math.PI / 2.0);
                 if (correctBtn != null) {
                     correctBtn.setAnimScale(scale);
                 }
@@ -1412,10 +1661,10 @@ public class MatchScreen extends JPanel {
                 }
             } else if (elapsed < totalDuration) {
                 if (correctBtn != null) {
-                    correctBtn.setAnimScale(1.18f);
+                    correctBtn.setAnimScale(1.08f);
                 }
                 if (userBtn != null && userBtn != correctBtn) {
-                    userBtn.setAnimScale(1.18f);
+                    userBtn.setAnimScale(1.08f);
                 }
                 if (parentContainer != null) {
                     parentContainer.repaint();
@@ -1439,6 +1688,7 @@ public class MatchScreen extends JPanel {
                     parentContainer.repaint();
                 }
 
+                if (hasLeft) return;
                 if (currentQuestionIndex + 1 < questions.size()) {
                     navigateToQuestion(currentQuestionIndex + 1);
                 } else {
@@ -1450,12 +1700,17 @@ public class MatchScreen extends JPanel {
     }
 
     private void confirmSubmit() {
-        if (isSubmitted) {
+        if (isSubmitted || isRevealing) {
             return;
         }
 
-        // Đảm bảo ghi nhận đáp án của câu hỏi hiện tại nếu người chơi vừa thao tác
-        finishCurrentQuestion();
+        // Đồng bộ lựa chọn ở câu hiện tại (nhưng chưa khóa cứng câu hỏi nếu người chơi chọn làm tiếp)
+        syncCurrentAnswerInput();
+        updateNavState();
+
+        boolean timerWasRunning = (questionCountdownTimer != null && questionCountdownTimer.isRunning());
+        stopCountdownTimer();
+        SoundManager.stopCountdown();
 
         Window owner = SwingUtilities.getWindowAncestor(this);
         activeSubmitDialog = new SubmitConfirmDialog(
@@ -1476,18 +1731,38 @@ public class MatchScreen extends JPanel {
             if (targetIdx >= 0 && targetIdx < totalQ) {
                 navigateToQuestion(targetIdx);
             }
+        } else if (timerWasRunning && !isSubmitted && !questionFinalized[currentQuestionIndex] && currentQuestionTimeRemaining > 0) {
+            questionCountdownTimer.start();
         }
     }
 
     private void doSubmit() {
-        if (isSubmitted) {
+        if (hasLeft || isSubmitted) {
             return;
         }
         if (activeSubmitDialog != null && activeSubmitDialog.isVisible()) {
             activeSubmitDialog.dispose();
             activeSubmitDialog = null;
         }
-        finishCurrentQuestion();
+        syncCurrentAnswerInput();
+        for (int k = 0; k < 10; k++) {
+            if (questions != null && k < questions.size()) {
+                MatchQuestion q = questions.get(k);
+                if (q.isDragAndDrop() && dndPanels[k] != null && !questionFinalized[k]) {
+                    if (dndPanels[k].isAllCorrect()) {
+                        selectedAnswers[k] = 1;
+                    } else if (dndPanels[k].hasAnyAnswer()) {
+                        selectedAnswers[k] = 0;
+                    }
+                }
+            }
+            if (!questionFinalized[k] && selectedAnswers[k] != -1) {
+                questionFinalized[k] = true;
+                if (!hasLeft && onAnswerListener != null) {
+                    onAnswerListener.accept(k, selectedAnswers[k]);
+                }
+            }
+        }
         isSubmitted = true;
         stopTimer();
 
@@ -1507,12 +1782,13 @@ public class MatchScreen extends JPanel {
         revalidate();
         repaint();
 
-        if (onSubmitListener != null) {
+        if (!hasLeft && onSubmitListener != null) {
             onSubmitListener.accept(selectedAnswers.clone());
         }
     }
 
     public void onSubmittedAcknowledged() {
+        if (hasLeft) return;
         isSubmitted = true;
         if (activeSubmitDialog != null && activeSubmitDialog.isVisible()) {
             activeSubmitDialog.dispose();
@@ -1524,7 +1800,22 @@ public class MatchScreen extends JPanel {
         repaint();
     }
 
+    public void onMatchFinished() {
+        if (hasLeft) return;
+        isSubmitted = true;
+        stopTimer();
+        waitingBanner.setVisible(true);
+        waitingBanner.setBackground(new Color(0x16, 0xA3, 0x4A, 220));
+        lblWaitingStatus.setText("TRẬN ĐẤU ĐÃ KẾT THÚC!");
+        revalidate();
+        repaint();
+    }
+
     private void confirmLeave() {
+        boolean timerWasRunning = (questionCountdownTimer != null && questionCountdownTimer.isRunning());
+        stopCountdownTimer();
+        SoundManager.stopCountdown();
+
         int choice = JOptionPane.showConfirmDialog(
                 this,
                 "Bạn có chắc chắn muốn rời trận đấu?\n"
@@ -1534,11 +1825,53 @@ public class MatchScreen extends JPanel {
                 JOptionPane.WARNING_MESSAGE);
 
         if (choice == JOptionPane.YES_OPTION) {
-            stopTimer();
+            cleanupAndStop();
             if (onLeaveListener != null) {
                 onLeaveListener.run();
             }
+        } else if (timerWasRunning && !hasLeft && !isSubmitted && !questionFinalized[currentQuestionIndex] && currentQuestionTimeRemaining > 0) {
+            questionCountdownTimer.start();
+            if (currentQuestionTimeRemaining <= 5) {
+                SoundManager.playCountdown(currentQuestionIndex);
+            }
         }
+    }
+
+    /**
+     * Dừng toàn bộ timer, countdown, animation, vô hiệu hóa callback và giải phóng tài nguyên khi rời trận
+     */
+    public void cleanupAndStop() {
+        hasLeft = true;
+        isSubmitted = true;
+        stopTimer();
+
+        if (activeSubmitDialog != null && activeSubmitDialog.isVisible()) {
+            activeSubmitDialog.dispose();
+            activeSubmitDialog = null;
+        }
+        if (currentMyBubble != null) {
+            currentMyBubble.dismiss();
+            currentMyBubble = null;
+        }
+        if (currentOpponentBubble != null) {
+            currentOpponentBubble.dismiss();
+            currentOpponentBubble = null;
+        }
+
+        for (ModernButton b : answerButtons) {
+            if (b != null) b.setEnabled(false);
+        }
+        if (btnTrue != null) btnTrue.setEnabled(false);
+        if (btnFalse != null) btnFalse.setEnabled(false);
+        if (txtFillInInput != null) txtFillInInput.setEnabled(false);
+        if (currentDragDropPanel != null) currentDragDropPanel.setInteractive(false);
+        if (btnSubmit != null) btnSubmit.setEnabled(false);
+        if (btnNext != null) btnNext.setEnabled(false);
+        if (btnLeave != null) btnLeave.setEnabled(false);
+
+        onAnswerListener = null;
+        onQuestionChangeListener = null;
+        onEmoteListener = null;
     }
 
     public void stopTimer() {
@@ -1553,6 +1886,12 @@ public class MatchScreen extends JPanel {
         }
         if (revealTimer != null && revealTimer.isRunning()) {
             revealTimer.stop();
+        }
+        if (myScoreBadge != null) {
+            myScoreBadge.stopTimer();
+        }
+        if (oppScoreBadge != null) {
+            oppScoreBadge.stopTimer();
         }
         isRevealing = false;
     }
@@ -1593,7 +1932,7 @@ public class MatchScreen extends JPanel {
 
         EmoteBubble bubble = new EmoteBubble(emoji);
         container.removeAll();
-        container.setLayout(new FlowLayout(FlowLayout.CENTER, 0, 2));
+        container.setLayout(new FlowLayout(FlowLayout.CENTER, 0, 0));
         container.add(bubble);
         container.revalidate();
         container.repaint();
@@ -1618,6 +1957,10 @@ public class MatchScreen extends JPanel {
         return selectedAnswers.clone();
     }
 
+    public String[] getUserFillInAnswers() {
+        return userFillInAnswers.clone();
+    }
+
     // ==========================================
     // CUSTOM HELPER COMPONENTS
     // ==========================================
@@ -1628,6 +1971,8 @@ public class MatchScreen extends JPanel {
      */
     private static class ScoreBadge extends JPanel {
         private int score = 0;
+        private int points = 0;
+        private int streak = 0;
         private final boolean isMe;
         private float pulseScale = 1.0f;
         private Timer pulseTimer;
@@ -1635,18 +1980,34 @@ public class MatchScreen extends JPanel {
         ScoreBadge(boolean isMe) {
             this.isMe = isMe;
             setOpaque(false);
-            setPreferredSize(new Dimension(84, 28));
+            setPreferredSize(new Dimension(126, 28));
         }
 
         public void setScore(int newScore) {
-            if (newScore != this.score) {
-                this.score = newScore;
+            setStats(newScore, newScore * 100, this.streak);
+        }
+
+        public void setStats(int newScore, int newPoints, int newStreak) {
+            boolean increased = (newScore > this.score) || (newPoints > this.points);
+            this.score = newScore;
+            this.points = newPoints;
+            this.streak = newStreak;
+            if (increased) {
                 triggerPulse();
+            } else {
+                repaint();
             }
         }
 
         public int getScore() {
             return score;
+        }
+
+        public void stopTimer() {
+            if (pulseTimer != null && pulseTimer.isRunning()) {
+                pulseTimer.stop();
+            }
+            pulseScale = 1.0f;
         }
 
         private void triggerPulse() {
@@ -1687,7 +2048,7 @@ public class MatchScreen extends JPanel {
 
             Color bg = isMe ? new Color(0x13, 0x68, 0xCE, 70) : new Color(0x86, 0x4C, 0xBF, 70);
             Color border = isMe ? new Color(0x3B, 0x82, 0xF6) : new Color(0xA8, 0x55, 0xF7);
-            if (pulseScale > 1.05f) {
+            if (pulseScale > 1.05f || streak >= 3) {
                 bg = new Color(0xF5, 0x9E, 0x0B, 140);
                 border = new Color(0xFB, 0xBF, 0x24);
             }
@@ -1699,8 +2060,8 @@ public class MatchScreen extends JPanel {
             g2.setStroke(new BasicStroke(1.5f));
             g2.draw(new RoundRectangle2D.Float(1, 1, w - 2, h - 2, 12, 12));
 
-            String text = score + " đ";
-            g2.setColor(pulseScale > 1.05f ? Theme.WHITE : (isMe ? new Color(0xBF, 0xDB, 0xFE) : new Color(0xE9, 0xD5, 0xFF)));
+            String text = score + "c • " + points + "đ" + (streak >= 2 ? " [x" + streak + "]" : "");
+            g2.setColor((pulseScale > 1.05f || streak >= 2) ? Theme.WHITE : (isMe ? new Color(0xBF, 0xDB, 0xFE) : new Color(0xE9, 0xD5, 0xFF)));
             g2.setFont(Theme.SMALL_BOLD);
             FontMetrics fm = g2.getFontMetrics();
             int tx = (w - fm.stringWidth(text)) / 2;
@@ -1942,5 +2303,9 @@ public class MatchScreen extends JPanel {
         java.util.regex.Pattern pattern = java.util.regex.Pattern.compile("\\p{InCombiningDiacriticalMarks}+");
         String result = pattern.matcher(normalized).replaceAll("");
         return result.replace('đ', 'd').replace('Đ', 'd');
+    }
+
+    private String getMatchSoundText() {
+        return (SoundManager.isMuted() && MusicManager.isMusicMuted()) ? "Tắt Âm" : "Âm Thanh";
     }
 }
