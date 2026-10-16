@@ -1,300 +1,155 @@
-# setId|topic|level|seconds|correctIndex(0-3)|question|A;B;C;D
 # ==============================================================================
-# CHỦ ĐỀ 1: MẠNG MÁY TÍNH (COMPUTER NETWORKS)
+# NGÂN HÀNG CÂU HỎI QUIZ ARENA (CHUYÊN ĐỀ KIẾN THỨC PHỔ THÔNG & KHÁM PHÁ)
+# Định dạng: id|topic|level|type|question|choices(A;B;C;D)|correctAnswerIndex(0-3)|explanation
 # ==============================================================================
-# Bộ 1-1-1: Mạng máy tính - Mức Dễ (Bộ 1)
-1-1-1|Mạng máy tính|Dễ|100|0|Giao thức TCP thuộc tầng nào trong mô hình OSI?|Tầng Giao vận (Transport);Tầng Mạng (Network);Tầng Ứng dụng (Application);Tầng Liên kết dữ liệu (Data Link)
-1-1-1|Mạng máy tính|Dễ|100|3|Giao thức nào dùng để phân giải tên miền thành địa chỉ IP?|FTP;DHCP;SNMP;DNS
-1-1-1|Mạng máy tính|Dễ|100|2|Cổng mặc định (default port) của giao thức HTTP là bao nhiêu?|21;443;80;25
-1-1-1|Mạng máy tính|Dễ|100|1|Địa chỉ IP phiên bản 4 (IPv4) có độ dài bao nhiêu bit?|16 bit;32 bit;64 bit;128 bit
-1-1-1|Mạng máy tính|Dễ|100|0|Địa chỉ Loopback mặc định của giao thức IPv4 là gì?|127.0.0.1;192.168.1.1;10.0.0.1;255.255.255.0
-1-1-1|Mạng máy tính|Dễ|100|3|Giao thức nào sau đây truyền dữ liệu không hướng kết nối (Connectionless)?|TCP;FTP;SSH;UDP
-1-1-1|Mạng máy tính|Dễ|100|2|Thiết bị nào hoạt động chủ yếu ở Tầng 2 (Data Link) trong mô hình OSI?|Router;Hub;Switch;Repeater
-1-1-1|Mạng máy tính|Dễ|100|1|Lệnh nào trong dòng lệnh dùng để kiểm tra tính thông suốt của kết nối mạng?|ipconfig;ping;tracert;netstat
-1-1-1|Mạng máy tính|Dễ|100|0|Cổng mặc định của giao thức SSH là bao nhiêu?|22;23;8080;3306
-1-1-1|Mạng máy tính|Dễ|100|3|Mô hình chuẩn OSI gồm có bao nhiêu tầng?|4 tầng;5 tầng;6 tầng;7 tầng
 
-# Bộ 1-1-2: Mạng máy tính - Mức Dễ (Bộ 2)
-1-1-2|Mạng máy tính|Dễ|100|1|Giao thức nào tự động cấp phát địa chỉ IP cho thiết bị khi kết nối mạng?|DNS;DHCP;ARP;ICMP
-1-1-2|Mạng máy tính|Dễ|100|2|Cổng mặc định của giao thức bảo mật HTTPS là bao nhiêu?|80;8080;443;21
-1-1-2|Mạng máy tính|Dễ|100|0|Địa chỉ MAC (Media Access Control) có độ dài bao nhiêu bit?|48 bit;32 bit;64 bit;128 bit
-1-1-2|Mạng máy tính|Dễ|100|3|Giao thức nào dùng để gửi thư điện tử (email) từ máy khách lên máy chủ?|POP3;IMAP;HTTP;SMTP
-1-1-2|Mạng máy tính|Dễ|100|1|Topo mạng nào mà khi một máy hỏng thì toàn bộ hệ thống vẫn hoạt động bình thường qua trung tâm?|Bus;Star (Sao);Ring (Vòng);Mesh (Lưới)
-1-1-2|Mạng máy tính|Dễ|100|0|Cáp mạng xoắn đôi phổ biến nhất hiện nay sử dụng đầu nối chuẩn gì?|RJ45;RJ11;BNC;USB
-1-1-2|Mạng máy tính|Dễ|100|2|Địa chỉ IPv6 có độ dài bao nhiêu bit?|32 bit;64 bit;128 bit;256 bit
-1-1-2|Mạng máy tính|Dễ|100|1|Giao thức FTP dùng để làm gì?|Duyệt web;Truyền nhận tệp tin;Gửi thư điện tử;Quản lý mạng
-1-1-2|Mạng máy tính|Dễ|100|3|Thiết bị mạng nào có chức năng định tuyến gói tin giữa các mạng khác nhau?|Hub;Repeater;Switch L2;Router
-1-1-2|Mạng máy tính|Dễ|100|0|Tầng nào nằm trên cùng trong mô hình mạng 7 tầng OSI?|Application;Presentation;Session;Transport
+# ------------------------------------------------------------------------------
+# CHỦ ĐỀ 1: KỲ QUAN THẾ GIỚI
+# ------------------------------------------------------------------------------
+Q-KQ-01|Kỳ quan thế giới|Dễ|MULTIPLE_CHOICE|Kim tự tháp Giza là kỳ quan cổ đại duy nhất còn tồn tại nguyên vẹn, nằm ở quốc gia nào?|Ai Cập;Hy Lạp;Ý;Thổ Nhĩ Kỳ|0|Kim tự tháp Giza nằm ở ngoại ô Cairo, Ai Cập, được xây dựng từ thời kỳ Cổ Vương quốc làm lăng mộ cho Pharaoh Khufu.
+Q-KQ-02|Kỳ quan thế giới|Dễ|TRUE_FALSE|Vạn Lý Trường Thành của Trung Quốc có thể nhìn thấy rõ mồn một bằng mắt thường từ Mặt Trăng?|Đúng;Sai|1|Đây là một lầm tưởng phổ biến. Các nhà du hành vũ trụ NASA xác nhận không thể nhìn thấy Vạn Lý Trường Thành bằng mắt thường từ Mặt Trăng.
+Q-KQ-03|Kỳ quan thế giới|Dễ|CLUE_GUESS|Manh mối: Lăng mộ bằng đá cẩm thạch trắng bên bờ sông Yamuna, do hoàng đế Shah Jahan xây tặng hoàng hậu Mumtaz Mahal. Đây là công trình nào?|Đền Taj Mahal;Angkor Wat;Thành cổ Petra;Cung điện Alhambra|0|Taj Mahal nằm tại thành phố Agra, Ấn Độ, là kiệt tác nghệ thuật Hồi giáo được UNESCO công nhận là di sản thế giới.
+Q-KQ-04|Kỳ quan thế giới|Trung bình|ODD_ONE_OUT|Trong danh sách các công trình nổi tiếng sau, công trình nào KHÔNG thuộc 7 Kỳ quan thế giới cổ đại?|Vạn Lý Trường Thành;Vườn treo Babylon;Tượng thần Zeus ở Olympia;Đền thờ Artemis ở Ephesus|0|Vạn Lý Trường Thành thuộc danh sách 7 kỳ quan thế giới mới được bầu chọn năm 2007, không thuộc nhóm 7 kỳ quan cổ đại ban đầu.
+Q-KQ-05|Kỳ quan thế giới|Trung bình|COMPARISON|Tượng Chúa Cứu Thế (Christ the Redeemer) tọa lạc trên đỉnh núi Corcovado thuộc thành phố nào của Brazil?|Rio de Janeiro;Sao Paulo;Brasilia;Salvador|0|Tượng cao 30m (chưa tính bệ 8m), dang rộng tay 28m, khánh thành năm 1931 tại thành phố Rio de Janeiro.
+Q-KQ-06|Kỳ quan thế giới|Trung bình|FILL_IN|Thành phố cổ Petra nổi tiếng với kiến trúc tạc thẳng vào vách đá sa thạch màu hồng thuộc quốc gia nào hiện nay?|Jordan;Gioóc-đan;Nước Jordan|1|Petra là thủ đô thịnh vượng của vương quốc Nabataean cổ đại nằm ở miền nam đất nước Jordan.
+Q-KQ-07|Kỳ quan thế giới|Trung bình|ELIMINATION|Công trình kiến trúc biểu tượng nào dưới đây KHÔNG lọt vào danh sách 7 Kỳ quan thế giới mới (công bố năm 2007)?|Tháp Eiffel (Pháp);Đấu trường Colosseum (Ý);Thành phố Machu Picchu (Peru);Khu đền Chichen Itza (Mexico)|0|Tháp Eiffel lọt vào danh sách đề cử chung kết nhưng không nằm trong nhóm 7 công trình chiến thắng chung cuộc năm 2007.
+Q-KQ-08|Kỳ quan thế giới|Khó|ORDERING|Sắp xếp các công trình sau theo thứ tự thời gian hoàn thành từ cổ xưa nhất đến gần đây nhất: (1) Kim tự tháp Giza, (2) Đấu trường Colosseum, (3) Machu Picchu, (4) Đền Taj Mahal.|(1) -> (2) -> (3) -> (4);(2) -> (1) -> (3) -> (4);(1) -> (3) -> (2) -> (4);(3) -> (1) -> (2) -> (4)|0|Kim tự tháp Giza (~2560 TCN), Colosseum (~80 SCN), Machu Picchu (~1450 SCN), và Taj Mahal hoàn thành khoảng năm 1653 SCN.
+Q-KQ-09|Kỳ quan thế giới|Khó|PHENOMENON_EXPLANATION|Tại sao thành phố ngầm Derinkuyu ở Thổ Nhĩ Kỳ có thể chứa tới 20.000 người sâu dưới lòng đất mà không bao giờ thiếu oxy?|Nhờ hệ thống hơn 50 trục thông gió thẳng đứng sâu tới tầng nước ngầm;Sử dụng quạt gió cơ học vận hành bằng sức nước;Đốt lửa ngầm để tạo luồng đối lưu không khí;Nhờ các khe nứt đá vôi tự nhiên thông lên đỉnh núi|0|Người xưa đã khoét đá núi lửa mềm và thiết kế các ống thông gió sâu hơn 55 mét, tạo đối lưu tự nhiên hoàn hảo khắp 8 tầng ngầm.
+Q-KQ-10|Kỳ quan thế giới|Khó|CLUE_GUESS|Manh mối: Kim tự tháp Maya El Castillo tại Chichen Itza có 4 mặt thang, mỗi mặt có 91 bậc. Tổng 4 mặt cộng với bậc sàn đỉnh tạo ra con số mang ý nghĩa gì?|365 bậc - tượng trưng số ngày trong năm dương lịch;360 bậc - số độ của một vòng tròn hoàng đạo;260 bậc - số ngày trong lịch Tzolkin của người Maya;100 bậc - số năm một thế kỷ theo quan niệm cổ|0|Mỗi mặt có 91 bậc x 4 = 364 bậc, cộng thêm bệ thờ trên cùng là 365, thể hiện sự am hiểu thiên văn học tuyệt đỉnh của người Maya.
+Q-KQ-13|Kỳ quan thế giới|Trung bình|TRUE_FALSE|Đấu trường Colosseum ở Rome từng được dẫn nước ngập sàn để tổ chức các trận hải chiến giả thời cổ đại?|Đúng;Sai|0|Đúng, người La Mã cổ đại từng bơm nước vào đấu trường Colosseum để tổ chức các trận thủy chiến giả (Naumachia) vô cùng quy mô.
+Q-KQ-14|Kỳ quan thế giới|Khó|TRUE_FALSE|Tháp nghiêng Pisa ở Ý được thiết kế cố tình để bị nghiêng ngay từ bản vẽ kiến trúc ban đầu?|Đúng;Sai|1|Sai, tháp Pisa bị nghiêng ngoài ý muốn do nền móng yếu và sụt lún không đều trong quá trình xây dựng kéo dài hơn 2 thế kỷ.
+Q-KQ-15|Kỳ quan thế giới|Trung bình|MULTIPLE_SELECT|Những công trình nào dưới đây thuộc danh sách 7 Kỳ quan thế giới mới (New 7 Wonders) công bố năm 2007?|Vạn Lý Trường Thành;Đấu trường Colosseum;Vườn treo Babylon;Kim tự tháp Giza|0,1|Vạn Lý Trường Thành (Trung Quốc) và Đấu trường Colosseum (Ý) đều thuộc 7 Kỳ quan thế giới mới, trong khi Vườn treo Babylon thuộc kỳ quan cổ đại và Kim tự tháp Giza là kỳ quan danh dự.
 
-# Bộ 1-2-1: Mạng máy tính - Mức Trung bình (Bộ 1)
-1-2-1|Mạng máy tính|Trung bình|150|2|Trong cơ chế bắt tay ba bước (3-Way Handshake) của TCP, thứ tự các cờ là gì?|ACK -> SYN -> SYN-ACK;SYN -> ACK -> SYN-ACK;SYN -> SYN-ACK -> ACK;SYN-ACK -> SYN -> ACK
-1-2-1|Mạng máy tính|Trung bình|150|1|Mặt nạ mạng /26 tương ứng với Subnet Mask dạng thập phân nào?|255.255.255.128;255.255.255.192;255.255.255.224;255.255.255.240
-1-2-1|Mạng máy tính|Trung bình|150|3|Giao thức ARP (Address Resolution Protocol) dùng để chuyển đổi gì?|Tên miền sang IP;IP sang Tên miền;Cổng sang IP;Địa chỉ IP sang địa chỉ MAC
-1-2-1|Mạng máy tính|Trung bình|150|0|Giao thức định tuyến RIP sử dụng metric nào để chọn đường đi tốt nhất?|Hop count (Số chặng);Băng thông (Bandwidth);Độ trễ (Delay);Chi phí (Cost)
-1-2-1|Mạng máy tính|Trung bình|150|1|Kích thước MTU mặc định phổ biến của gói tin Ethernet là bao nhiêu byte?|576 bytes;1500 bytes;4096 bytes;9000 bytes
-1-2-1|Mạng máy tính|Trung bình|150|2|Kỹ thuật NAT (Network Address Translation) chủ yếu giải quyết vấn đề gì?|Tăng tốc độ truyền tải;Mã hóa dữ liệu;Tiết kiệm địa chỉ IPv4 công cộng;Chống virus mạng
-1-2-1|Mạng máy tính|Trung bình|150|0|Bản ghi DNS loại MX (Mail Exchange) có vai trò gì?|Chỉ định máy chủ tiếp nhận email của tên miền;Phân giải tên miền sang IPv4;Phân giải tên miền sang IPv6;Tạo bí danh cho tên miền
-1-2-1|Mạng máy tính|Trung bình|150|3|Cờ nào trong TCP Header dùng để chủ động yêu cầu thiết lập lại kết nối khẩn cấp?|FIN;SYN;URG;RST
-1-2-1|Mạng máy tính|Trung bình|150|1|Dải địa chỉ IP nào sau đây thuộc dải mạng riêng (Private IP) Lớp C?|10.0.0.0/8;192.168.0.0/16;172.16.0.0/12;169.254.0.0/16
-1-2-1|Mạng máy tính|Trung bình|150|2|Trong Java Socket, lớp nào được sử dụng để tạo Server lắng nghe kết nối TCP?|Socket;DatagramSocket;ServerSocket;InetAddress
+# ------------------------------------------------------------------------------
+# CHỦ ĐỀ 2: ĐỊA DANH VÀ KHÁM PHÁ THẾ GIỚI
+# ------------------------------------------------------------------------------
+Q-DD-01|Địa danh và khám phá thế giới|Dễ|MULTIPLE_CHOICE|Quốc gia nào có diện tích lãnh thổ tự nhiên lớn nhất thế giới?|Nga;Canada;Hoa Kỳ;Trung Quốc|0|Nga có diện tích hơn 17 triệu km2, trải dài qua 2 châu lục Á - Âu và gồm 11 múi giờ.
+Q-DD-02|Địa danh và khám phá thế giới|Dễ|TRUE_FALSE|Sa mạc Sahara là sa mạc có diện tích lớn nhất trên toàn Trái Đất?|Đúng;Sai|1|Sa mạc lớn nhất Trái Đất là sa mạc lạnh Nam Cực (Antarctica) với diện tích khoảng 14 triệu km2; Sahara là sa mạc cát nóng lớn nhất.
+Q-DD-03|Địa danh và khám phá thế giới|Dễ|FILL_IN|Dòng sông nào được ghi nhận dài nhất thế giới theo truyền thống địa lý quốc tế?|Sông Nin;Sông Nile;Nin;Nile|1|Sông Nin ở châu Phi dài khoảng 6.650 km, bắt nguồn từ hồ Victoria và đổ ra biển Địa Trung Hải.
+Q-DD-04|Địa danh và khám phá thế giới|Trung bình|ODD_ONE_OUT|Thành phố nào dưới đây KHÔNG phải là thủ đô chính thức của quốc gia sở tại?|Sydney;Canberra;Ottawa;Tokyo|0|Canberra mới là thủ đô của nước Úc. Sydney là thành phố đông dân nhất nhưng không phải thủ đô.
+Q-DD-05|Địa danh và khám phá thế giới|Trung bình|COMPARISON|Đỉnh núi nào cao nhất thế giới nếu tính theo độ cao so với mực nước biển trung bình?|Đỉnh Everest;Đỉnh K2;Đỉnh Kangchenjunga;Đỉnh Makalu|0|Đỉnh Everest nằm trên dãy Himalaya giữa Nepal và Tây Tạng có độ cao chính thức là 8.848,86 mét.
+Q-DD-06|Địa danh và khám phá thế giới|Trung bình|CLUE_GUESS|Manh mối: Hồ nước ngọt sâu nhất thế giới (1.642m) và chứa tới 20% lượng nước ngọt bề mặt không đóng băng của Trái Đất. Đây là hồ nào?|Hồ Baikal;Hồ Victoria;Hồ Superior;Hồ Tanganyika|0|Hồ Baikal nằm ở miền nam Siberia, Nga, là hồ nước ngọt cổ nhất và sâu nhất hành tinh.
+Q-DD-07|Địa danh và khám phá thế giới|Trung bình|ELIMINATION|Quốc gia duy nhất nào ở khu vực Đông Nam Á hoàn toàn không có đường bờ biển giáp biển (quốc gia nội lục)?|Lào;Thái Lan;Campuchia;Myanmar|0|Lào là quốc gia nội lục duy nhất tại Đông Nam Á, được bao bọc bởi 5 nước: Việt Nam, Campuchia, Thái Lan, Myanmar và Trung Quốc.
+Q-DD-08|Địa danh và khám phá thế giới|Khó|ORDERING|Sắp xếp các đại dương sau theo diện tích từ lớn nhất đến nhỏ nhất: (1) Thái Bình Dương, (2) Đại Tây Dương, (3) Ấn Độ Dương, (4) Bắc Băng Dương.|(1) -> (2) -> (3) -> (4);(1) -> (3) -> (2) -> (4);(2) -> (1) -> (3) -> (4);(1) -> (2) -> (4) -> (3)|0|Thái Bình Dương rộng nhất (~165 triệu km2), tiếp theo là Đại Tây Dương (~85 triệu km2), Ấn Độ Dương (~70 triệu km2), Bắc Băng Dương nhỏ nhất (~14 triệu km2).
+Q-DD-09|Địa danh và khám phá thế giới|Khó|PHENOMENON_EXPLANATION|Tại sao người bơi ở Biển Chết (Dead Sea) có thể nổi lơ lửng trên mặt nước đọc báo mà không bao giờ bị chìm?|Độ mặn cực cao làm khối lượng riêng của nước lớn hơn cơ thể người;Có áp suất khí ngầm đẩy liên tục từ dưới đáy biển;Nước ở Biển Chết có nhiệt độ cố định 45 độ C;Sức căng bề mặt của nước tăng mạnh do có nhiều dầu khoáng|0|Độ mặn của Biển Chết đạt gần 34% (gấp gần 10 lần đại dương), làm tỷ trọng nước tăng lên xấp xỉ 1,24 kg/lít, giúp cơ thể người nổi dễ dàng.
+Q-DD-10|Địa danh và khám phá thế giới|Khó|CLUE_GUESS|Manh mối: Eo biển hẹp nằm giữa mũi nam bán đảo Iberia và bờ biển tây bắc châu Phi, nối Đại Tây Dương với Địa Trung Hải. Đây là eo biển nào?|Eo biển Gibraltar;Eo biển Bosphorus;Eo biển Malacca;Eo biển Magellan|0|Eo biển Gibraltar có vị trí chiến lược quân sự và hàng hải tối quan trọng, điểm hẹp nhất chỉ cách nhau 14,3 km giữa châu Âu và châu Phi.
+Q-DD-13|Địa danh và khám phá thế giới|Trung bình|TRUE_FALSE|Thành phố Istanbul của Thổ Nhĩ Kỳ là thành phố lớn duy nhất trên thế giới nằm trải dài trên cả hai lục địa Á và Âu?|Đúng;Sai|0|Đúng, Istanbul nằm ở hai bờ eo biển Bosphorus, nửa phía tây thuộc châu Âu và nửa phía đông thuộc châu Á.
+Q-DD-14|Địa danh và khám phá thế giới|Khó|TRUE_FALSE|Dòng sông Amazon ở Nam Mỹ không có bất kỳ cây cầu nào bắc qua suốt toàn bộ chiều dài của nó?|Đúng;Sai|0|Đúng, do sông Amazon chủ yếu chảy qua rừng rậm nhiệt đới rậm rạp với mật độ dân cư thưa thớt, nên không có cây cầu nào bắc qua dòng sông này.
+Q-DD-15|Địa danh và khám phá thế giới|Trung bình|MULTIPLE_SELECT|Những quốc gia nào dưới đây có đường biên giới trên đất liền tiếp giáp trực tiếp với Việt Nam?|Lào;Campuchia;Thái Lan;Trung Quốc|0,1,3|Việt Nam có đường biên giới trên đất liền giáp với Lào, Campuchia và Trung Quốc (Thái Lan không có biên giới trên đất liền với Việt Nam).
 
-# Bộ 1-2-2: Mạng máy tính - Mức Trung bình (Bộ 2)
-1-2-2|Mạng máy tính|Trung bình|150|1|Giao thức ICMP thường được sử dụng cho mục đích nào?|Truyền file dung lượng lớn;Báo cáo lỗi và chẩn đoán mạng;Mã hóa kênh truyền;Cấp phát địa chỉ động
-1-2-2|Mạng máy tính|Trung bình|150|0|Với mạng 192.168.1.0/24, địa chỉ Broadcast của mạng này là gì?|192.168.1.255;192.168.1.0;192.168.1.1;192.168.1.254
-1-2-2|Mạng máy tính|Trung bình|150|2|Giao thức OSPF hoạt động dựa trên thuật toán tìm đường nào?|Bellman-Ford;Floyd-Warshall;Dijkstra;Kruskal
-1-2-2|Mạng máy tính|Trung bình|150|3|Cửa sổ trượt (Sliding Window) trong giao thức TCP có công dụng chính là gì?|Mã hóa nội dung gói;Kiểm tra lỗi checksum;Phát hiện xung đột;Kiểm soát luồng dữ liệu (Flow Control)
-1-2-2|Mạng máy tính|Trung bình|150|1|Giao thức truyền file bảo mật SFTP chạy trên nền tảng của giao thức nào?|FTP;SSH;SSL/TLS;Telnet
-1-2-2|Mạng máy tính|Trung bình|150|0|Bản ghi DNS nào dùng để ánh xạ tên miền tới địa chỉ IPv6?|AAAA;A;CNAME;PTR
-1-2-2|Mạng máy tính|Trung bình|150|2|Quá trình đóng một kết nối TCP thông thường gồm bao nhiêu bước bắt tay?|2 bước;3 bước;4 bước (FIN - ACK - FIN - ACK);5 bước
-1-2-2|Mạng máy tính|Trung bình|150|3|Trong mạng LAN, miền quảng bá (Broadcast Domain) được giới hạn bởi thiết bị nào?|Hub;Repeater;Switch L2;Router
-1-2-2|Mạng máy tính|Trung bình|150|1|Độ dài tiêu đề (Header) tối thiểu của gói tin IPv4 là bao nhiêu byte?|16 bytes;20 bytes;24 bytes;32 bytes
-1-2-2|Mạng máy tính|Trung bình|150|0|Lớp DatagramPacket và DatagramSocket trong Java dùng để lập trình giao thức nào?|UDP;TCP;HTTP;ICMP
+# ------------------------------------------------------------------------------
+# CHỦ ĐỀ 3: NHỮNG CON NGƯỜI LÀM NÊN LỊCH SỬ
+# ------------------------------------------------------------------------------
+Q-LS-01|Những con người làm nên lịch sử|Dễ|MULTIPLE_CHOICE|Nhà bác học thiên tài nào là tác giả của Thuyết tương đối hẹp và Thuyết tương đối rộng?|Albert Einstein;Isaac Newton;Nikola Tesla;Galileo Galilei|0|Albert Einstein công bố Thuyết tương đối hẹp năm 1905 và Thuyết tương đối rộng năm 1915, làm thay đổi căn bản nền vật lý hiện đại.
+Q-LS-02|Những con người làm nên lịch sử|Dễ|TRUE_FALSE|Thomas Edison là người đầu tiên trong lịch sử nhân loại phát minh ra bóng đèn điện?|Đúng;Sai|1|Trước Edison đã có nhiều nhà nghiên cứu chế tạo bóng đèn; công lao của Edison là hoàn thiện dây tóc và hệ thống phân phối điện để thương mại hóa bóng đèn.
+Q-LS-03|Những con người làm nên lịch sử|Dễ|CLUE_GUESS|Manh mối: Nữ khoa học gia đầu tiên và duy nhất từng giành hai giải Nobel ở hai lĩnh vực khoa học tự nhiên khác nhau (Vật lý và Hóa học). Bà là ai?|Marie Curie;Rosalind Franklin;Ada Lovelace;Lise Meitner|0|Marie Curie nhận giải Nobel Vật lý năm 1903 cùng chồng và Nobel Hóa học năm 1911 nhờ khám phá ra nguyên tố Polonium và Radium.
+Q-LS-04|Những con người làm nên lịch sử|Trung bình|ODD_ONE_OUT|Nhân vật lỗi lạc nào dưới đây KHÔNG phải là một họa sĩ danh tiếng thời kỳ Phục Hưng?|Wolfgang Amadeus Mozart;Leonardo da Vinci;Michelangelo Buonarroti;Raffaello Sanzio|0|Mozart là nhà soạn nhạc thiên tài người Áo thời kỳ Cổ điển thế kỷ 18, trong khi 3 nhân vật còn lại là tam kiệt hội họa thời Phục Hưng Ý.
+Q-LS-05|Những con người làm nên lịch sử|Trung bình|COMPARISON|Phi hành gia nào là người đầu tiên trong lịch sử nhân loại bay vào không gian vũ trụ (ngày 12/4/1961)?|Yuri Gagarin;Neil Armstrong;Buzz Aldrin;Alan Shepard|0|Phi hành gia Liên Xô Yuri Gagarin thực hiện chuyến bay quỹ đạo kéo dài 108 phút trên con tàu Vostok 1.
+Q-LS-06|Những con người làm nên lịch sử|Trung bình|FILL_IN|Nhà thám hiểm nào dẫn đầu đoàn thủy thủ vượt Đại Tây Dương và khám phá ra châu Mỹ vào năm 1492?|Christopher Columbus;Columbus;Cô-lôm-bô|1|Columbus dẫn đầu đoàn tàu buồm của Tây Ban Nha cập bến Bahamas ngày 12/10/1492, mở ra kỷ nguyên khám phá tân thế giới.
+Q-LS-07|Những con người làm nên lịch sử|Trung bình|ELIMINATION|Nhà phát minh nào được mệnh danh là 'Cha đẻ của dòng điện xoay chiều' (AC) và sở hữu hàng trăm bằng sáng chế vĩ đại?|Nikola Tesla;Alexander Graham Bell;Guglielmo Marconi;James Watt|0|Nikola Tesla phát minh động cơ cảm ứng điện xoay chiều và các hệ thống phát điện xoay chiều nhiều pha, xương sống của điện lưới hiện đại.
+Q-LS-08|Những con người làm nên lịch sử|Khó|ORDERING|Sắp xếp các mốc phát minh theo trình tự thời gian xuất hiện: (1) Máy in ấn Gutenberg, (2) Động cơ hơi nước Watt, (3) Máy bay có động cơ anh em nhà Wright, (4) Máy tính điện tử ENIAC.|(1) -> (2) -> (3) -> (4);(2) -> (1) -> (3) -> (4);(1) -> (3) -> (2) -> (4);(2) -> (3) -> (1) -> (4)|0|Máy in Gutenberg (~1440), Động cơ hơi nước hoàn thiện (1776), Máy bay anh em nhà Wright (1903), Máy tính ENIAC (1945).
+Q-LS-09|Những con người làm nên lịch sử|Khó|PHENOMENON_EXPLANATION|Khám phá ngẫu nhiên nổi tiếng nào của bác sĩ Alexander Fleming năm 1928 đã tạo nên bước ngoặt vĩ đại cứu sống hàng trăm triệu người?|Phát hiện ra chất kháng sinh Penicillin từ nấm mốc;Tìm ra trực khuẩn vi khuẩn lao;Phát hiện ra cơ chế phân nhóm máu người;Phát minh ra vaccine phòng bệnh đậu mùa|0|Alexander Fleming nhận thấy nấm Penicillium notatum vô tình rơi vào đĩa nuôi cấy đã tiêu diệt các cụm vi khuẩn tụ cầu xung quanh.
+Q-LS-10|Những con người làm nên lịch sử|Khó|CLUE_GUESS|Manh mối: Nhà thiên văn học Ba Lan đã can đảm công bố tác phẩm đề xuất mô hình 'Thuyết nhật tâm' (Mặt Trời là trung tâm) năm 1543. Ông là ai?|Nicolaus Copernicus;Johannes Kepler;Galileo Galilei;Giordano Bruno|0|Copernicus lật ngược thuyết địa tâm kéo dài hàng nghìn năm của Ptolemy, khởi đầu cho cuộc cách mạng thiên văn học thời cận đại.
+Q-LS-13|Những con người làm nên lịch sử|Trung bình|TRUE_FALSE|Leonardo da Vinci có thói quen viết các ghi chép khoa học của mình theo chiều ngược từ phải sang trái qua gương?|Đúng;Sai|0|Đúng, hầu hết các trang sổ tay của Leonardo da Vinci đều được viết theo kiểu chữ gương (mirror writing) rất độc đáo.
+Q-LS-14|Những con người làm nên lịch sử|Khó|TRUE_FALSE|Hoàng đế Pháp Napoleon Bonaparte có chiều cao thực tế cực kỳ lùn chỉ dưới 1 mét 40?|Đúng;Sai|1|Sai, đây là thông tin tuyên truyền phóng đại của người Anh thời bấy giờ; thực tế Napoleon cao khoảng 1m68, mức trung bình của nam giới Pháp thế kỷ 18.
+Q-LS-15|Những con người làm nên lịch sử|Trung bình|MULTIPLE_SELECT|Những nhà khoa học nào dưới đây từng được trao giải thưởng Nobel trong lịch sử?|Albert Einstein;Marie Curie;Nikola Tesla;Thomas Edison|0,1|Albert Einstein (Nobel Vật lý 1921) và Marie Curie (Nobel Vật lý 1903 & Hóa học 1911) đều từng đoạt giải Nobel. Nikola Tesla và Thomas Edison chưa từng nhận giải Nobel.
 
-# Bộ 1-3-1: Mạng máy tính - Mức Khó (Bộ 1)
-1-3-1|Mạng máy tính|Khó|200|2|Trong cơ chế TCP Congestion Control, giai đoạn Slow Start kết thúc khi cửa sổ cwnd chạm ngưỡng nào?|MSS;BDP;ssthresh;Receive Window
-1-3-1|Mạng máy tính|Khó|200|1|Thuật toán Nagle trong ngăn xếp TCP nhằm mục đích gì?|Chống tràn bộ đệm máy nhận;Giảm overhead gói tin nhỏ bằng cách gom dữ liệu;Tăng tốc độ bắt tay ba bước;Ưu tiên các gói tin âm thanh
-1-3-1|Mạng máy tính|Khó|200|0|Giao thức BGP (Border Gateway Protocol) hoạt động ở tầng nào và dùng cổng TCP nào?|Tầng Ứng dụng qua cổng TCP 179;Tầng Mạng qua giao thức IP 89;Tầng Giao vận qua cổng UDP 520;Tầng Liên kết qua cổng 8080
-1-3-1|Mạng máy tính|Khó|200|3|Tùy chọn TCP SYN Cookie được thiết kế để đối phó với hình thức tấn công nào?|Man-in-the-middle;DNS Poisoning;Smurf Attack;SYN Flood DoS
-1-3-1|Mạng máy tính|Khó|200|2|Trong giao thức TLS 1.3, thời gian bắt tay (Handshake latency) được tối ưu xuống còn bao nhiêu RTT?|2 RTT;3 RTT;1 RTT (hoặc 0-RTT);4 RTT
-1-3-1|Mạng máy tính|Khó|200|1|Khi MTU là 1500 byte, truyền gói tin IP kích thước 4000 byte (header 20 byte) thì số mảnh phân mảnh (fragment) là?|2 mảnh;3 mảnh;4 mảnh;5 mảnh
-1-3-1|Mạng máy tính|Khó|200|0|Trạng thái TIME_WAIT trong TCP tồn tại trong khoảng thời gian bằng bao nhiêu để đảm bảo an toàn?|2 MSL (Maximum Segment Lifetime);1 RTT;30 giây cố định;5 phút
-1-3-1|Mạng máy tính|Khó|200|3|Cơ chế ECN (Explicit Congestion Notification) trong IP Header sử dụng bao nhiêu bit để báo nghẽn?|8 bit;4 bit;1 bit;2 bit
-1-3-1|Mạng máy tính|Khó|200|1|Trong kiến trúc CDN, kỹ thuật Anycast dựa trên giao thức định tuyến nào để đưa người dùng đến điểm gần nhất?|RIP;BGP;OSPF;IS-IS
-1-3-1|Mạng máy tính|Khó|200|0|Header cố định của giao thức IPv6 có kích thước là bao nhiêu byte?|40 bytes;20 bytes;32 bytes;64 bytes
+# ------------------------------------------------------------------------------
+# CHỦ ĐỀ 4: SỰ THẬT THÚ VỊ VỀ THẾ GIỚI
+# ------------------------------------------------------------------------------
+Q-ST-01|Sự thật thú vị về thế giới|Dễ|MULTIPLE_CHOICE|Loài động vật có vú nào là sinh vật lớn nhất từng sinh sống trên hành tinh Trái Đất?|Cá voi xanh;Voi rừng châu Phi;Khủng long bạo chúa T-Rex;Cá mập Megalodon|0|Cá voi xanh có chiều dài lên tới hơn 30 mét và khối lượng lên tới 190 tấn, vượt qua kích thước của bất kỳ loài khủng long khổng lồ nào.
+Q-ST-02|Sự thật thú vị về thế giới|Dễ|TRUE_FALSE|Trái tim của loài tôm nằm ở khu vực phần đầu ngực của cơ thể chúng?|Đúng;Sai|0|Các cơ quan nội tạng quan trọng nhất của tôm như não, tim và dạ dày đều được bảo vệ bên trong lớp vỏ giáp đầu ngực.
+Q-ST-03|Sự thật thú vị về thế giới|Dễ|FILL_IN|Loài chim nào là loài chim duy nhất có cấu trúc xương cánh cho phép chúng có thể bay lùi về phía sau?|Chim ruồi;Hummingbird;Chim ruoi|1|Chim ruồi có thể xoay khớp cánh linh hoạt 180 độ theo chuyển động hình số 8, cho phép chúng đứng yên giữa không trung và bay lùi.
+Q-ST-04|Sự thật thú vị về thế giới|Trung bình|ODD_ONE_OUT|Sinh vật biển nào dưới đây KHÔNG thuộc lớp động vật có vú (Mammalia)?|Cá mập trắng;Cá voi lưng gù;Cá heo mũi chai;Bò biển (Dugong)|0|Cá mập trắng là lớp cá sụn đẻ trứng hoặc sinh con nhưng thở bằng mang, không có tuyến sữa nuôi con như động vật có vú.
+Q-ST-05|Sự thật thú vị về thế giới|Trung bình|COMPARISON|Cơ quan nào trong cơ thể con người tiêu tốn nhiều năng lượng và oxy nhất (khoảng 20% tổng năng lượng mỗi ngày)?|Não bộ;Trái tim;Lá gan;Đôi phổi|0|Dù chỉ chiếm khoảng 2% tổng trọng lượng cơ thể, não bộ tiêu thụ tới 20% lượng oxy và lượng đường glucose trong máu.
+Q-ST-06|Sự thật thú vị về thế giới|Trung bình|CLUE_GUESS|Manh mối: Sinh vật thân mềm thông minh sở hữu 3 trái tim, máu có màu xanh lam và có thể đổi màu sắc ngụy trang trong tích tắc. Đây là con gì?|Bạch tuộc;Mực nang;Sứa biển;Hải sâm|0|Bạch tuộc có 2 tim bơm máu qua mang và 1 tim bơm máu đi nuôi cơ thể; máu có màu xanh vì chứa sắc tố đồng hemocyanin.
+Q-ST-07|Sự thật thú vị về thế giới|Trung bình|ELIMINATION|Mật ong tự nhiên nguyên chất nếu được bảo quản kín trong lọ thì có thời hạn sử dụng là bao lâu?|Hàng nghìn năm mà không bị ôi thiu;Tối đa 2 năm;Khoảng 10 năm;Không quá 6 tháng|0|Nhờ độ ẩm cực thấp và độ pH có tính axit nhẹ, vi khuẩn và vi sinh vật không thể sống sót trong mật ong; mật ong trong lăng mộ Ai Cập cổ đại vẫn ăn được.
+Q-ST-08|Sự thật thú vị về thế giới|Khó|PHENOMENON_EXPLANATION|Hiện tượng nào giải thích tại sao lá của nhiều loài cây rụng lá lại chuyển sang màu vàng hoặc đỏ rực rỡ vào mùa thu?|Chất diệp lục xanh bị phân hủy do ít nắng, làm lộ rõ các sắc tố vàng và đỏ có sẵn;Cây tiết ra lượng axit tannic cực lớn để chống rét;Cây hấp thụ nhiều sắc tố sắt đỏ từ lòng đất qua rễ;Nhiệt độ hạ thấp làm đông cứng tế bào lá chuyển màu|0|Khi mùa thu đến ngày ngắn lại, diệp lục tố xanh dừng tổng hợp và thoái hóa, để lộ các sắc tố carotenoid (vàng) và anthocyanin (đỏ).
+Q-ST-09|Sự thật thú vị về thế giới|Khó|ORDERING|Sắp xếp tốc độ di chuyển cực đại của các sinh vật sau từ chậm nhất đến nhanh nhất: (1) Con lười, (2) Con rùa cạn, (3) Báo săn Cheetah, (4) Chim cắt Peregrine Falcon.|(1) -> (2) -> (3) -> (4);(2) -> (1) -> (3) -> (4);(1) -> (3) -> (2) -> (4);(2) -> (3) -> (1) -> (4)|0|Con lười bò (~0,24 km/h), rùa cạn (~0,5 km/h), báo săn khi bứt tốc đạt ~110 km/h, và chim cắt khi bổ nhào săn mồi đạt trên 320 km/h.
+Q-ST-10|Sự thật thú vị về thế giới|Khó|COMPARISON|Xương nào là xương dài nhất, có thể tích lớn nhất và chịu lực khỏe nhất trong toàn bộ khung xương người trưởng thành?|Xương đùi (Femur);Xương cẳng chân (Tibia);Xương cánh tay (Humerus);Xương cột sống|0|Xương đùi chiếm trung bình khoảng 27% chiều cao một người và có thể chịu được lực nén tương đương cả tấn trước khi gãy.
+Q-ST-13|Sự thật thú vị về thế giới|Dễ|TRUE_FALSE|Loài đà điểu châu Phi sở hữu đôi mắt có kích thước to hơn cả bộ não của chúng?|Đúng;Sai|0|Đúng, mỗi mắt của đà điểu có đường kính khoảng 5 cm, lớn hơn đáng kể so với kích thước não bộ của chúng.
+Q-ST-14|Sự thật thú vị về thế giới|Trung bình|TRUE_FALSE|Máu của loài tôm hùm và bạch tuộc có màu xanh lam thay vì màu đỏ như máu của con người?|Đúng;Sai|0|Đúng, máu của chúng sử dụng phân tử hemocyanin gốc đồng để vận chuyển oxy thay vì hemoglobin gốc sắt, nên khi tiếp xúc với oxy máu có màu xanh lam.
+Q-ST-15|Sự thật thú vị về thế giới|Trung bình|MULTIPLE_SELECT|Những loài động vật nào dưới đây thuộc lớp động vật có vú (Mammalia)?|Cá voi lưng gù;Cá heo mũi chai;Cá mập trắng;Cá ngựa|0,1|Cá voi và cá heo là thú có vú thở bằng phổi và sinh con, nuôi con bằng sữa mẹ; trong khi cá mập trắng và cá ngựa thuộc lớp cá.
 
-# Bộ 1-3-2: Mạng máy tính - Mức Khó (Bộ 2)
-1-3-2|Mạng máy tính|Khó|200|3|Thuật toán chống nghẽn TCP BBR (Bottleneck Bandwidth and RTT) do tổ chức nào phát triển?|Cisco;IETF;Microsoft;Google
-1-3-2|Mạng máy tính|Khó|200|1|Giao thức HTTP/3 sử dụng giao thức truyền vận nào bên dưới thay thế cho TCP?|SCTP;QUIC (trên nền UDP);RTP;DCCP
-1-3-2|Mạng máy tính|Khó|200|0|Trong kỹ thuật tấn công DNS Cache Poisoning, kẻ tấn công khai thác trường nào trong DNS Header?|Transaction ID (16 bit);Opcode;Checksum;TTL
-1-3-2|Mạng máy tính|Khó|200|2|Tại sao TCP Header có trường Header Length (Data Offset) dài 4 bit biểu thị đơn vị là?|Số byte;Số bit;Số từ 32-bit (32-bit words);Số kilobyte
-1-3-2|Mạng máy tính|Khó|200|3|Kỹ thuật Path MTU Discovery (PMTUD) sử dụng cờ IP nào kết hợp với bản tin ICMP?|MF (More Fragments);RST (Reset);URG (Urgent);DF (Don't Fragment)
-1-3-2|Mạng máy tính|Khó|200|1|Giao thức STP (Spanning Tree Protocol) sử dụng gói tin nào để phát hiện và ngăn ngừa lặp vòng mạng (loop)?|LSA;BPDU;ARP Request;Keepalive
-1-3-2|Mạng máy tính|Khó|200|0|Vấn đề Silly Window Syndrome trong TCP được giải quyết bằng thuật toán nào ở phía người nhận?|Thuật toán Clark;Thuật toán Dijkstra;Thuật toán Bellman;Thuật toán Karn
-1-3-2|Mạng máy tính|Khó|200|2|Địa chỉ IPv6 ::1 tương đương với địa chỉ IPv4 nào?|0.0.0.0;255.255.255.255;127.0.0.1;192.168.1.1
-1-3-2|Mạng máy tính|Khó|200|3|Trong giao thức OSPF, Router ID được chọn theo thứ tự ưu tiên nào cao nhất?|Địa chỉ IP vật lý lớn nhất;Địa chỉ IP vật lý nhỏ nhất;Địa chỉ Loopback nhỏ nhất;Địa chỉ IP cấu hình thủ công hoặc Loopback lớn nhất
-1-3-2|Mạng máy tính|Khó|200|1|Trong Java NIO SocketChannel, chế độ Non-blocking kết hợp với thành phần nào để phục vụ hàng ngàn kết nối?|Thread;Selector;ThreadPool;ServerSocket
+# ------------------------------------------------------------------------------
+# CHỦ ĐỀ 5: DÒNG THỜI GIAN VÀ NHỮNG CỘT MỐC
+# ------------------------------------------------------------------------------
+Q-TM-01|Dòng thời gian và những cột mốc|Dễ|MULTIPLE_CHOICE|Chiến tranh thế giới thứ hai (Thế chiến II) chính thức kết thúc vào năm nào?|1945;1939;1918;1954|0|Thế chiến II kết thúc vào năm 1945 sau khi phe Phát xít đầu hàng vô điều kiện.
+Q-TM-02|Dòng thời gian và những cột mốc|Dễ|TRUE_FALSE|Sự kiện con người lần đầu tiên đặt chân lên bề mặt Mặt Trăng (sứ mệnh Apollo 11) diễn ra vào năm 1969?|Đúng;Sai|0|Ngày 20/7/1969, hai phi hành gia Neil Armstrong và Buzz Aldrin đã đổ bộ thành công xuống Mặt Trăng trên tàu Apollo 11.
+Q-TM-03|Dòng thời gian và những cột mốc|Dễ|FILL_IN|Bức tường Berlin biểu tượng của Chiến tranh Lạnh tại châu Âu chính thức bị sụp đổ vào năm nào?|1989;Năm 1989|1|Bức tường Berlin bị phá bỏ vào tháng 11 năm 1989, mở đường cho sự thống nhất nước Đức.
+Q-TM-04|Dòng thời gian và những cột mốc|Trung bình|ODD_ONE_OUT|Sự kiện lịch sử nào dưới đây KHÔNG diễn ra trong thế kỷ 20 (giai đoạn 1901 - 2000)?|Cách mạng Pháp bùng nổ;Thế chiến thứ nhất;Sự kiện chìm tàu Titanic;Thành lập Liên Hiệp Quốc|0|Cách mạng Pháp bùng nổ năm 1789 (thuộc thế kỷ 18); tàu Titanic chìm năm 1912, Thế chiến I (1914-1918), Liên Hiệp Quốc thành lập năm 1945 (thế kỷ 20).
+Q-TM-05|Dòng thời gian và những cột mốc|Trung bình|CLUE_GUESS|Manh mối: Mạng máy tính tiền thân của mạng Internet toàn cầu được Bộ Quốc phòng Hoa Kỳ thử nghiệm thành công năm 1969 có tên là gì?|ARPANET;INTERNET;ETHERNET;NSFNET|0|ARPANET (Advanced Research Projects Agency Network) là mạng chuyển mạch gói đầu tiên trên thế giới.
+Q-TM-06|Dòng thời gian và những cột mốc|Trung bình|ELIMINATION|Công ước quốc tế thành lập tổ chức Liên Hợp Quốc (UN) được ký kết tại thành phố nào của Hoa Kỳ năm 1945?|San Francisco;New York;Washington D.C.;Boston|0|Hiến chương Liên Hợp Quốc được đại diện 50 quốc gia ký kết ngày 26/6/1945 tại San Francisco.
+Q-TM-07|Dòng thời gian và những cột mốc|Trung bình|COMPARISON|Cuộc Cách mạng Công nghiệp lần thứ nhất bắt nguồn sớm nhất tại quốc gia nào vào nửa sau thế kỷ 18?|Nước Anh;Nước Pháp;Nước Đức;Hoa Kỳ|0|Cách mạng công nghiệp lần thứ nhất bùng nổ tại Anh nhờ phát minh máy dệt và động cơ hơi nước của James Watt.
+Q-TM-08|Dòng thời gian và những cột mốc|Khó|ORDERING|Sắp xếp các cột mốc sau theo trình tự thời gian xảy ra: (1) Cách mạng Tháng Mười Nga, (2) Ném bom nguyên tử xuống Hiroshima, (3) Khủng hoảng tên lửa Cuba, (4) Thống nhất nước Đức.|(1) -> (2) -> (3) -> (4);(2) -> (1) -> (3) -> (4);(1) -> (3) -> (2) -> (4);(2) -> (4) -> (1) -> (3)|0|Cách mạng Tháng Mười Nga (1917), Hiroshima (1945), Khủng hoảng tên lửa Cuba (1962), Thống nhất nước Đức (1990).
+Q-TM-09|Dòng thời gian và những cột mốc|Khó|PHENOMENON_EXPLANATION|Năm 1816 được ghi vào lịch sử nhân loại với tên gọi 'Năm không có mùa hè' tại Bắc Bán Cầu là do hiện tượng gì?|Núi lửa Tambora ở Indonesia phun trào dữ dội che khuất bức xạ Mặt Trời;Hiện tượng bão từ Mặt Trời làm suy yếu khí quyển;Thiên thạch va chạm vào vùng biển Thái Bình Dương;Băng tan kỷ lục ở hai cực làm thay đổi hải lưu|0|Vụ phun trào núi lửa Tambora năm 1815 giải phóng hàng triệu tấn tro bụi và sulfur dioxide vào tầng bình lưu, làm nhiệt độ toàn cầu giảm mạnh.
+Q-TM-10|Dòng thời gian và những cột mốc|Khó|CLUE_GUESS|Manh mối: Bản tuyên ngôn lịch sử được ký kết tại Philadelphia năm 1776 khai sinh ra Hợp chúng quốc Hoa Kỳ. Bản tuyên ngôn do ai chủ trì soạn thảo?|Thomas Jefferson;George Washington;Benjamin Franklin;John Adams|0|Thomas Jefferson là tác giả chính của Bản Tuyên ngôn Độc lập Hoa Kỳ công bố ngày 4/7/1776.
+Q-TM-13|Dòng thời gian và những cột mốc|Trung bình|TRUE_FALSE|Công trình Tháp Eiffel ở Paris ban đầu chỉ được cấp phép xây dựng để tồn tại trong 20 năm rồi sẽ bị tháo dỡ?|Đúng;Sai|0|Đúng, tháp được khánh thành cho Hội chợ Thế giới 1889 và dự định phá bỏ năm 1909, nhưng được cứu nhờ ứng dụng làm trạm phát sóng vô tuyến viễn thông.
+Q-TM-14|Dòng thời gian và những cột mốc|Khó|TRUE_FALSE|Con tàu huyền thoại Titanic mang theo đầy đủ số xuồng cứu sinh cho toàn bộ hành khách và thủy thủ đoàn khi khởi hành?|Đúng;Sai|1|Sai, tàu Titanic chỉ mang theo 20 xuồng cứu sinh, chỉ đủ tải khoảng một nửa số người có mặt trên tàu.
+Q-TM-15|Dòng thời gian và những cột mốc|Trung bình|MULTIPLE_SELECT|Những sự kiện lịch sử trọng đại nào dưới đây đã diễn ra trong thế kỷ 20 (giai đoạn 1901 - 2000)?|Thế chiến thứ nhất kết thúc;Con người đặt chân lên Mặt Trăng;Cách mạng Pháp bùng nổ;Tàu ngầm hơi nước đầu tiên thử nghiệm|0,1|Thế chiến I kết thúc năm 1918 và Apollo 11 hạ cánh Mặt Trăng năm 1969 đều diễn ra trong thế kỷ 20. Cách mạng Pháp bùng nổ năm 1789 (thế kỷ 18).
 
-# ==============================================================================
-# CHỦ ĐỀ 2: LẬP TRÌNH & CẤU TRÚC DỮ LIỆU
-# ==============================================================================
-# Bộ 2-1-1: Lập trình & Cấu trúc dữ liệu - Mức Dễ (Bộ 1)
-2-1-1|Lập trình & Cấu trúc dữ liệu|Dễ|100|0|Cấu trúc dữ liệu nào hoạt động theo nguyên lý LIFO (Last In First Out)?|Stack (Ngăn xếp);Queue (Hàng đợi);LinkedList;Array
-2-1-1|Lập trình & Cấu trúc dữ liệu|Dễ|100|1|Cấu trúc dữ liệu nào hoạt động theo nguyên lý FIFO (First In First Out)?|Stack;Queue (Hàng đợi);Tree;Graph
-2-1-1|Lập trình & Cấu trúc dữ liệu|Dễ|100|2|Trong Java, mã nguồn (.java) sau khi biên dịch bằng javac sẽ tạo ra tệp gì?|Mã máy (.exe);Mã nguồn C;Bytecode (.class);Tệp thư viện (.dll)
-2-1-1|Lập trình & Cấu trúc dữ liệu|Dễ|100|3|Độ phức tạp thời gian trung bình của thuật toán tìm kiếm nhị phân (Binary Search) là gì?|O(n);O(n^2);O(1);O(log n)
-2-1-1|Lập trình & Cấu trúc dữ liệu|Dễ|100|0|Chỉ số (index) đầu tiên của mảng trong hầu hết các ngôn ngữ (Java, C++, Python) là bao nhiêu?|0;1;-1;Không xác định
-2-1-1|Lập trình & Cấu trúc dữ liệu|Dễ|100|2|Tính chất nào trong OOP cho phép một đối tượng có nhiều hình thái thực thi khác nhau?|Đóng gói;Kế thừa;Đa hình (Polymorphism);Trừu tượng
-2-1-1|Lập trình & Cấu trúc dữ liệu|Dễ|100|1|Lớp HashMap trong Java lưu trữ dữ liệu dưới dạng cấu trúc nào?|Danh sách liên kết;Cặp Key - Value (Khóa - Giá trị);Mảng một chiều;Hàng đợi ưu tiên
-2-1-1|Lập trình & Cấu trúc dữ liệu|Dễ|100|3|Từ khóa nào trong Java dùng để kế thừa một lớp cha?|implements;exports;public;extends
-2-1-1|Lập trình & Cấu trúc dữ liệu|Dễ|100|0|Khối mã nào trong cấu trúc try-catch-finally luôn luôn được thực thi dù có lỗi hay không?|finally;catch;try;default
-2-1-1|Lập trình & Cấu trúc dữ liệu|Dễ|100|1|Kiểu dữ liệu nguyên thủy nào trong Java dùng để lưu trữ giá trị đúng hoặc sai?|int;boolean;char;float
+# ------------------------------------------------------------------------------
+# CHỦ ĐỀ 6: VŨ TRỤ VÀ KHÁM PHÁ KHÔNG GIAN
+# ------------------------------------------------------------------------------
+Q-VT-01|Vũ trụ và khám phá không gian|Dễ|MULTIPLE_CHOICE|Hành tinh nào có kích thước và khối lượng lớn nhất trong Hệ Mặt Trời của chúng ta?|Sao Mộc (Jupiter);Sao Thổ (Saturn);Sao Hải Vương;Sao Kim|0|Sao Mộc là hành tinh khí khổng lồ, khối lượng của nó gấp hơn 2,5 lần tổng khối lượng tất cả các hành tinh khác trong Hệ Mặt Trời cộng lại.
+Q-VT-02|Vũ trụ và khám phá không gian|Dễ|TRUE_FALSE|Ánh sáng phát ra từ bề mặt Mặt Trời mất khoảng 8 phút 20 giây để truyền tới Trái Đất?|Đúng;Sai|0|Với khoảng cách xấp xỉ 150 triệu km và tốc độ ánh sáng ~300.000 km/s, ánh sáng cần khoảng 500 giây (~8 phút 20 giây) để đến Trái Đất.
+Q-VT-03|Vũ trụ và khám phá không gian|Dễ|FILL_IN|Hành tinh nào trong Hệ Mặt Trời được mệnh danh là 'Hành tinh Đỏ' do bề mặt chứa nhiều oxit sắt?|Sao Hỏa;Mars;Hỏa tinh;Sao Hoa|1|Sao Hỏa có màu đỏ rực đặc trưng vì bề mặt bị bao phủ bởi lớp bụi giàu khoáng chất sắt oxit (gỉ sắt).
+Q-VT-04|Vũ trụ và khám phá không gian|Trung bình|ODD_ONE_OUT|Thiên thể nào dưới đây KHÔNG còn được Liên minh Thiên văn Quốc tế (IAU) xếp vào danh sách các hành tinh chính của Hệ Mặt Trời từ năm 2006?|Sao Diêm Vương (Pluto);Sao Hải Vương (Neptune);Sao Thiên Vương (Uranus);Sao Thủy (Mercury)|0|Năm 2006, IAU đã phân loại lại Sao Diêm Vương thành 'hành tinh lùn' (Dwarf planet) vì nó chưa dọn sạch vùng lân cận quỹ đạo của mình.
+Q-VT-05|Vũ trụ và khám phá không gian|Trung bình|CLUE_GUESS|Manh mối: Kính viễn vọng không gian hồng ngoại thế hệ mới tối tân nhất của NASA, phóng lên quỹ đạo điểm Lagrange L2 năm 2021. Tên của kính là gì?|James Webb (JWST);Hubble;Spitzer;Kepler|0|Kính viễn vọng James Webb sở hữu gương mạ vàng đường kính 6,5 mét, chụp lại những hình ảnh thiên hà cổ xưa nhất từ thuở vũ trụ sơ khai.
+Q-VT-06|Vũ trụ và khám phá không gian|Trung bình|COMPARISON|Hành tinh nào trong Hệ Mặt Trời sở hữu hệ thống vành đai bụi và băng đá rộng lớn và lộng lẫy nhất?|Sao Thổ (Saturn);Sao Mộc;Sao Thiên Vương;Sao Hải Vương|0|Vành đai của Sao Thổ trải rộng hàng trăm nghìn kilomet nhưng độ dày trung bình chỉ khoảng vài chục mét đến 1 kilomet.
+Q-VT-07|Vũ trụ và khám phá không gian|Trung bình|ELIMINATION|Hiện tượng nhật thực toàn phần xảy ra khi vị trí của ba thiên thể nằm trên một đường thẳng theo thứ tự nào?|Mặt Trời - Mặt Trăng - Trái Đất;Mặt Trời - Trái Đất - Mặt Trăng;Trái Đất - Mặt Trời - Mặt Trăng;Mặt Trăng - Trái Đất - Sao Hỏa|0|Nhật thực xảy ra khi Mặt Trăng đi vào khoảng giữa Trái Đất và Mặt Trời, che khuất một phần hoặc toàn bộ ánh sáng Mặt Trời chiếu tới Trái Đất.
+Q-VT-08|Vũ trụ và khám phá không gian|Khó|ORDERING|Sắp xếp các hành tinh sau theo thứ tự khoảng cách từ gần Mặt Trời nhất đến xa nhất: (1) Sao Thủy, (2) Sao Hỏa, (3) Sao Mộc, (4) Sao Hải Vương.|(1) -> (2) -> (3) -> (4);(1) -> (3) -> (2) -> (4);(2) -> (1) -> (3) -> (4);(1) -> (2) -> (4) -> (3)|0|Thứ tự từ Mặt Trời: Sao Thủy -> Sao Kim -> Trái Đất -> Sao Hỏa -> Sao Mộc -> Sao Thổ -> Sao Thiên Vương -> Sao Hải Vương.
+Q-VT-09|Vũ trụ và khám phá không gian|Khó|PHENOMENON_EXPLANATION|Tại sao trên Mặt Trăng con người không thể nghe thấy bất kỳ âm thanh nào truyền trực tiếp qua không khí?|Mặt Trăng là môi trường chân không, không có không khí để truyền sóng âm;Trọng lực Mặt Trăng quá yếu không giữ được sóng âm;Nhiệt độ trên Mặt Trăng luôn ở độ không tuyệt đối;Bề mặt Mặt Trăng hấp thụ hoàn toàn dao động âm thanh|0|Sóng âm là sóng cơ học đòi hỏi môi trường vật chất (chất khí, lỏng, rắn) để lan truyền; vì Mặt Trăng không có bầu khí quyển nên âm thanh không truyền được.
+Q-VT-10|Vũ trụ và khám phá không gian|Khó|CLUE_GUESS|Manh mối: Vùng không gian có trường hấp dẫn cực kỳ mãnh liệt đến mức không một vật chất hay bức xạ ánh sáng nào có thể thoát khỏi chân trời sự kiện của nó. Đây là gì?|Hố đen (Lỗ đen vũ trụ);Sao Neutron;Sao lùn trắng;Tinh vân hành tinh|0|Hố đen (Black hole) hình thành khi các ngôi sao khổng lồ suy sụp trọng lực ở cuối vòng đời, tập trung khối lượng khổng lồ vào một điểm kỳ dị.
+Q-VT-13|Vũ trụ và khám phá không gian|Trung bình|TRUE_FALSE|Một ngày trên Sao Kim (thời gian tự quay một vòng quanh trục) dài hơn một năm trên Sao Kim (thời gian quay quanh Mặt Trời)?|Đúng;Sai|0|Đúng, Sao Kim mất 243 ngày Trái Đất để tự quay một vòng, nhưng chỉ mất khoảng 225 ngày Trái Đất để quay trọn vẹn một vòng quanh Mặt Trời.
+Q-VT-14|Vũ trụ và khám phá không gian|Khó|TRUE_FALSE|Sao Kim (Venus) là hành tinh nóng nhất trong Hệ Mặt Trời dù Sao Thủy (Mercury) nằm gần Mặt Trời hơn?|Đúng;Sai|0|Đúng, Sao Kim có bầu khí quyển dày đặc chứa hơn 96% CO2 tạo hiệu ứng nhà kính cực độ, khiến nhiệt độ bề mặt lên tới khoảng 465 độ C.
+Q-VT-15|Vũ trụ và khám phá không gian|Trung bình|MULTIPLE_SELECT|Những hành tinh nào dưới đây thuộc nhóm hành tinh đất đá (Terrestrial planets) trong Hệ Mặt Trời?|Sao Thủy;Sao Hỏa;Sao Mộc;Sao Thổ|0,1|Sao Thủy, Sao Kim, Trái Đất và Sao Hỏa là 4 hành tinh đất đá; còn Sao Mộc và Sao Thổ là các hành tinh khí khổng lồ.
 
-# Bộ 2-1-2: Lập trình & Cấu trúc dữ liệu - Mức Dễ (Bộ 2)
-2-1-2|Lập trình & Cấu trúc dữ liệu|Dễ|100|2|Từ khóa nào trong Java dùng để khai báo một hằng số không thể thay đổi giá trị?|static;const;final;immutable
-2-1-2|Lập trình & Cấu trúc dữ liệu|Dễ|100|0|Trong cấu trúc dữ liệu mảng động ArrayList của Java, thao tác get(index) có độ phức tạp là bao nhiêu?|O(1);O(n);O(log n);O(n^2)
-2-1-2|Lập trình & Cấu trúc dữ liệu|Dễ|100|3|Phương thức nào là điểm khởi đầu thực thi của một ứng dụng Java Console độc lập?|start();run();init();main(String[] args)
-2-1-2|Lập trình & Cấu trúc dữ liệu|Dễ|100|1|Tính chất nào của OOP ẩn đi các chi tiết cài đặt bên trong và chỉ cung cấp các hàm giao tiếp ngoài?|Kế thừa;Đóng gói (Encapsulation);Đa hình;Gán dữ liệu
-2-1-2|Lập trình & Cấu trúc dữ liệu|Dễ|100|2|Vòng lặp nào kiểm tra điều kiện sau khi đã thực thi thân vòng lặp ít nhất một lần?|for;while;do-while;foreach
-2-1-2|Lập trình & Cấu trúc dữ liệu|Dễ|100|0|Lớp cha cao nhất của tất cả các lớp trong ngôn ngữ lập trình Java là lớp nào?|java.lang.Object;java.lang.Class;java.lang.System;java.lang.String
-2-1-2|Lập trình & Cấu trúc dữ liệu|Dễ|100|3|Cấu trúc dữ liệu nào không cho phép lưu trữ các phần tử trùng lặp?|List;ArrayList;Queue;Set (HashSet)
-2-1-2|Lập trình & Cấu trúc dữ liệu|Dễ|100|1|Kích thước bộ nhớ của kiểu dữ liệu nguyên thủy int trong Java là bao nhiêu byte?|2 bytes;4 bytes (32 bits);8 bytes;1 byte
-2-1-2|Lập trình & Cấu trúc dữ liệu|Dễ|100|0|Để so sánh nội dung bằng nhau của hai đối tượng chuỗi String trong Java, ta dùng phương thức nào?|equals();==;compareTo() == 0;isSame()
-2-1-2|Lập trình & Cấu trúc dữ liệu|Dễ|100|2|Từ khóa nào được dùng để thực thi (triển khai) một Interface trong lớp Java?|extends;inherits;implements;abstract
+# ------------------------------------------------------------------------------
+# CHỦ ĐỀ 7: VĂN HÓA VÀ DI SẢN NHÂN LOẠI
+# ------------------------------------------------------------------------------
+Q-VH-01|Văn hóa và di sản nhân loại|Dễ|MULTIPLE_CHOICE|Trang phục truyền thống nổi tiếng của đất nước Nhật Bản có tên gọi là gì?|Kimono;Hanbok;Áo dài;Sari|0|Kimono là quốc phục truyền thống của Nhật Bản, mang đậm tính triết lý và hoa văn bốn mùa của xứ sở hoa anh đào.
+Q-VH-02|Văn hóa và di sản nhân loại|Dễ|TRUE_FALSE|Nhã nhạc cung đình Huế của Việt Nam đã được UNESCO ghi danh là Di sản văn hóa phi vật thể của nhân loại?|Đúng;Sai|0|Năm 2003, Nhã nhạc cung đình Huế là di sản phi vật thể đầu tiên của Việt Nam được UNESCO vinh danh.
+Q-VH-03|Văn hóa và di sản nhân loại|Dễ|FILL_IN|Lễ hội hóa trang Carnaval lớn nhất và sôi động nhất hành tinh diễn ra thường niên tại thành phố nào của Brazil?|Rio de Janeiro;Rio;Thành phố Rio de Janeiro|1|Lễ hội Carnaval ở Rio de Janeiro quy tụ hàng triệu du khách với các màn diễu hành vũ điệu Samba lộng lẫy tại Sambadrome.
+Q-VH-04|Văn hóa và di sản nhân loại|Trung bình|ODD_ONE_OUT|Nhạc cụ truyền thống nào dưới đây của Việt Nam phát ra âm thanh chỉ nhờ một dây duy nhất?|Đàn bầu (Độc huyền cầm);Đàn tranh;Đàn tỳ bà;Đàn nguyệt|0|Đàn bầu (Độc huyền cầm) độc đáo ở chỗ chỉ có đúng 1 dây đàn nhưng nhờ cần nắn uốn tạo ra âm bội và các luyến láy tuyệt đẹp.
+Q-VH-05|Văn hóa và di sản nhân loại|Trung bình|CLUE_GUESS|Manh mối: Lễ hội ném cà chua vui nhộn La Tomatina được tổ chức thường niên vào thứ Tư cuối cùng của tháng 8 tại thị trấn Bunol thuộc quốc gia nào?|Tây Ban Nha;Ý;Bồ Đào Nha;Hy Lạp|0|Lễ hội La Tomatina ở Tây Ban Nha thu hút hàng chục nghìn người tham gia ném hơn 100 tấn cà chua chín trên các con phố.
+Q-VH-06|Văn hóa và di sản nhân loại|Trung bình|COMPARISON|Thành phố nào được mệnh danh là 'Thành phố tình yêu' và nổi tiếng với những chiếc thuyền Gondola trôi trên kênh rạch?|Venice (Ý);Paris (Pháp);Amsterdam (Hà Lan);Bruges (Bỉ)|0|Venice xây dựng trên 118 hòn đảo nhỏ trong đầm phá Venetian với hơn 400 cây cầu và những chiếc thuyền Gondola cổ kính.
+Q-VH-07|Văn hóa và di sản nhân loại|Trung bình|ELIMINATION|Tác phẩm sử thi anh hùng Iliad và Odyssey mô tả cuộc chiến thành Troy là kiệt tác văn học cổ đại của quốc gia nào?|Hy Lạp cổ đại;La Mã cổ đại;Ai Cập cổ đại;Ba Tư cổ đại|0|Hai thiên sử thi vĩ đại Iliad và Odyssey được cho là sáng tác của đại thi hào mù Homer của Hy Lạp cổ đại.
+Q-VH-08|Văn hóa và di sản nhân loại|Khó|ORDERING|Sắp xếp các di sản thế giới tại Việt Nam sau theo thời gian được UNESCO công nhận lần đầu tiên: (1) Quần thể di tích Cố đô Huế, (2) Vịnh Hạ Long, (3) Phố cổ Hội An, (4) Hoàng thành Thăng Long.|(1) -> (2) -> (3) -> (4);(2) -> (1) -> (3) -> (4);(1) -> (3) -> (2) -> (4);(2) -> (4) -> (1) -> (3)|0|Cố đô Huế (1993), Vịnh Hạ Long (1994), Phố cổ Hội An (1999), Hoàng thành Thăng Long (2010).
+Q-VH-09|Văn hóa và di sản nhân loại|Khó|PHENOMENON_EXPLANATION|Ý nghĩa cốt lõi của nghệ thuật Kintsugi (hàn gắn đồ gốm sứ vỡ bằng vàng) trong triết lý văn hóa Nhật Bản là gì?|Tôn vinh vết nứt và sự không hoàn hảo như một phần lịch sử đáng quý;Để tăng giá trị thương mại đồ cổ;Ngăn ngừa bụi bẩn bám vào các khe nứt;Tượng trưng cho sự giàu sang và thịnh vượng quyền quý|0|Kintsugi gắn liền với triết lý Wabi-Sabi, coi những vết nứt và thương tổn là vẻ đẹp độc bản của sự tái sinh thay vì che giấu chúng.
+Q-VH-10|Văn hóa và di sản nhân loại|Khó|CLUE_GUESS|Manh mối: Lễ hội tắm nước thiêng Kumbh Mela quy tụ hàng chục triệu tín đồ bên dòng sông Hằng là nghi lễ tôn giáo lớn nhất của tôngio nào?|Ấn Độ giáo (Hindu giáo);Phật giáo;Hồi giáo;Kito giáo|0|Kumbh Mela là đại lễ hành hương của tín đồ Hindu giáo, được UNESCO công nhận là di sản văn hóa phi vật thể của nhân loại.
+Q-VH-13|Văn hóa và di sản nhân loại|Trung bình|TRUE_FALSE|Trống đồng Đông Sơn là biểu tượng văn hóa tiêu biểu của nền văn minh thời kỳ dựng nước Văn Lang - Âu Lạc tại Việt Nam?|Đúng;Sai|0|Đúng, trống đồng Đông Sơn phản ánh đỉnh cao kỹ nghệ đúc đồng và đời sống tâm linh, nghệ thuật của người Việt cổ thời kỳ các Vua Hùng.
+Q-VH-14|Văn hóa và di sản nhân loại|Khó|TRUE_FALSE|Đền Taj Mahal ở Ấn Độ hoàn toàn đối xứng hoàn hảo trong mọi chi tiết, bao gồm cả vị trí đặt hai cỗ quách lăng mộ bên trong?|Đúng;Sai|1|Sai, toàn bộ công trình đối xứng tuyệt đối ngoại trừ cỗ quách của vua Shah Jahan được đặt lệch cạnh cỗ quách của hoàng hậu Mumtaz Mahal.
+Q-VH-15|Văn hóa và di sản nhân loại|Trung bình|MULTIPLE_SELECT|Những địa danh nào dưới đây của Việt Nam đã được UNESCO công nhận là Di sản thiên nhiên thế giới?|Vịnh Hạ Long;Vườn quốc gia Phong Nha - Kẻ Bàng;Cố đô Huế;Phố cổ Hội An|0,1|Vịnh Hạ Long và Vườn quốc gia Phong Nha - Kẻ Bàng là Di sản thiên nhiên thế giới; trong khi Cố đô Huế và Phố cổ Hội An là Di sản văn hóa thế giới.
 
-# Bộ 2-2-1: Lập trình & Cấu trúc dữ liệu - Mức Trung bình (Bộ 1)
-2-2-1|Lập trình & Cấu trúc dữ liệu|Trung bình|150|1|Độ phức tạp thời gian trong trường hợp xấu nhất (Worst case) của QuickSort là gì?|O(n log n);O(n^2);O(n);O(log n)
-2-2-1|Lập trình & Cấu trúc dữ liệu|Trung bình|150|2|Trong Cây nhị phân tìm kiếm (BST), phần tử ở nhánh con bên trái luôn có giá trị như thế nào so với nút gốc?|Lớn hơn;Bằng nhau;Nhỏ hơn;Gấp đôi
-2-2-1|Lập trình & Cấu trúc dữ liệu|Trung bình|150|0|Thuật toán sắp xếp nào hoạt động theo nguyên lý Chia để trị (Divide and Conquer)?|MergeSort;BubbleSort;InsertionSort;SelectionSort
-2-2-1|Lập trình & Cấu trúc dữ liệu|Trung bình|150|3|Kỹ thuật xử lý va chạm trong Bảng băm (Hash Table) bằng cách liên kết các nút tại cùng bucket gọi là gì?|Open Addressing;Linear Probing;Double Hashing;Chaining (Separate Chaining)
-2-2-1|Lập trình & Cấu trúc dữ liệu|Trung bình|150|1|Trong Java, sự khác biệt chính giữa StringBuilder và StringBuffer là gì?|StringBuilder lưu được nhiều ký tự hơn;StringBuffer đồng bộ hóa thread-safe còn StringBuilder thì không;StringBuilder là kiểu nguyên thủy;StringBuffer không thay đổi được chuỗi
-2-2-1|Lập trình & Cấu trúc dữ liệu|Trung bình|150|2|Độ phức tạp thời gian khi chèn một phần tử vào đầu danh sách liên kết đơn (Singly LinkedList) là gì?|O(n);O(log n);O(1);O(n^2)
-2-2-1|Lập trình & Cấu trúc dữ liệu|Trung bình|150|0|Từ khóa volatile trong đa luồng Java có ý nghĩa gì đối với biến?|Đảm bảo tính hiển thị (Visibility) tức thì giữa các luồng trong bộ nhớ chính;Tự động đồng bộ hóa synchronized toàn bộ hàm;Biến không thể thay đổi giá trị;Biến chỉ chạy trên một luồng duy nhất
-2-2-1|Lập trình & Cấu trúc dữ liệu|Trung bình|150|3|Thứ tự duyệt cây nào sau đây trả về danh sách các khóa của cây BST theo thứ tự tăng dần?|Pre-order (Tiền thứ tự);Post-order (Hậu thứ tự);Level-order (Theo tầng);In-order (Trung thứ tự)
-2-2-1|Lập trình & Cấu trúc dữ liệu|Trung bình|150|1|Mô hình thiết kế (Design Pattern) nào đảm bảo một lớp chỉ có duy nhất một thể hiện (Instance)?|Factory Pattern;Singleton Pattern;Observer Pattern;Decorator Pattern
-2-2-1|Lập trình & Cấu trúc dữ liệu|Trung bình|150|2|Cấu trúc dữ liệu Heap nhị phân cực đại (Max-Heap) thỏa mãn tính chất nào?|Nút lá luôn lớn hơn nút cha;Nút con trái luôn lớn hơn nút con phải;Giá trị nút cha luôn lớn hơn hoặc bằng các nút con;Tất cả các nút đều có giá trị âm
+# ------------------------------------------------------------------------------
+# CHỦ ĐỀ 8: NHỮNG ĐIỀU LỚN NHẤT, NHỎ NHẤT VÀ ĐẦU TIÊN
+# ------------------------------------------------------------------------------
+Q-KL-01|Những điều lớn nhất, nhỏ nhất và đầu tiên|Dễ|MULTIPLE_CHOICE|Hòn đảo tự nhiên nào có diện tích lớn nhất trên thế giới?|Greenland;Madagascar;New Guinea;Borneo|0|Greenland có diện tích khoảng 2,16 triệu km2, là đảo lớn nhất thế giới (không tính các lục địa).
+Q-KL-02|Những điều lớn nhất, nhỏ nhất và đầu tiên|Dễ|TRUE_FALSE|Tòa nhà chọc trời Burj Khalifa tại Dubai (UAE) hiện là công trình nhân tạo cao nhất thế giới?|Đúng;Sai|0|Burj Khalifa khánh thành năm 2010 với chiều cao 828 mét, giữ kỷ lục tòa nhà cao nhất thế giới hiện nay.
+Q-KL-03|Những điều lớn nhất, nhỏ nhất và đầu tiên|Dễ|FILL_IN|Quốc gia nào có diện tích lãnh thổ nhỏ nhất thế giới (chưa đầy 0,5 km2)?|Vatican;Thành Vatican;Toà thánh Vatican|1|Thành quốc Vatican nằm trọn trong lòng thủ đô Rome của Ý với diện tích chỉ khoảng 0,44 km2.
+Q-KL-04|Những điều lớn nhất, nhỏ nhất và đầu tiên|Trung bình|ODD_ONE_OUT|Loài sinh vật nào dưới đây giữ kỷ lục là loài chim có kích thước cơ thể nhỏ nhất hành tinh?|Chim ruồi ong (Bee Hummingbird);Chim sẻ ngô;Chim chích chòe;Chim yến phụng|0|Chim ruồi ong ở Cuba chỉ dài khoảng 5-6 cm và nặng chưa tới 2 gam, là loài chim nhỏ nhất thế giới.
+Q-KL-05|Những điều lớn nhất, nhỏ nhất và đầu tiên|Trung bình|COMPARISON|Vực biển nào sâu nhất thế giới từng được con người thám hiểm dưới lòng đại dương?|Rãnh Mariana (Vực thẳm Challenger);Rãnh Puerto Rico;Rãnh Java;Rãnh Tonga|0|Vực thẳm Challenger ở rãnh Mariana thuộc Thái Bình Dương có độ sâu gần 11.000 mét dưới mặt nước biển.
+Q-KL-06|Những điều lớn nhất, nhỏ nhất và đầu tiên|Trung bình|CLUE_GUESS|Manh mối: Thác nước tự nhiên đổ không ngắt quãng cao nhất thế giới (979 mét), đổ từ đỉnh núi Auyan-tepui ở Venezuela. Tên của thác là gì?|Thác Angel (Salto Angel);Thác Niagara;Thác Victoria;Thác Iguazu|0|Thác Angel ở vườn quốc gia Canaima, Venezuela có độ cao 979m với dòng nước rơi tự do thẳng đứng 807 mét.
+Q-KL-07|Những điều lớn nhất, nhỏ nhất và đầu tiên|Trung bình|ELIMINATION|Vệ tinh nhân tạo đầu tiên trong lịch sử nhân loại được phóng thành công lên quỹ đạo Trái Đất năm 1957 có tên là gì?|Sputnik 1;Explorer 1;Vostok 1;Apollo 1|0|Vệ tinh Sputnik 1 do Liên Xô phóng ngày 4/10/1957 đã mở ra kỷ nguyên không gian cho toàn nhân loại.
+Q-KL-08|Những điều lớn nhất, nhỏ nhất và đầu tiên|Khó|ORDERING|Sắp xếp các loài động vật sau theo kích thước khối lượng trung bình từ nhỏ nhất đến lớn nhất: (1) Chuột chù Etruscan, (2) Chó sói xám, (3) Gấu Bắc Cực, (4) Voi đồng cỏ châu Phi.|(1) -> (2) -> (3) -> (4);(1) -> (3) -> (2) -> (4);(2) -> (1) -> (3) -> (4);(1) -> (2) -> (4) -> (3)|0|Chuột chù Etruscan (~1.8g - động vật có vú nhẹ nhất), Chó sói (~40kg), Gấu Bắc Cực (~500kg), Voi châu Phi (~6000kg).
+Q-KL-09|Những điều lớn nhất, nhỏ nhất và đầu tiên|Khó|PHENOMENON_EXPLANATION|Cây General Sherman ở vườn quốc gia Sequoia (Mỹ) giữ kỷ lục sinh vật đơn lẻ có thể tích gỗ lớn nhất thế giới chủ yếu nhờ đặc điểm sinh học gì?|Thân cây hình trụ khổng lồ không thon nhọn nhiều và vỏ cây dày chống chịu lửa rừng qua hàng nghìn năm;Rễ cây đâm sâu vào mạch nước khoáng ngầm hơn 200m;Cây có thể quang hợp cả vào ban đêm;Cây có cấu tạo thân rỗng chứa nước|0|Cây cự tháp General Sherman ước tính hơn 2.200 năm tuổi, thể tích thân đạt gần 1.500 m3 nhờ khả năng kháng cháy và giữ đường kính thân lớn suốt chiều cao.
+Q-KL-10|Những điều lớn nhất, nhỏ nhất và đầu tiên|Khó|CLUE_GUESS|Manh mối: Kỷ lục về nhiệt độ tự nhiên cao nhất từng được ghi nhận trên bề mặt Trái Đất (56,7 độ C vào năm 1913) thuộc về địa danh nổi tiếng nào ở Hoa Kỳ?|Thung lũng Chết (Death Valley, California);Sa mạc Mojave;Hẻm núi Grand Canyon;Sa mạc Sonoran|0|Thung lũng Chết nằm dưới mực nước biển tại bang California, là lòng chảo giữ nhiệt cực đoan bậc nhất thế giới.
+Q-KL-13|Những điều lớn nhất, nhỏ nhất và đầu tiên|Trung bình|TRUE_FALSE|Cá voi xanh là sinh vật tạo ra âm thanh lớn nhất trong thế giới động vật trên Trái Đất?|Đúng;Sai|0|Đúng, tiếng kêu của cá voi xanh có thể đạt mức âm lượng lên đến 188 decibel, truyền xa hàng trăm kilomet dưới lòng đại dương.
+Q-KL-14|Những điều lớn nhất, nhỏ nhất và đầu tiên|Khó|TRUE_FALSE|Đỉnh núi Everest là điểm trên bề mặt Trái Đất nằm ở vị trí gần Mặt Trăng nhất tính từ tâm địa cầu?|Đúng;Sai|1|Sai, do Trái Đất có hình cầu phình ra ở xích đạo, đỉnh núi lửa Chimborazo ở Ecuador mới là điểm trên bề mặt nằm xa tâm Trái Đất nhất và gần Mặt Trăng nhất.
+Q-KL-15|Những điều lớn nhất, nhỏ nhất và đầu tiên|Trung bình|MULTIPLE_SELECT|Những đại dương nào dưới đây có diện tích tự nhiên lớn hơn 70 triệu km2?|Thái Bình Dương;Đại Tây Dương;Bắc Băng Dương;Ấn Độ Dương|0,1,3|Thái Bình Dương (~165 triệu km2), Đại Tây Dương (~85 triệu km2) và Ấn Độ Dương (~70,5 triệu km2) đều vượt mốc 70 triệu km2; Bắc Băng Dương chỉ rộng khoảng 14 triệu km2.
 
-# Bộ 2-2-2: Lập trình & Cấu trúc dữ liệu - Mức Trung bình (Bộ 2)
-2-2-2|Lập trình & Cấu trúc dữ liệu|Trung bình|150|2|Độ phức tạp không gian (Space Complexity) của thuật toán sắp xếp MergeSort cho mảng kích thước n là gì?|O(1);O(log n);O(n);O(n^2)
-2-2-2|Lập trình & Cấu trúc dữ liệu|Trung bình|150|0|Hàng đợi ưu tiên (PriorityQueue) trong Java mặc định cài đặt cấu trúc dữ liệu nào bên dưới?|Min-Heap;Max-Heap;Cây đỏ đen;Danh sách liên kết đôi
-2-2-2|Lập trình & Cấu trúc dữ liệu|Trung bình|150|3|Phương thức nào trong Java bắt đầu thực thi một luồng (Thread) mới một cách bất đồng bộ?|run();init();execute();start()
-2-2-2|Lập trình & Cấu trúc dữ liệu|Trung bình|150|1|Thuật toán duyệt đồ thị nào sử dụng cấu trúc dữ liệu Hàng đợi (Queue)?|DFS (Tìm kiếm theo chiều sâu);BFS (Tìm kiếm theo chiều rộng);Dijkstra;Bellman-Ford
-2-2-2|Lập trình & Cấu trúc dữ liệu|Trung bình|150|0|Trong Java, biến được khai báo static thuộc về đối tượng nào?|Thuộc về Lớp (Class);Thuộc về Thể hiện (Object);Thuộc về Thread đang chạy;Thuộc về Package
-2-2-2|Lập trình & Cấu trúc dữ liệu|Trung bình|150|2|Một Interface trong Java kể từ phiên bản 8 trở đi có thể chứa phương thức có thân hàm nếu có từ khóa nào?|public;static;default;concrete
-2-2-2|Lập trình & Cấu trúc dữ liệu|Trung bình|150|3|Cấu trúc dữ liệu nào tốt nhất để kiểm tra tính hợp lệ của dấu đóng mở ngoặc trong biểu thức toán học?|Queue;Array;LinkedList;Stack
-2-2-2|Lập trình & Cấu trúc dữ liệu|Trung bình|150|1|Cơ chế Garbage Collection (Bộ thu gom rác) của máy ảo JVM tự động giải phóng vùng nhớ nào?|Stack;Heap;Method Area;Program Counter Register
-2-2-2|Lập trình & Cấu trúc dữ liệu|Trung bình|150|0|Độ phức tạp thời gian trung bình của thao tác tìm kiếm, chèn, xóa trong cây nhị phân cân bằng AVL là gì?|O(log n);O(n);O(1);O(n log n)
-2-2-2|Lập trình & Cấu trúc dữ liệu|Trung bình|150|2|Khái niệm Đa hình lúc biên dịch (Compile-time Polymorphism) được thể hiện qua cơ chế nào?|Method Overriding;Interface Implementation;Method Overloading (Nạp chồng phương thức);Dynamic Binding
-
-# Bộ 2-3-1: Lập trình & Cấu trúc dữ liệu - Mức Khó (Bộ 1)
-2-3-1|Lập trình & Cấu trúc dữ liệu|Khó|200|2|Trong Cây đỏ đen (Red-Black Tree), số lượng nút đen trên mọi đường đi đơn từ nút gốc đến nút lá phải như thế nào?|Tăng dần theo độ sâu;Luôn bằng 2;Luôn bằng nhau;Luôn là số lẻ
-2-3-1|Lập trình & Cấu trúc dữ liệu|Khó|200|1|Thuật toán Dijkstra tìm đường đi ngắn nhất không thể hoạt động chính xác trong trường hợp nào?|Đồ thị vô hướng;Đồ thị có trọng số cạnh âm;Đồ thị có chu trình;Đồ thị có nhiều hơn 1000 đỉnh
-2-3-1|Lập trình & Cấu trúc dữ liệu|Khó|200|0|Thuật toán nào sau đây giải quyết bài toán Cây khung nhỏ nhất (Minimum Spanning Tree)?|Kruskal và Prim;Dijkstra và Floyd;Tarjan và Kosaraju;KMP và Rabin-Karp
-2-3-1|Lập trình & Cấu trúc dữ liệu|Khó|200|3|Hiện tượng Deadlock (Bế tắc) xảy ra khi thỏa mãn đồng thời bao nhiêu điều kiện Coffman?|2 điều kiện;3 điều kiện;5 điều kiện;4 điều kiện
-2-3-1|Lập trình & Cấu trúc dữ liệu|Khó|200|1|Trong Java Memory Model, vùng nhớ lưu trữ biến cục bộ (Local Variables) của hàm là gì?|Heap;Thread Stack;Metaspace;Native Memory
-2-3-1|Lập trình & Cấu trúc dữ liệu|Khó|200|0|Thuật toán Floyd-Warshall dùng để tìm đường đi ngắn nhất có độ phức tạp thời gian là bao nhiêu?|O(V^3);O(V^2);O(E log V);O(V * E)
-2-3-1|Lập trình & Cấu trúc dữ liệu|Khó|200|2|Cấu trúc dữ liệu Disjoint Set Union (DSU) với kỹ thuật gộp theo hạng và nén đường đi có độ phức tạp gần như là gì?|O(log n);O(n);O(alpha(n)) - Hàm nghịch đảo Ackermann;O(1)
-2-3-1|Lập trình & Cấu trúc dữ liệu|Khó|200|3|Lớp ConcurrentHashMap trong Java 8 đạt được khả năng đa luồng cao nhờ cơ chế khóa nào?|Khóa toàn bộ bảng ReentrantLock;Đồng bộ synchronized trên cả đối tượng;Phân đoạn ReentrantLock Segment;Khóa ở cấp độ từng Node (Bucket) và kết hợp CAS (Compare-And-Swap)
-2-3-1|Lập trình & Cấu trúc dữ liệu|Khó|200|1|Thuật toán tìm kiếm xâu con KMP (Knuth-Morris-Pratt) tiền xử lý mẫu (pattern) bằng mảng nào?|Bảng dịch chuyển Boyer;Mảng tiền tố dài nhất cũng là hậu tố (LPS array);Cây Suffix Tree;Hàm băm Rabin
-2-3-1|Lập trình & Cấu trúc dữ liệu|Khó|200|0|Trong kỹ thuật Quy hoạch động (Dynamic Programming), hai thuộc tính then chốt của bài toán là gì?|Cấu trúc con tối ưu và các bài toán con gối nhau (Overlapping Subproblems);Chia để trị và thuật toán tham lam;Đệ quy đuôi và nhánh cận;Đồ thị liên thông và thứ tự tô pô
-
-# Bộ 2-3-2: Lập trình & Cấu trúc dữ liệu - Mức Khó (Bộ 2)
-2-3-2|Lập trình & Cấu trúc dữ liệu|Khó|200|1|Cấu trúc dữ liệu Segment Tree (Cây đoạn) có thời gian truy vấn khoảng (Range Query) và cập nhật điểm là bao nhiêu?|O(n);O(log n);O(1);O(n log n)
-2-3-2|Lập trình & Cấu trúc dữ liệu|Khó|200|3|Cây Trie (Prefix Tree) phù hợp nhất với bài toán nào dưới đây?|Tìm đường đi ngắn nhất trên bản đồ;Sắp xếp số nguyên;Tính định thức ma trận;Tìm kiếm và tự động gợi ý từ điển theo tiền tố (Autocomplete)
-2-3-2|Lập trình & Cấu trúc dữ liệu|Khó|200|0|Thuật toán Tarjan sử dụng phép duyệt nào để tìm các Thành phần liên thông mạnh (SCC) trong đồ thị có hướng?|Duyệt theo chiều sâu DFS;Duyệt theo chiều rộng BFS;Duyệt theo mức Level-order;Duyệt tham lam Greedy
-2-3-2|Lập trình & Cấu trúc dữ liệu|Khó|200|2|Trong Java, cơ chế ForkJoinPool tối ưu hóa việc phân chia tác vụ đa luồng dựa trên kỹ thuật nào?|Round-Robin scheduling;LIFO stack priority;Work-Stealing (Đánh cắp công việc);Priority preemption
-2-3-2|Lập trình & Cấu trúc dữ liệu|Khó|200|1|Một cây B-Tree bậc m có đặc điểm nào sau đây về số lượng khóa tối đa trong một nút?|m khóa;m - 1 khóa;2m khóa;m / 2 khóa
-2-3-2|Lập trình & Cấu trúc dữ liệu|Khó|200|0|Vấn đề ABA trong lập trình đa luồng không khóa (Lock-free Programming) thường được khắc phục bằng gì?|AtomicStampedReference (Thêm số hiệu phiên bản/timestamp);Khóa synchronized;Biến volatile đơn thuần;Tăng kích thước biến
-2-3-2|Lập trình & Cấu trúc dữ liệu|Khó|200|3|Kỹ thuật Lazy Propagation trong Cây đoạn (Segment Tree) giải quyết bài toán nào với thời gian O(log n)?|Tìm kiếm nhị phân;Xóa toàn bộ cây;Tính chiều cao cây;Cập nhật giá trị trên cả một đoạn (Range Update)
-2-3-2|Lập trình & Cấu trúc dữ liệu|Khó|200|2|Bộ thu gom rác G1 GC (Garbage-First Garbage Collector) của JVM chia vùng nhớ Heap thành các phần như thế nào?|Chia thành 2 nửa cố định;Chia thành 3 thế hệ tuần tự;Chia thành hàng ngàn vùng nhỏ (Regions) có kích thước bằng nhau;Không phân chia mà dùng danh sách tự do
-2-3-2|Lập trình & Cấu trúc dữ liệu|Khó|200|0|Thuật toán Bellman-Ford có ưu điểm vượt trội nào so với thuật toán Dijkstra?|Hoạt động được trên đồ thị có cạnh trọng số âm và phát hiện chu trình âm;Chạy nhanh hơn thuật toán Dijkstra;Bộ nhớ sử dụng luôn là O(1);Không cần khởi tạo khoảng cách
-2-3-2|Lập trình & Cấu trúc dữ liệu|Khó|200|1|Độ phức tạp thời gian khi xây dựng Heap nhị phân từ một mảng n phần tử cho trước bằng hàm buildHeap là gì?|O(n log n);O(n);O(n^2);O(log n)
-
-# ==============================================================================
-# CHỦ ĐỀ 3: KHOA HỌC & ĐỜI SỐNG
-# ==============================================================================
-# Bộ 3-1-1: Khoa học & Đời sống - Mức Dễ (Bộ 1)
-3-1-1|Khoa học & Đời sống|Dễ|100|0|Hành tinh nào gần Mặt Trời nhất trong Hệ Mặt Trời?|Sao Thủy (Mercury);Sao Kim (Venus);Trái Đất (Earth);Sao Hỏa (Mars)
-3-1-1|Khoa học & Đời sống|Dễ|100|2|Công thức hóa học của nước cất là gì?|CO2;H2O2;H2O;NaCl
-3-1-1|Khoa học & Đời sống|Dễ|100|1|Đơn vị đo lực chuẩn trong Hệ thống đơn vị quốc tế (SI) là gì?|Joule;Newton (N);Pascal;Watt
-3-1-1|Khoa học & Đời sống|Dễ|100|3|Chất khí nào chiếm thể tích lớn nhất trong bầu khí quyển Trái Đất?|Oxy;Cacbonic;Argon;Nitơ (~78%)
-3-1-1|Khoa học & Đời sống|Dễ|100|0|Quá trình quang hợp của thực vật chủ yếu hấp thụ khí gì và thải ra khí gì?|Hấp thụ CO2 và thải ra O2;Hấp thụ O2 và thải ra CO2;Hấp thụ N2 và thải ra CO2;Hấp thụ H2 và thải ra O2
-3-1-1|Khoa học & Đời sống|Dễ|100|1|Nhiệt độ sôi của nước tinh khiết ở áp suất khí quyển tiêu chuẩn là bao nhiêu?|90°C;100°C;120°C;80°C
-3-1-1|Khoa học & Đời sống|Dễ|100|3|Cơ quan nào trong cơ thể con người chịu trách nhiệm bơm máu đi khắp cơ thể?|Phổi;Gan;Thận;Tim
-3-1-1|Khoa học & Đời sống|Dễ|100|2|Vận tốc ánh sáng truyền trong môi trường chân không xấp xỉ bằng bao nhiêu?|30.000 km/s;300.000 m/s;300.000 km/s;3.000.000 km/s
-3-1-1|Khoa học & Đời sống|Dễ|100|0|Phần lớn năng lượng tự nhiên trên Trái Đất có nguồn gốc từ đâu?|Mặt Trời;Địa nhiệt;Năng lượng gió;Mặt Trăng
-3-1-1|Khoa học & Đời sống|Dễ|100|1|Vitamin nào được cơ thể con người tổng hợp tự nhiên nhiều nhất khi tiếp xúc ánh nắng mặt trời?|Vitamin C;Vitamin D;Vitamin A;Vitamin B12
-
-# Bộ 3-1-2: Khoa học & Đời sống - Mức Dễ (Bộ 2)
-3-1-2|Khoa học & Đời sống|Dễ|100|2|Hành tinh nào được mệnh danh là Hành tinh Đỏ trong Hệ Mặt Trời?|Sao Mộc;Sao Kim;Sao Hỏa (Mars);Sao Thổ
-3-1-2|Khoa học & Đời sống|Dễ|100|0|Kim loại nào tồn tại ở thể lỏng ở điều kiện nhiệt độ phòng tiêu chuẩn?|Thủy ngân (Hg);Sắt (Fe);Đồng (Cu);Nhôm (Al)
-3-1-2|Khoa học & Đời sống|Dễ|100|3|Đơn vị đo tần số dao động của sóng âm là gì?|Decibel;Volt;Ampere;Hertz (Hz)
-3-1-2|Khoa học & Đời sống|Dễ|100|1|Loài động vật có vú nào duy nhất có khả năng bay lượn thực sự?|Sóc bay;Dơi;Chim cánh cụt;Vượn cáo
-3-1-2|Khoa học & Đời sống|Dễ|100|2|Hiện tượng Nhật thực xảy ra khi thiên thể nào nằm ở giữa hai thiên thể còn lại?|Mặt Trời;Trái Đất;Mặt Trăng;Sao Hỏa
-3-1-2|Khoa học & Đời sống|Dễ|100|0|Muối ăn gia đình thường dùng có tên hóa học là gì?|Natri Clorua (NaCl);Canxi Cacbonat;Axit Axetic;Natri Bicarbonat
-3-1-2|Khoa học & Đời sống|Dễ|100|1|Bộ phận nào của tế bào chứa vật chất di truyền DNA chủ yếu?|Không bào;Nhân tế bào (Nucleus);Thành tế bào;Lục lạp
-3-1-2|Khoa học & Đời sống|Dễ|100|3|Âm thanh không thể truyền qua môi trường nào sau đây?|Kim loại;Nước biển;Không khí;Chân không
-3-1-2|Khoa học & Đời sống|Dễ|100|0|Nhóm máu nào được coi là nhóm máu chuyên cho trong truyền máu thông thường?|Nhóm máu O;Nhóm máu AB;Nhóm máu A;Nhóm máu B
-3-1-2|Khoa học & Đời sống|Dễ|100|2|Thang đo pH có giá trị bằng 7 biểu thị dung dịch có tính chất gì?|Axit mạnh;Bazơ kiềm;Trung tính;Nhiễm mặn
-
-# Bộ 3-2-1: Khoa học & Đời sống - Mức Trung bình (Bộ 1)
-3-2-1|Khoa học & Đời sống|Trung bình|150|1|Định luật Vạn vật Hấp dẫn do nhà khoa học lỗi lạc nào phát hiện và công bố?|Albert Einstein;Isaac Newton;Galileo Galilei;Nikola Tesla
-3-2-1|Khoa học & Đời sống|Trung bình|150|2|Đơn vị thiên văn năm ánh sáng (Light-year) là đơn vị dùng để đo đại lượng nào?|Thời gian vũ trụ;Vận tốc di chuyển;Khoảng cách;Khối lượng ngôi sao
-3-2-1|Khoa học & Đời sống|Trung bình|150|0|Quá trình biến đổi từ chất rắn trực tiếp thành chất khí không qua thể lỏng gọi là gì?|Thăng hoa (Sublimation);Ngưng tụ;Bay hơi;Nóng chảy
-3-2-1|Khoa học & Đời sống|Trung bình|150|3|Nguyên tố hóa học nào có khối lượng chiếm tỷ lệ cao nhất trong vỏ Trái Đất?|Silic;Sắt;Nhôm;Oxy (~46.6%)
-3-2-1|Khoa học & Đời sống|Trung bình|150|1|Loại sóng nào sau đây có bước sóng ngắn hơn vùng ánh sáng nhìn thấy?|Sóng vô tuyến;Tia tử ngoại (UV);Sóng vi ba;Tia hồng ngoại
-3-2-1|Khoa học & Đời sống|Trung bình|150|0|Hiện tượng khúc xạ ánh sáng xảy ra do nguyên nhân chính nào?|Vận tốc ánh sáng thay đổi khi truyền qua hai môi trường khác nhau;Ánh sáng bị hấp thụ hoàn toàn;Giao thoa giữa các chùm sáng;Sự giãn nở của nguồn sáng
-3-2-1|Khoa học & Đời sống|Trung bình|150|2|Thành phần chính của khí thiên nhiên và khí sinh học Biogas là gì?|Propan;Etan;Metan (CH4);Butan
-3-2-1|Khoa học & Đời sống|Trung bình|150|3|Cơ quan nào trong cơ thể con người thực hiện chức năng lọc chất thải và bài tiết nước tiểu?|Dạ dày;Tụy;Gan;Thận
-3-2-1|Khoa học & Đời sống|Trung bình|150|1|Hạt nào trong cấu trúc nguyên tử mang điện tích âm?|Proton;Electron;Neutron;Positron
-3-2-1|Khoa học & Đời sống|Trung bình|150|0|Tầng ozone trong khí quyển đóng vai trò quan trọng gì đối với sự sống trên Trái Đất?|Ngăn chặn các tia cực tím (UV) có hại;Tạo ra mưa bão;Giữ ấm Trái Đất ban đêm;Cung cấp oxy hít thở
-
-# Bộ 3-2-2: Khoa học & Đời sống - Mức Trung bình (Bộ 2)
-3-2-2|Khoa học & Đời sống|Trung bình|150|2|Chất xúc tác sinh học trong cơ thể sống có bản chất là protein được gọi là gì?|Hormone;Kháng thể;Enzyme (Men sinh học);Lipid
-3-2-2|Khoa học & Đời sống|Trung bình|150|0|Thuyết Tương đối Hẹp được nhà vật lý Albert Einstein công bố vào năm nào?|1905;1915;1899;1921
-3-2-2|Khoa học & Đời sống|Trung bình|150|3|Loại bức xạ điện từ nào có năng lượng cao nhất và bước sóng ngắn nhất?|Tia X;Tia tử ngoại;Ánh sáng khả kiến;Tia Gamma
-3-2-2|Khoa học & Đời sống|Trung bình|150|1|Định luật bảo toàn năng lượng khẳng định năng lượng có đặc điểm gì?|Tự sinh ra khi có phản ứng;Không tự sinh ra cũng không tự mất đi, chỉ chuyển hóa;Luôn tăng dần trong vũ trụ;Mất đi hoàn toàn khi sinh công
-3-2-2|Khoa học & Đời sống|Trung bình|150|0|Hiện tượng thủy triều trên Trái Đất chủ yếu do lực hấp dẫn của thiên thể nào gây ra?|Mặt Trăng;Mặt Trời;Sao Hỏa;Sao Kim
-3-2-2|Khoa học & Đời sống|Trung bình|150|2|Trong cơ thể người, tế bào hồng cầu có chức năng chính là gì?|Bảo vệ cơ thể chống vi khuẩn;Đông máu khi có vết thương;Vận chuyển oxy và cacbonic;Tiết ra dịch tiêu hóa
-3-2-2|Khoa học & Đời sống|Trung bình|150|1|Kim loại dẫn điện tốt nhất ở điều kiện tiêu chuẩn là kim loại nào?|Đồng (Cu);Bạc (Ag);Vàng (Au);Nhôm (Al)
-3-2-2|Khoa học & Đời sống|Trung bình|150|3|Khí gây ra hiệu ứng nhà kính mạnh nhất và phổ biến nhất do hoạt động của con người là?|Ozon;CFC;Metan;Cacbon dioxit (CO2)
-3-2-2|Khoa học & Đời sống|Trung bình|150|0|Sóng âm mà tai người bình thường có thể nghe được nằm trong dải tần số nào?|20 Hz đến 20.000 Hz;Dưới 20 Hz;Trên 20.000 Hz;50 Hz đến 100.000 Hz
-3-2-2|Khoa học & Đời sống|Trung bình|150|2|Quá trình phân bào nguyên nhiễm (nguyên phân) tạo ra các tế bào con có số lượng NST như thế nào?|Giảm đi một nửa;Gấp đôi tế bào mẹ;Giữ nguyên giống tế bào mẹ;Tùy thuộc vào dinh dưỡng
-
-# Bộ 3-3-1: Khoa học & Đời sống - Mức Khó (Bộ 1)
-3-3-1|Khoa học & Đời sống|Khó|200|1|Nguyên lý bất định (Uncertainty Principle) trong Cơ học lượng tử do ai đề xuất?|Niels Bohr;Werner Heisenberg;Max Planck;Erwin Schrödinger
-3-3-1|Khoa học & Đời sống|Khó|200|3|Hằng số Planck (ký hiệu h) có giá trị xấp xỉ bằng bao nhiêu trong hệ đơn vị SI?|6.67 x 10^-11 N m^2/kg^2;1.60 x 10^-19 C;3.00 x 10^8 m/s;6.626 x 10^-34 J.s
-3-3-1|Khoa học & Đời sống|Khó|200|0|Phản ứng nhiệt hạch (Nuclear Fusion) tạo ra năng lượng trên các ngôi sao bằng cách nào?|Hợp nhất các hạt nhân nhẹ thành hạt nhân nặng hơn;Phân hạch hạt nhân nặng Urani;Oxy hóa khử hydro;Phân rã phóng xạ beta
-3-3-1|Khoa học & Đời sống|Khó|200|2|Công nghệ chỉnh sửa gen mang tính đột phá giành giải Nobel Hóa học 2020 có tên là gì?|PCR;Gel Electrophoresis;CRISPR-Cas9;Western Blot
-3-3-1|Khoa học & Đời sống|Khó|200|1|Hiện tượng Siêu dẫn (Superconductivity) là trạng thái vật liệu có đặc tính nào nổi bật?|Dẫn nhiệt hoàn hảo;Điện trở giảm về chính xác bằng 0;Hút tất cả các loại từ trường;Phát quang trong bóng tối
-3-3-1|Khoa học & Đời sống|Khó|200|0|Định luật thứ hai của Nhiệt động lực học khẳng định đại lượng nào của một hệ cô lập luôn tăng theo thời gian?|Entropy;Enthalpy;Nội năng;Nhiệt dung
-3-3-1|Khoa học & Đời sống|Khó|200|3|Bán kính Schwarzschild của một thiên thể biểu thị điều gì trong vật lý thiên văn?|Độ dày tầng khí quyển;Bán kính quỹ đạo vệ tinh;Tốc độ quay quanh trục;Bán kính giới hạn mà vật chất sụp đổ tạo thành Hố Đen (Black Hole)
-3-3-1|Khoa học & Đời sống|Khó|200|2|Phân tử ATP (Adenosine Triphosphate) đóng vai trò gì trong tế bào sinh học?|Lưu trữ mã di truyền;Tạo thành màng tế bào;Đồng tiền năng lượng hóa học của tế bào;Xúc tác phản ứng nhân đôi
-3-3-1|Khoa học & Đời sống|Khó|200|1|Trong vật lý hạt nhân, hạt nào là hạt sơ cấp không thể phân chia nhỏ hơn?|Proton;Quark;Neutron;Hạt Alpha
-3-3-1|Khoa học & Đời sống|Khó|200|0|Hiệu ứng Casimir trong lý thuyết trường lượng tử chứng minh sự tồn tại của hiện tượng nào?|Năng lượng chân không và các hạt ảo;Sóng hấp dẫn;Vật chất tối;Năng lượng tối
-
-# Bộ 3-3-2: Khoa học & Đời sống - Mức Khó (Bộ 2)
-3-3-2|Khoa học & Đời sống|Khó|200|2|Phương trình trường Einstein trong Thuyết Tương đối Rộng mô tả mối liên hệ giữa gì?|Vận tốc và gia tốc;Khối lượng và điện tích;Hình học không-thời gian và tensor năng lượng-động lượng;Ánh sáng và từ trường
-3-3-2|Khoa học & Đời sống|Khó|200|0|Bức xạ Hawking là khái niệm lý thuyết chứng minh điều gì về Hố Đen?|Hố đen có thể bốc hơi phát ra nhiệt lượng và dần biến mất;Hố đen hút mọi vật thể mãi mãi;Hố đen là cổng không gian nối vũ trụ khác;Hố đen không có entropy
-3-3-2|Khoa học & Đời sống|Khó|200|3|Cơ chế tác động của vaccine công nghệ mRNA (như Pfizer/Moderna) kích hoạt miễn dịch bằng cách nào?|Đưa virus sống đã làm yếu vào cơ thể;Đưa kháng thể nhân tạo sẵn có;Đưa protein vỏ virus tổng hợp;Đưa chuỗi RNA hướng dẫn tế bào tự tổng hợp kháng nguyên Spike
-3-3-2|Khoa học & Đời sống|Khó|200|1|Thí nghiệm hai khe Young với chùm electron đơn lẻ chứng minh tính chất cơ bản nào của lượng tử?|Tính tương đối của thời gian;Lưỡng tính sóng - hạt;Sự suy thoái năng lượng;Hiệu ứng Doppler
-3-3-2|Khoa học & Đời sống|Khó|200|2|Vật chất tối (Dark Matter) trong vũ trụ được suy đoán tồn tại chủ yếu dựa trên bằng chứng nào?|Quan sát trực tiếp qua kính thiên văn quang học;Sự sụp đổ của các sao lùn trắng;Đường cong quay bất thường của các thiên hà và thấu kính hấp dẫn;Năng lượng phát ra từ siêu tân tinh
-3-3-2|Khoa học & Đời sống|Khó|200|0|Nghịch lý Fermi trong thiên văn sinh học đề cập đến vấn đề nan giải nào?|Nếu sự sống ngoài Trái Đất phổ biến, tại sao ta chưa thấy bằng chứng về họ?;Tại sao vũ trụ lại giãn nở gia tốc?;Tại sao các hành tinh quay cùng chiều?;Nguồn gốc của các tia vũ trụ năng lượng siêu cao
-3-3-2|Khoa học & Đời sống|Khó|200|1|Kỹ thuật Polymerase Chain Reaction (PCR) do Kary Mullis phát minh sử dụng enzyme nào chịu nhiệt?|DNA Ligase;Taq Polymerase;Helicase;RNA Polymerase
-3-3-2|Khoa học & Đời sống|Khó|200|3|Trạng thái vật chất thứ 5 ngoài Rắn, Lỏng, Khí và Plasma có tên gọi là gì?|Quark-Gluon Plasma;Vật chất thoái hóa;Siêu chất rắn;Ngưng tụ Bose-Einstein (BEC)
-3-3-2|Khoa học & Đời sống|Khó|200|0|Hằng số Avogadro (khoảng 6.022 x 10^23) định nghĩa số lượng hạt trong bao nhiêu mol chất?|1 mol;10 mol;12 mol;0.5 mol
-3-3-2|Khoa học & Đời sống|Khó|200|2|Trong sinh học phân tử, codon nào trên phân tử m-RNA là mã mở đầu tổng hợp chuỗi polypeptide?|UAA;UGA;AUG (mã hóa Methionine);UAG
-
-# ==============================================================================
-# CHỦ ĐỀ 4: LỊCH SỬ & ĐỊA LÝ
-# ==============================================================================
-# Bộ 4-1-1: Lịch sử & Địa lý - Mức Dễ (Bộ 1)
-4-1-1|Lịch sử & Địa lý|Dễ|100|0|Chủ tịch Hồ Chí Minh đọc bản Tuyên ngôn Độc lập tại Quảng trường Ba Đình vào ngày tháng năm nào?|02/09/1945;19/08/1945;30/04/1975;07/05/1954
-4-1-1|Lịch sử & Địa lý|Dễ|100|1|Đỉnh núi nào được mệnh danh là Nóc nhà Đông Dương?|Núi Ngọc Linh;Fansipan (3.143m);Núi Bà Đen;Núi Bạch Mộc Lương Tử
-4-1-1|Lịch sử & Địa lý|Dễ|100|2|Thủ đô của nước Cộng hòa Xã hội Chủ nghĩa Việt Nam là thành phố nào?|TP. Hồ Chí Minh;Đà Nẵng;Hà Nội;Hải Phòng
-4-1-1|Lịch sử & Địa lý|Dễ|100|3|Dòng sông nào dài nhất thế giới chảy qua khu vực châu Phi?|Sông Amazon;Sông Trường Giang;Sông Mê Kông;Sông Nile
-4-1-1|Lịch sử & Địa lý|Dễ|100|0|Chiến thắng Điện Biên Phủ lừng lẫy năm châu chấn động địa cầu diễn ra vào năm nào?|1954;1945;1972;1975
-4-1-1|Lịch sử & Địa lý|Dễ|100|2|Quốc gia nào có diện tích lãnh thổ tự nhiên lớn nhất thế giới?|Canada;Hoa Kỳ;Liên bang Nga;Trung Quốc
-4-1-1|Lịch sử & Địa lý|Dễ|100|1|Đại dương nào có diện tích và độ sâu trung bình lớn nhất hành tinh?|Đại Tây Dương;Thái Bình Dương;Ấn Độ Dương;Bắc Băng Dương
-4-1-1|Lịch sử & Địa lý|Dễ|100|3|Vịnh Hạ Long - kỳ quan thiên nhiên thế giới thuộc tỉnh nào của Việt Nam?|Hải Phòng;Ninh Bình;Thanh Hóa;Quảng Ninh
-4-1-1|Lịch sử & Địa lý|Dễ|100|0|Vị vua nào đã ban Chiếu dời đô từ Hoa Lư về Thăng Long năm 1010?|Lý Thái Tổ (Lý Công Uẩn);Lý Thường Kiệt;Đinh Tiên Hoàng;Lê Lợi
-4-1-1|Lịch sử & Địa lý|Dễ|100|1|Châu lục nào có diện tích tự nhiên lớn nhất và đông dân nhất thế giới?|Châu Phi;Châu Á;Châu Âu;Châu Mỹ
-
-# Bộ 4-1-2: Lịch sử & Địa lý - Mức Dễ (Bộ 2)
-4-1-2|Lịch sử & Địa lý|Dễ|100|2|Chiến dịch Hồ Chí Minh lịch sử giải phóng hoàn toàn miền Nam thống nhất đất nước kết thúc vào ngày nào?|02/09/1945;07/05/1954;30/04/1975;19/08/1945
-4-1-2|Lịch sử & Địa lý|Dễ|100|0|Việt Nam có đường bờ biển dài khoảng bao nhiêu km?|Khoảng 3.260 km;Khoảng 2.500 km;Khoảng 4.200 km;Khoảng 1.800 km
-4-1-2|Lịch sử & Địa lý|Dễ|100|3|Thành phố nào là trung tâm kinh tế lớn nhất ở miền Nam Việt Nam?|Cần Thơ;Biên Hòa;Vũng Tàu;TP. Hồ Chí Minh
-4-1-2|Lịch sử & Địa lý|Dễ|100|1|Kim tự tháp Giza nổi tiếng thế giới nằm ở quốc gia nào?|Hy Lạp;Ai Cập;Thổ Nhĩ Kỳ;Ý
-4-1-2|Lịch sử & Địa lý|Dễ|100|0|Hai quần đảo Hoàng Sa và Trường Sa thuộc chủ quyền của quốc gia nào?|Việt Nam;Philippines;Malaysia;Indonesia
-4-1-2|Lịch sử & Địa lý|Dễ|100|2|Thủ đô của nước Pháp là thành phố nào?|London;Berlin;Paris;Rome
-4-1-2|Lịch sử & Địa lý|Dễ|100|1|Sông Mê Kông trước khi đổ ra biển Đông chảy qua đồng bằng nào của Việt Nam?|Đồng bằng sông Hồng;Đồng bằng sông Cửu Long;Đồng bằng Duyên hải miền Trung;Tây Nguyên
-4-1-2|Lịch sử & Địa lý|Dễ|100|3|Vị anh hùng dân tộc nào gắn liền với 3 lần đánh đuổi quân xâm lược Nguyên Mông trên sông Bạch Đằng?|Lê Lợi;Quang Trung;Ngô Quyền;Trần Hưng Đạo (Trần Quốc Tuấn)
-4-1-2|Lịch sử & Địa lý|Dễ|100|0|Đất nước nào có biệt danh là Xứ sở Mặt trời mọc?|Nhật Bản;Hàn Quốc;Thái Lan;Mông Cổ
-4-1-2|Lịch sử & Địa lý|Dễ|100|2|Tỉnh nào có diện tích tự nhiên lớn nhất Việt Nam hiện nay?|Đắk Lắk;Sơn La;Nghệ An;Thanh Hóa
-
-# Bộ 4-2-1: Lịch sử & Địa lý - Mức Trung bình (Bộ 1)
-4-2-1|Lịch sử & Địa lý|Trung bình|150|1|Trận quyết chiến chiến lược trên sông Bạch Đằng năm 938 do vị tướng nào lãnh đạo chấm dứt 1000 năm Bắc thuộc?|Đinh Bộ Lĩnh;Ngô Quyền;Lê Hoàn;Trần Hưng Đạo
-4-2-1|Lịch sử & Địa lý|Trung bình|150|2|Kênh đào Suez nối liền Biển Đỏ (Red Sea) với biển nào?|Biển Đen;Biển Baltic;Địa Trung Hải (Mediterranean Sea);Biển Caspi
-4-2-1|Lịch sử & Địa lý|Trung bình|150|0|Chiến thắng Ngọc Hồi - Đống Đa quét sạch 29 vạn quân Thanh vào mùa xuân năm nào?|Kỷ Dậu 1789;Mậu Thân 1788;Tân Hợi 1791;Giáp Ngọ 1774
-4-2-1|Lịch sử & Địa lý|Trung bình|150|3|Dãy núi nào được coi là ranh giới tự nhiên ngăn cách giữa châu Âu và châu Á?|Dãy Alps;Dãy Andes;Dãy Himalaya;Dãy Ural
-4-2-1|Lịch sử & Địa lý|Trung bình|150|1|Hiệp định Paris về chấm dứt chiến tranh, lập lại hòa bình ở Việt Nam được ký kết vào năm nào?|1954;1973;1972;1975
-4-2-1|Lịch sử & Địa lý|Trung bình|150|0|Hồ nước ngọt sâu nhất và chứa lượng nước ngọt mặt lớn nhất thế giới là hồ nào?|Hồ Baikal (Nga);Hồ Superior (Bắc Mỹ);Hồ Victoria (Châu Phi);Hồ Michigan
-4-2-1|Lịch sử & Địa lý|Trung bình|150|2|Cuộc Cách mạng Công nghiệp lần thứ nhất khởi phát đầu tiên ở quốc gia nào?|Hoa Kỳ;Đức;Vương quốc Anh;Pháp
-4-2-1|Lịch sử & Địa lý|Trung bình|150|3|Đèo nào là ranh giới khí hậu tự nhiên giữa miền Bắc và miền Nam Việt Nam?|Đèo Ngang;Đèo Cù Mông;Đèo Cả;Đèo Hải Vân
-4-2-1|Lịch sử & Địa lý|Trung bình|150|1|Vương triều nào đặt tên nước ta là Đại Cồ Việt?|Nhà Tiền Lê;Nhà Đinh (Đinh Tiên Hoàng);Nhà Lý;Nhà Trần
-4-2-1|Lịch sử & Địa lý|Trung bình|150|0|Thác nước tự nhiên lớn nhất Đông Nam Á nằm trên dòng sông Mê Kông ở biên giới Lào - Campuchia là thác gì?|Thác Khone Phapheng;Thác Bản Giốc;Thác Kuang Si;Thác Dambri
-
-# Bộ 4-2-2: Lịch sử & Địa lý - Mức Trung bình (Bộ 2)
-4-2-2|Lịch sử & Địa lý|Trung bình|150|2|Chiến dịch Điện Biên Phủ trên không bảo vệ bầu trời Hà Nội diễn ra trong bao nhiêu ngày đêm năm 1972?|10 ngày đêm;15 ngày đêm;12 ngày đêm;20 ngày đêm
-4-2-2|Lịch sử & Địa lý|Trung bình|150|0|Eo biển nào là yết hầu hàng hải kết nối Ấn Độ Dương và Biển Đông quan trọng nhất Đông Nam Á?|Eo biển Malacca;Eo biển Bosphorus;Eo biển Gibraltar;Eo biển Hormuz
-4-2-2|Lịch sử & Địa lý|Trung bình|150|3|Bản tuyên ngôn độc lập đầu tiên trong lịch sử dân tộc Nam quốc sơn hà tương truyền gắn liền với ai?|Trần Hưng Đạo;Quang Trung;Ngô Quyền;Lý Thường Kiệt
-4-2-2|Lịch sử & Địa lý|Trung bình|150|1|Cao nguyên đá Đồng Văn - Công viên địa chất toàn cầu UNESCO nằm ở tỉnh nào?|Cao Bằng;Hà Giang;Lạng Sơn;Lào Cai
-4-2-2|Lịch sử & Địa lý|Trung bình|150|0|Khối liên minh quân sự NATO được thành lập vào năm nào thời kỳ đầu Chiến tranh Lạnh?|1949;1955;1945;1960
-4-2-2|Lịch sử & Địa lý|Trung bình|150|2|Thành phố nào được mệnh danh là Thành phố ngàn hoa của Việt Nam?|Sa Pa;Tam Đảo;Đà Lạt;Pleiku
-4-2-2|Lịch sử & Địa lý|Trung bình|150|1|Cuộc khởi nghĩa Lam Sơn chống quân Minh xâm lược do ai khởi xướng và lãnh đạo?|Nguyễn Trãi;Lê Lợi;Trần Nguyên Hãn;Lê Lai
-4-2-2|Lịch sử & Địa lý|Trung bình|150|3|Quốc gia nào có đường bờ biển dài nhất thế giới?|Nga;Hoa Kỳ;Australia;Canada
-4-2-2|Lịch sử & Địa lý|Trung bình|150|0|Hội nghị Diên Hồng lịch sử biểu thị ý chí quyết chiến của toàn dân diễn ra dưới triều đại nào?|Nhà Trần;Nhà Lý;Nhà Hậu Lê;Nhà Tây Sơn
-4-2-2|Lịch sử & Địa lý|Trung bình|150|2|Dãy núi Andes - dãy núi dài nhất trên cạn nằm ở châu lục nào?|Bắc Mỹ;Châu Âu;Nam Mỹ;Châu Phi
-
-# Bộ 4-3-1: Lịch sử & Địa lý - Mức Khó (Bộ 1)
-4-3-1|Lịch sử & Địa lý|Khó|200|1|Hiệp định Genève năm 1954 quy định vĩ tuyến nào làm giới tuyến quân sự tạm thời tại Việt Nam?|Vĩ tuyến 16;Vĩ tuyến 17;Vĩ tuyến 18;Vĩ tuyến 15
-4-3-1|Lịch sử & Địa lý|Khó|200|3|Vùng biển sâu nhất từng được con người phát hiện là rãnh Mariana thuộc đại dương nào?|Đại Tây Dương;Ấn Độ Dương;Nam Đại Dương;Thái Bình Dương (sâu gần 11.000m)
-4-3-1|Lịch sử & Địa lý|Khó|200|0|Trận đánh nổi tiếng nào trong lịch sử thế giới cổ đại ghi nhận 300 chiến binh Sparta cản bước quân Ba Tư?|Trận Thermopylae;Trận Marathon;Trận Salamis;Trận Gaugamela
-4-3-1|Lịch sử & Địa lý|Khó|200|2|Địa danh Ngã ba Đồng Lộc huyền thoại gắn liền với sự hy sinh anh dũng của bao nhiêu nữ thanh niên xung phong?|8 cô gái;12 cô gái;10 cô gái;14 cô gái
-4-3-1|Lịch sử & Địa lý|Khó|200|1|Hiện tượng sa mạc hóa Atacama - nơi khô cằn nhất Trái Đất chịu tác động trực tiếp của dòng hải lưu lạnh nào?|Dòng hải lưu Benguela;Dòng hải lưu Humboldt (Peru);Dòng hải lưu California;Dòng hải lưu Canaries
-4-3-1|Lịch sử & Địa lý|Khó|200|3|Bộ luật Hồng Đức (Quốc triều hình luật) - đỉnh cao pháp luật phong kiến Việt Nam được ban hành dưới triều vua nào?|Lê Thái Tổ;Lê Nhân Tông;Lê Hiến Tông;Lê Thánh Tông
-4-3-1|Lịch sử & Địa lý|Khó|200|0|Hồ nước mặn kín nằm thấp nhất trên bề mặt đất liền của Trái Đất (khoảng -430m) là hồ nào?|Biển Chết (Dead Sea);Hồ Aral;Biển Caspi;Hồ Assal
-4-3-1|Lịch sử & Địa lý|Khó|200|2|Chiến dịch quân sự nào mở màn cho Đại thắng Mùa Xuân năm 1975 của quân và dân ta?|Chiến dịch Huế - Đà Nẵng;Chiến dịch Đường 9 - Khe Sanh;Chiến dịch Tây Nguyên;Chiến dịch Quảng Trị
-4-3-1|Lịch sử & Địa lý|Khó|200|1|Thành phố cổ Petra độc đáo được tạc vào vách đá sa thạch đỏ nằm ở quốc gia Trung Đông nào?|Syria;Jordan;Liban;Iraq
-4-3-1|Lịch sử & Địa lý|Khó|200|0|Đại hội đại biểu toàn quốc lần thứ VI của Đảng Cộng sản Việt Nam khởi xướng công cuộc Đổi mới diễn ra vào năm nào?|1986;1982;1991;1976
-
-# Bộ 4-3-2: Lịch sử & Địa lý - Mức Khó (Bộ 2)
-4-3-2|Lịch sử & Địa lý|Khó|200|2|Nền văn hóa Đông Sơn thời kỳ đồ đồng rực rỡ ở miền Bắc Việt Nam có niên đại nổi bật gắn liền với cổ vật nào?|Trống đồng Cảnh Thịnh;Bia đá Tiến sĩ;Trống đồng Ngọc Lũ;Cửu đỉnh Huế
-4-3-2|Lịch sử & Địa lý|Khó|200|0|Quốc gia nào sau đây là quốc gia nội lục (không giáp biển) có diện tích lớn nhất thế giới?|Kazakhstan;Mông Cổ;Uzbekistan;Bolivia
-4-3-2|Lịch sử & Địa lý|Khó|200|3|Hòa ước Westphalia ký kết năm 1648 đã kết thúc cuộc chiến tranh tàn khốc nào tại châu Âu?|Chiến tranh Trăm Năm;Chiến tranh Bảy Năm;Chiến tranh Hoa Hồng;Chiến tranh Ba Mươi Năm
-4-3-2|Lịch sử & Địa lý|Khó|200|1|Đảo lớn nhất thế giới xét về diện tích địa lý tự nhiên là đảo nào?|Madagascar;Greenland (Đảo Băng);New Guinea;Borneo
-4-3-2|Lịch sử & Địa lý|Khó|200|2|Vị danh tướng nào của nước ta được phong là Thái úy, tác giả bài thơ thần Nam quốc sơn hà và Lý Thường Kiệt phá Tống trên sông Như Nguyệt?|Trần Quang Khải;Tô Hiến Thành;Lý Thường Kiệt;Phạm Ngũ Lão
-4-3-2|Lịch sử & Địa lý|Khó|200|0|Hệ thống rạn san hô ngầm lớn nhất thế giới Great Barrier Reef nằm ngoài khơi bờ biển của quốc gia nào?|Australia;Indonesia;Philippines;Madagascar
-4-3-2|Lịch sử & Địa lý|Khó|200|3|Hiệp ước Patenôtre ký năm 1884 giữa triều đình Huế và thực dân Pháp đã đánh dấu điều gì?|Thực dân Pháp bắt đầu nổ súng xâm lược;Quân ta hoàn toàn thất bại trong phong trào Cần Vương;Thực dân Pháp thất bại bước đầu;Sự đầu hàng hoàn toàn của triều đình phong kiến nhà Nguyễn trước thực dân Pháp
-4-3-2|Lịch sử & Địa lý|Khó|200|1|Vùng lõm Danakil - một trong những nơi nóng và khắc nghiệt nhất Trái Đất thuộc lãnh thổ quốc gia nào?|Sudan;Ethiopia;Somalia;Ai Cập
-4-3-2|Lịch sử & Địa lý|Khó|200|0|Trận hải chiến Midway năm 1942 được coi là bước ngoặt quyết định của chiến trường nào trong CTTG II?|Mặt trận Thái Bình Dương;Mặt trận Tây Âu;Mặt trận Bắc Phi;Mặt trận Đại Tây Dương
-4-3-2|Lịch sử & Địa lý|Khó|200|2|Sông Dương Tử (Trường Giang) - dòng sông dài nhất châu Á bắt nguồn từ cao nguyên nào?|Cao nguyên Vân Quý;Cao nguyên Mông Cổ;Cao nguyên Thanh Tạng (Tây Tạng);Cao nguyên Hoàng Thổ
+# ------------------------------------------------------------------------------
+# CÂU HỎI KÉO THẢ ĐÁP ÁN (DRAG_AND_DROP)
+# ------------------------------------------------------------------------------
+Q-KQ-11|Kỳ quan thế giới|Dễ|DRAG_AND_DROP|Kim tự tháp Giza nằm ở ____, còn đền Taj Mahal nằm ở ____.|Ai Cập;Ấn Độ;Hy Lạp;Ý;Thổ Nhĩ Kỳ|1|Kim tự tháp Giza thuộc đất nước Ai Cập, còn đền Taj Mahal thuộc thành phố Agra của Ấn Độ.|b1;b2|b1=Ai Cập;b2=Ấn Độ
+Q-KQ-12|Kỳ quan thế giới|Trung bình|DRAG_AND_DROP|Thành cổ Petra tạc trong vách đá thuộc nước ____, còn tượng Chúa Cứu Thế tọa lạc tại ____.|Jordan;Brazil;Peru;Mexico;Ai Cập|1|Petra là thành cổ ở Jordan, tượng Chúa Cứu Thế nằm trên đỉnh Corcovado ở Rio de Janeiro, Brazil.|b1;b2|b1=Jordan;b2=Brazil
+Q-DD-11|Địa danh và khám phá thế giới|Dễ|DRAG_AND_DROP|Quốc gia có diện tích lớn nhất thế giới là ____, còn dòng sông dài nhất thế giới là ____.|Nga;Sông Nin;Canada;Sông Amazon;Hoa Kỳ|1|Nga là quốc gia rộng nhất thế giới (~17 triệu km2), sông Nin là dòng sông dài nhất hành tinh.|b1;b2|b1=Nga;b2=Sông Nin
+Q-DD-12|Địa danh và khám phá thế giới|Trung bình|DRAG_AND_DROP|Đỉnh núi cao nhất trên đất liền là ____, còn hồ nước ngọt sâu nhất hành tinh là ____.|Everest;Baikal;K2;Victoria;Titicaca|1|Đỉnh Everest cao 8848m, hồ Baikal sâu 1642m tại Siberia của Nga.|b1;b2|b1=Everest;b2=Baikal
+Q-LS-11|Những con người làm nên lịch sử|Dễ|DRAG_AND_DROP|Tác giả của Thuyết tương đối là ____, còn người khám phá ra chất kháng sinh Penicillin là ____.|Albert Einstein;Alexander Fleming;Isaac Newton;Marie Curie;Nikola Tesla|1|Albert Einstein công bố Thuyết tương đối, Alexander Fleming tình cờ tìm ra Penicillin năm 1928.|b1;b2|b1=Albert Einstein;b2=Alexander Fleming
+Q-LS-12|Những con người làm nên lịch sử|Trung bình|DRAG_AND_DROP|Người đầu tiên bay vào không gian vũ trụ là ____, còn người đầu tiên đặt chân lên Mặt Trăng là ____.|Yuri Gagarin;Neil Armstrong;Buzz Aldrin;Alan Shepard;John Glenn|1|Yuri Gagarin bay vào không gian năm 1961, Neil Armstrong đặt chân lên Mặt Trăng năm 1969.|b1;b2|b1=Yuri Gagarin;b2=Neil Armstrong
+Q-ST-11|Sự thật thú vị về thế giới|Dễ|DRAG_AND_DROP|Động vật lớn nhất từng sống trên Trái Đất là ____, còn loài chim có thể bay lùi là ____.|Cá voi xanh;Chim ruồi;Voi châu Phi;Cá heo;Chim hải âu|1|Cá voi xanh là sinh vật lớn nhất hành tinh, chim ruồi là loài chim duy nhất có thể bay lùi.|b1;b2|b1=Cá voi xanh;b2=Chim ruồi
+Q-VT-11|Vũ trụ và khám phá không gian|Dễ|DRAG_AND_DROP|Hành tinh lớn nhất trong Hệ Mặt Trời là ____, còn hành tinh có biệt danh Hành tinh Đỏ là ____.|Sao Mộc;Sao Hỏa;Sao Kim;Sao Thổ;Sao Thủy|1|Sao Mộc là hành tinh lớn nhất, Sao Hỏa giàu oxit sắt nên có sắc đỏ rực rỡ.|b1;b2|b1=Sao Mộc;b2=Sao Hỏa
+Q-VT-12|Vũ trụ và khám phá không gian|Trung bình|DRAG_AND_DROP|Kính viễn vọng không gian hồng ngoại hiện đại nhất là ____, còn hành tinh sở hữu vành đai ngoạn mục nhất là ____.|James Webb;Sao Thổ;Hubble;Sao Hải Vương;Kepler|1|Kính James Webb hoạt động tại điểm L2, Sao Thổ có hệ thống vành đai băng bụi rộng lớn nhất.|b1;b2|b1=James Webb;b2=Sao Thổ
+Q-KL-11|Những điều lớn nhất, nhỏ nhất và đầu tiên|Dễ|DRAG_AND_DROP|Hòn đảo tự nhiên lớn nhất thế giới là ____, còn quốc gia có diện tích nhỏ nhất là ____.|Greenland;Vatican;Madagascar;Monaco;Borneo|1|Greenland là đảo lớn nhất (hơn 2,1 triệu km2), Vatican là quốc gia nhỏ nhất (0,44 km2).|b1;b2|b1=Greenland;b2=Vatican
+Q-KL-12|Những điều lớn nhất, nhỏ nhất và đầu tiên|Trung bình|DRAG_AND_DROP|Tòa tháp cao nhất thế giới hiện nay là ____, còn rãnh biển sâu nhất đại dương là ____.|Burj Khalifa;Rãnh Mariana;Tháp Thượng Hải;Rãnh Puerto Rico;Merdeka 118|1|Burj Khalifa cao 828m tại Dubai, Rãnh Mariana sâu gần 11.000m tại Thái Bình Dương.|b1;b2|b1=Burj Khalifa;b2=Rãnh Mariana

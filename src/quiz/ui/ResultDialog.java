@@ -19,12 +19,17 @@ import javax.swing.border.EmptyBorder;
  */
 public class ResultDialog extends JDialog {
 
-    public record PlayerStat(String name, int correct, long durationMs, boolean isWinner, boolean isMe) {
+    public record PlayerStat(String name, int correct, long durationMs, boolean isWinner, boolean isMe, String avatarId) {
+        public PlayerStat(String name, int correct, long durationMs, boolean isWinner, boolean isMe) {
+            this(name, correct, durationMs, isWinner, isMe, "avatar_01");
+        }
     }
 
     private final Frame owner;
     private final String currentUsername;
     private final String winner;
+    private final String myAvatarId;
+    private final String opponentAvatarId;
     private final PlayerStat player1;
     private final PlayerStat player2;
     private final Runnable onRematchYes;
@@ -47,7 +52,7 @@ public class ResultDialog extends JDialog {
             String rightRaw,
             Runnable onRematchYes,
             Runnable onRematchNo) {
-        this(owner, currentUsername, winner, leftRaw, rightRaw, onRematchYes, onRematchNo, null, null, null);
+        this(owner, currentUsername, winner, leftRaw, rightRaw, onRematchYes, onRematchNo, null, null, null, "avatar_01", "avatar_01");
     }
 
     public ResultDialog(
@@ -61,19 +66,37 @@ public class ResultDialog extends JDialog {
             List<MatchQuestion> questions,
             int[] userAnswers,
             int[] correctAnswers) {
+        this(owner, currentUsername, winner, leftRaw, rightRaw, onRematchYes, onRematchNo, questions, userAnswers, correctAnswers, "avatar_01", "avatar_01");
+    }
+
+    public ResultDialog(
+            Frame owner,
+            String currentUsername,
+            String winner,
+            String leftRaw,
+            String rightRaw,
+            Runnable onRematchYes,
+            Runnable onRematchNo,
+            List<MatchQuestion> questions,
+            int[] userAnswers,
+            int[] correctAnswers,
+            String myAvatarId,
+            String opponentAvatarId) {
 
         super(owner, "Kết Quả Trận Đấu — Quiz Arena", true);
         this.owner = owner;
         this.currentUsername = currentUsername != null ? currentUsername : "";
         this.winner = winner != null ? winner.trim() : "";
+        this.myAvatarId = myAvatarId != null ? myAvatarId : "avatar_01";
+        this.opponentAvatarId = opponentAvatarId != null ? opponentAvatarId : "avatar_01";
         this.onRematchYes = onRematchYes;
         this.onRematchNo = onRematchNo;
         this.questions = questions;
         this.userAnswers = userAnswers;
         this.correctAnswers = correctAnswers;
 
-        this.player1 = parseStat(leftRaw, this.winner, this.currentUsername);
-        this.player2 = parseStat(rightRaw, this.winner, this.currentUsername);
+        this.player1 = parseStat(leftRaw, this.winner, this.currentUsername, this.myAvatarId, this.opponentAvatarId);
+        this.player2 = parseStat(rightRaw, this.winner, this.currentUsername, this.myAvatarId, this.opponentAvatarId);
 
         setSize(560, 530);
         setLocationRelativeTo(owner);
@@ -94,7 +117,7 @@ public class ResultDialog extends JDialog {
         }
 
         Color bannerBg = isWin ? Theme.GREEN : (isDraw ? Theme.PURPLE : Theme.RED);
-        String bannerTitle = isWin ? "🏆 CHIẾN THẮNG!" : (isDraw ? "🤝 TRẬN ĐẤU HÒA!" : "💔 THẤT BẠI!");
+        String bannerTitle = isWin ? "CHIẾN THẮNG!" : (isDraw ? "TRẬN ĐẤU HÒA!" : "THẤT BẠI!");
         String bannerSubtitle = isWin
                 ? "+2 Điểm Xếp Hạng • Bạn đã thể hiện rất xuất sắc!"
                 : (isDraw ? "0 Điểm Xếp Hạng • Hai đấu thủ ngang tài ngang sức!"
@@ -167,7 +190,7 @@ public class ResultDialog extends JDialog {
         bottomBar.setBackground(Theme.WHITE);
         bottomBar.setBorder(BorderFactory.createMatteBorder(1, 0, 0, 0, Theme.BORDER_LIGHT));
 
-        btnReview = new ModernButton("📝 Xem Đáp Án", ModernButton.Style.SECONDARY);
+        btnReview = new ModernButton("Xem Đáp Án", ModernButton.Style.SECONDARY);
         btnReview.setPreferredSize(new Dimension(150, 42));
         btnReview.setEnabled(this.questions != null && !this.questions.isEmpty());
         btnReview.addActionListener(e -> {
@@ -175,7 +198,7 @@ public class ResultDialog extends JDialog {
             openReviewDialog();
         });
 
-        btnLobby = new ModernButton("🏠 Về Sảnh Chờ", ModernButton.Style.SECONDARY);
+        btnLobby = new ModernButton("Về Sảnh Chờ", ModernButton.Style.SECONDARY);
         btnLobby.setPreferredSize(new Dimension(150, 42));
         btnLobby.addActionListener(e -> {
             SoundManager.playClick();
@@ -185,13 +208,13 @@ public class ResultDialog extends JDialog {
             }
         });
 
-        btnRematch = new ModernButton("⚔️ Tái Đấu Ngay", ModernButton.Style.SUCCESS);
+        btnRematch = new ModernButton("Tái Đấu Ngay", ModernButton.Style.SUCCESS);
         btnRematch.setPreferredSize(new Dimension(160, 42));
         btnRematch.addActionListener(e -> {
             SoundManager.playClick();
             btnRematch.setEnabled(false);
-            btnRematch.setText("⏳ Đã Yêu Cầu...");
-            lblRematchStatus.setText("⏳ Đã gửi yêu cầu tái đấu! Đang chờ đối thủ đồng ý...");
+            btnRematch.setText("Đã Yêu Cầu...");
+            lblRematchStatus.setText("Đã gửi yêu cầu tái đấu! Đang chờ đối thủ đồng ý...");
             lblRematchStatus.setForeground(Theme.BLUE);
             if (this.onRematchYes != null) {
                 this.onRematchYes.run();
@@ -224,24 +247,20 @@ public class ResultDialog extends JDialog {
         JPanel top = new JPanel(new FlowLayout(FlowLayout.CENTER, 8, 0));
         top.setOpaque(false);
 
-        String initial = (!stat.name().isEmpty()) ? stat.name().substring(0, 1).toUpperCase() : "?";
         JPanel avatar = new JPanel() {
             @Override
             protected void paintComponent(Graphics g) {
+                super.paintComponent(g);
                 Graphics2D g2 = (Graphics2D) g.create();
                 Theme.setupAntiAliasing(g2);
-                g2.setColor(stat.isMe() ? Theme.BLUE : Theme.PURPLE);
-                g2.fillOval(0, 0, getWidth(), getHeight());
-                g2.setColor(Theme.WHITE);
-                g2.setFont(Theme.BODY_BOLD);
-                FontMetrics fm = g2.getFontMetrics();
-                int x = (getWidth() - fm.stringWidth(initial)) / 2;
-                int y = (getHeight() - fm.getHeight()) / 2 + fm.getAscent();
-                g2.drawString(initial, x, y);
+                int size = Math.min(getWidth(), getHeight());
+                int ox = (getWidth() - size) / 2;
+                int oy = (getHeight() - size) / 2;
+                AvatarPicker.paintAvatar(g2, stat.avatarId(), ox, oy, size);
                 g2.dispose();
             }
         };
-        avatar.setPreferredSize(new Dimension(36, 36));
+        avatar.setPreferredSize(new Dimension(40, 40));
         avatar.setOpaque(false);
 
         JLabel lblName = new JLabel(stat.name() + (stat.isMe() ? " (Bạn)" : ""));
@@ -282,7 +301,7 @@ public class ResultDialog extends JDialog {
 
         // Stat: Duration
         String durText = String.format("%.2f giây", stat.durationMs() / 1000.0);
-        JLabel lblDuration = new JLabel("⏱️ " + durText, SwingConstants.CENTER);
+        JLabel lblDuration = new JLabel(durText, SwingConstants.CENTER);
         lblDuration.setFont(Theme.BODY_BOLD);
         lblDuration.setForeground(Theme.DARK_TEXT);
         lblDuration.setAlignmentX(Component.CENTER_ALIGNMENT);
@@ -291,9 +310,9 @@ public class ResultDialog extends JDialog {
         return col;
     }
 
-    private PlayerStat parseStat(String raw, String winner, String currentUsername) {
+    private PlayerStat parseStat(String raw, String winner, String currentUsername, String myAvatar, String oppAvatar) {
         if (raw == null || raw.isBlank()) {
-            return new PlayerStat("Unknown", 0, 0, false, false);
+            return new PlayerStat("Unknown", 0, 0, false, false, "avatar_01");
         }
         try {
             String[] parts = raw.split(":");
@@ -316,9 +335,10 @@ public class ResultDialog extends JDialog {
 
             boolean isWin = name.equalsIgnoreCase(winner);
             boolean isMe = name.equalsIgnoreCase(currentUsername);
-            return new PlayerStat(name, correct, durationMs, isWin, isMe);
+            String avatarId = isMe ? (myAvatar != null ? myAvatar : "avatar_01") : (oppAvatar != null ? oppAvatar : "avatar_01");
+            return new PlayerStat(name, correct, durationMs, isWin, isMe, avatarId);
         } catch (Exception e) {
-            return new PlayerStat(raw, 0, 0, false, false);
+            return new PlayerStat(raw, 0, 0, false, false, "avatar_01");
         }
     }
 

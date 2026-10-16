@@ -1,0 +1,55 @@
+﻿<USER_REQUEST>
+# NHIỆM VỤ: TÍCH HỢP HỆ THỐNG ÂM THANH HOÀN CHỈNH CHO GAME QUIZ ĐỐI KHÁNG JAVA SWING + TCP
+
+## 1. BỐI CẢNH DỰ ÁN
+
+Tôi đang phát triển một game đối kháng trắc nghiệm trực tuyến bằng Java Swing và TCP Socket.
+
+Dự án đã có các chức năng gameplay, giao diện trong trận đấu, sảnh chờ, giao tiếp client-server và các chức năng quản lý người chơi. Một số thành phần cụ thể có thể khác với mô tả, vì vậy phải kiểm tra mã nguồn thực tế trước khi chỉnh sửa.
+
+Tôi đã tải sẵn một bộ tài nguyên âm thanh để tích hợp vào game. Mục tiêu là bổ sung nhạc nền và hiệu ứng âm thanh cho toàn bộ game, giúp trải nghiệm chơi sinh động hơn nhưng vẫn giữ nguyên kiến trúc, giao diện và các chức năng đang hoạt động.
+
+Yêu cầu quan trọng nhất: **Tích hợp âm thanh vào project hiện có với mức thay đổi tối thiểu, không viết lại hệ thống và không làm hỏng giao tiếp TCP, gameplay hoặc cơ chế ghép trận.**
+
+---
+
+## 2. NGUYÊN TẮC BẮT BUỘC
+
+Trước khi thực hiện bất kỳ thay đổi nào, hãy tuân thủ các nguyên tắc sau:
+
+1. Đọc và phân tích cấu trúc project hiện tại.
+2. Xác định chính xác các lớp quản lý giao diện, xử lý sự kiện, client TCP, server TCP, câu hỏi, thời gian, kết quả trận đấu và điều hướng màn hình.
+3. Kiểm tra các thư viện, cấu hình build, phiên bản Java và cách quản lý tài nguyên hiện có.
+4. Kiểm tra các file âm thanh đã được tải xuống, bao gồm tên file thực tế, phần mở rộng, vị trí, thời lượng và định dạng nếu có thể.
+5. Không tự ý thay đổi kiến trúc client-server hoặc giao thức TCP.
+6. Không sửa logic tính điểm, tính giờ, xác định đúng sai, ghép trận, đăng nhập, đăng xuất ho
+<truncated 18611 bytes>
+ sung tài nguyên nếu cần.
+12. Xác nhận các chức năng TCP, gameplay và giao diện nào đã được giữ nguyên.
+
+Không tuyên bố đã hoàn tất kiểm thử nếu chưa thực hiện. Phân biệt rõ giữa việc đã viết code, đã biên dịch thành công và đã kiểm thử gameplay thực tế.
+
+## MỤC TIÊU CUỐI CÙNG
+
+Tích hợp nhạc nền và hiệu ứng âm thanh cho toàn bộ game quiz đối kháng Java Swing + TCP một cách nhất quán, dễ bảo trì và có thể mở rộng.
+
+Ưu tiên tái sử dụng code hiện tại, thay đổi tối thiểu, quản lý tài nguyên an toàn, xử lý đúng vòng đời âm thanh và bảo toàn toàn bộ chức năng mạng cùng gameplay.
+
+Đặc biệt, file `countdown` đã bao gồm âm báo kết thúc câu hỏi. Không tạo hoặc sử dụng `time_up`, không phát âm thanh kết thúc trùng lặp và không làm thay đổi logic đếm giờ hiện tại.
+</USER_REQUEST>
+<ADDITIONAL_METADATA>
+The current local time is: 2026-10-16T09:58:07+07:00.
+
+The user's current state is as follows:
+Active Document: c:\Users\Admin\OneDrive\Máy tính\QuizDoiKhang\schema_postgres.sql (LANGUAGE_SQL)
+Cursor is on line: 1
+Other open documents:
+- c:\Users\Admin\OneDrive\Máy tính\QuizDoiKhang\src\quiz\Bank.java (LANGUAGE_JAVA)
+- c:\Users\Admin\OneDrive\Máy tính\QuizDoiKhang\src\quiz\Server.java (LANGUAGE_JAVA)
+- c:\Users\Admin\OneDrive\Máy tính\QuizDoiKhang\src\quiz\ui\SubmitConfirmDialog.java (LANGUAGE_JAVA)
+- c:\Users\Admin\OneDrive\Máy tính\QuizDoiKhang\src\quiz\ui\Theme.java (LANGUAGE_JAVA)
+- c:\Users\Admin\OneDrive\Máy tính\QuizDoiKhang\src\quiz\ui\SoundManager.java (LANGUAGE_JAVA)
+</ADDITIONAL_METADATA>
+<USER_SETTINGS_CHANGE>
+The user changed setting `Model Selection` from None to Claude Sonnet 4.6 (Thinking). No need to comment on this change if the user doesn't ask about it. If reporting what model you are, please use a human readable name instead of the exact string.
+</USER_SETTINGS_CHANGE>

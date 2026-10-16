@@ -48,7 +48,7 @@ public class InviteDialog extends JDialog {
         header.setBackground(Theme.WHITE);
         header.setBorder(new EmptyBorder(22, 24, 10, 24));
 
-        JLabel title = new JLabel("⚔️ LỜI MỜI THÁCH ĐẤU", SwingConstants.CENTER);
+        JLabel title = new JLabel("LỜI MỜI THÁCH ĐẤU", SwingConstants.CENTER);
         title.setFont(Theme.TITLE);
         title.setForeground(Theme.PURPLE);
         title.setAlignmentX(Component.CENTER_ALIGNMENT);
@@ -169,6 +169,9 @@ public class InviteDialog extends JDialog {
             if (remainingSeconds <= 10) {
                 lblCountdown.setForeground(Theme.RED);
                 progressBar.setForeground(Theme.RED);
+                if (remainingSeconds == 10) {
+                    Toolkit.getDefaultToolkit().beep();
+                }
             }
 
             if (remainingSeconds <= 0) {
@@ -191,6 +194,7 @@ public class InviteDialog extends JDialog {
     }
 
     private void decide(boolean accept) {
+        SoundManager.playClick();
         if (countdownTimer.isRunning()) {
             countdownTimer.stop();
         }

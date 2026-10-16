@@ -7,7 +7,8 @@ import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 
 /**
- * LeaderboardDialog - Hộp thoại hiển thị Bảng xếp hạng cao thủ với giao diện hiện đại,
+ * LeaderboardDialog - Hộp thoại hiển thị Bảng xếp hạng cao thủ với giao diện
+ * hiện đại,
  * làm nổi bật Top 1-2-3 và các tiêu chí xếp hạng (Điểm, TB đối thủ, Tốc độ).
  */
 public class LeaderboardDialog extends JDialog {
@@ -25,7 +26,7 @@ public class LeaderboardDialog extends JDialog {
         header.setBackground(Theme.WHITE);
         header.setBorder(new EmptyBorder(20, 24, 12, 24));
 
-        JLabel title = new JLabel("🏆 BẢNG XẾP HẠNG CAO THỦ");
+        JLabel title = new JLabel("BẢNG XẾP HẠNG CAO THỦ");
         title.setFont(Theme.TITLE);
         title.setForeground(Theme.BLUE);
         title.setAlignmentX(Component.LEFT_ALIGNMENT);
@@ -41,7 +42,7 @@ public class LeaderboardDialog extends JDialog {
         add(header, BorderLayout.NORTH);
 
         // 2. TABLE
-        String[] columnNames = {"Hạng", "Người chơi", "Điểm số", "TB Đối thủ", "Tốc độ thắng"};
+        String[] columnNames = { "Hạng", "Người chơi", "Điểm số", "TB Đối thủ", "Tốc độ thắng" };
         DefaultTableModel model = new DefaultTableModel(columnNames, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
@@ -53,16 +54,17 @@ public class LeaderboardDialog extends JDialog {
             String[] rows = rawData.split("\\|");
             int rank = 1;
             for (String r : rows) {
-                if (r.isBlank()) continue;
+                if (r.isBlank())
+                    continue;
                 String[] f = r.split(";");
                 if (f.length >= 4) {
                     String rankText = switch (rank) {
-                        case 1 -> "🥇 #1";
-                        case 2 -> "🥈 #2";
-                        case 3 -> "🥉 #3";
-                        default -> "    #" + rank;
+                        case 1 -> "TOP 1";
+                        case 2 -> "TOP 2";
+                        case 3 -> "TOP 3";
+                        default -> "#" + rank;
                     };
-                    model.addRow(new Object[]{rankText, f[0], f[1] + " pts", f[2], f[3]});
+                    model.addRow(new Object[] { rankText, f[0], f[1] + " pts", f[2], f[3] });
                     rank++;
                 }
             }
@@ -87,7 +89,8 @@ public class LeaderboardDialog extends JDialog {
 
         DefaultTableCellRenderer scoreRenderer = new DefaultTableCellRenderer() {
             @Override
-            public Component getTableCellRendererComponent(JTable t, Object val, boolean sel, boolean foc, int row, int col) {
+            public Component getTableCellRendererComponent(JTable t, Object val, boolean sel, boolean foc, int row,
+                    int col) {
                 Component c = super.getTableCellRendererComponent(t, val, sel, foc, row, col);
                 setForeground(Theme.PURPLE);
                 setFont(Theme.BODY_BOLD);
@@ -107,7 +110,10 @@ public class LeaderboardDialog extends JDialog {
         footer.setBackground(Theme.WHITE);
         ModernButton btnClose = new ModernButton("Đóng", ModernButton.Style.PRIMARY);
         btnClose.setPreferredSize(new Dimension(100, 36));
-        btnClose.addActionListener(e -> dispose());
+        btnClose.addActionListener(e -> {
+            SoundManager.playClick();
+            dispose();
+        });
         footer.add(btnClose);
         add(footer, BorderLayout.SOUTH);
     }

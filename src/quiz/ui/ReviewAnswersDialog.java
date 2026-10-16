@@ -2,6 +2,7 @@ package quiz.ui;
 
 import java.awt.*;
 import java.util.List;
+import java.util.Map;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 
@@ -96,7 +97,11 @@ public class ReviewAnswersDialog extends JDialog {
             JPanel cardHeader = new JPanel(new BorderLayout());
             cardHeader.setOpaque(false);
 
-            JLabel lblQNum = new JLabel("CÂU HỎI " + (i + 1) + " / " + total);
+            String typeBadge = "";
+            if (q.type() != null && !q.type().isBlank()) {
+                typeBadge = " • " + quiz.Model.QuestionType.fromString(q.type()).getDisplayName();
+            }
+            JLabel lblQNum = new JLabel("CÂU HỎI " + (i + 1) + " / " + total + typeBadge);
             lblQNum.setFont(Theme.SMALL_BOLD);
             lblQNum.setForeground(Theme.MUTED_GRAY);
             cardHeader.add(lblQNum, BorderLayout.WEST);
@@ -105,9 +110,9 @@ public class ReviewAnswersDialog extends JDialog {
             if (isSkipped) {
                 cardBadge = new ModernBadge("— Chưa chọn", ModernBadge.Type.WARNING);
             } else if (isCorrect) {
-                cardBadge = new ModernBadge("✓ Đúng (+1)", ModernBadge.Type.READY);
+                cardBadge = new ModernBadge("Đúng (+1)", ModernBadge.Type.READY);
             } else {
-                cardBadge = new ModernBadge("✗ Sai", ModernBadge.Type.BUSY);
+                cardBadge = new ModernBadge("Sai", ModernBadge.Type.BUSY);
             }
             cardHeader.add(cardBadge, BorderLayout.EAST);
             card.add(cardHeader, BorderLayout.NORTH);
@@ -123,20 +128,101 @@ public class ReviewAnswersDialog extends JDialog {
             contentPanel.add(lblQuestionText);
             contentPanel.add(Box.createVerticalStrut(10));
 
-            // Options List
-            JPanel choicesPanel = new JPanel(new GridLayout(4, 1, 0, 6));
-            choicesPanel.setOpaque(false);
+            if (q.isDragAndDrop() && q.fillMap() != null) {
+                JPanel dndReviewBox = new JPanel(new GridLayout(0, 1, 0, 6));
+                dndReviewBox.setOpaque(false);
+                int slotIndex = 1;
+                for (Map.Entry<String, String> entry : q.fillMap().entrySet()) {
+                    JPanel row = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 4));
+                    row.setOpaque(true);
+                    row.setBackground(new Color(0xEC, 0xFD, 0xF5));
+                    row.setBorder(BorderFactory.createCompoundBorder(
+                        BorderFactory.createLineBorder(new Color(0x6E, 0xE7, 0xB7), 1, true),
+                        new EmptyBorder(4, 8, 4, 8)
+                    ));
+                    JLabel lblSlot = new JLabel("Chỗ trống (" + slotIndex++ + ") ➜ Đáp án đúng: ");
+                    lblSlot.setFont(Theme.SMALL_BOLD);
+                    lblSlot.setForeground(new Color(0x06, 0x5F, 0x46));
+                    JLabel lblAns = new JLabel(entry.getValue());
+                    lblAns.setFont(Theme.BODY_BOLD);
+                    lblAns.setForeground(new Color(0x04, 0x78, 0x57));
+                    row.add(lblSlot);
+                    row.add(lblAns);
+                    dndReviewBox.add(row);
+                }
+                contentPanel.add(dndReviewBox);
+            } else if (q.isFillIn()) {
+                JPanel fillInReviewBox = new JPanel(new GridLayout(0, 1, 0, 6));
+                fillInReviewBox.setOpaque(false);
 
-            String[] choices = q.choices();
-            for (int c = 0; c < 4; c++) {
-                String choiceText = (c < choices.length) ? choices[c] : "";
-                boolean isUserChoice = (uAns == c);
-                boolean isCorrectChoice = (cAns == c);
+                JPanel row = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 4));
+                row.setOpaque(true);
+                row.setBackground(new Color(0xEC, 0xFD, 0xF5));
+                row.setBorder(BorderFactory.createCompoundBorder(
+                    BorderFactory.createLineBorder(new Color(0x6E, 0xE7, 0xB7), 1, true),
+                    new EmptyBorder(6, 12, 6, 12)
+                ));
+                JLabel lblTarget = new JLabel("Đáp án chính xác: ");
+                lblTarget.setFont(Theme.SMALL_BOLD);
+                lblTarget.setForeground(new Color(0x06, 0x5F, 0x46));
+                String targetDisplay = (q.choices() != null && q.choices().length > 0) ? q.choices()[0] : "";
+                JLabel lblTargetVal = new JLabel(targetDisplay);
+                lblTargetVal.setFont(Theme.BODY_BOLD);
+                lblTargetVal.setForeground(new Color(0x04, 0x78, 0x57));
 
-                choicesPanel.add(createChoiceRow(prefixes[c], choiceText, isUserChoice, isCorrectChoice));
+                row.add(lblTarget);
+                row.add(lblTargetVal);
+                fillInReviewBox.add(row);
+                contentPanel.add(fillInReviewBox);
+            } else {
+                // Options List (Multiple Choice / Multiple Select / True False)
+                String[] choices = q.choices();
+                int maxC = (q.isTrueFalse() || (choices != null && choices.length == 2)) ? 2 : 4;
+                JPanel choicesPanel = new JPanel(new GridLayout(maxC, 1, 0, 6));
+                choicesPanel.setOpaque(false);
+
+                for (int c = 0; c < maxC; c++) {
+                    String choiceText = (choices != null && c < choices.length) ? choices[c] : "";
+                    boolean isUserChoice;
+                    boolean isCorrectChoice;
+                    if (q.isMultipleSelect()) {
+                        isUserChoice = (uAns != -1) && ((uAns & (1 << c)) != 0);
+                        isCorrectChoice = ((cAns & (1 << c)) != 0);
+                    } else {
+                        isUserChoice = (uAns == c);
+                        isCorrectChoice = (cAns == c);
+                    }
+
+                    choicesPanel.add(createChoiceRow(prefixes[c], choiceText, isUserChoice, isCorrectChoice));
+                }
+
+                contentPanel.add(choicesPanel);
             }
 
-            contentPanel.add(choicesPanel);
+            // Explanation Box
+            if (q.explanation() != null && !q.explanation().isBlank()) {
+                JPanel expBox = new JPanel(new BorderLayout(8, 4));
+                expBox.setOpaque(true);
+                expBox.setBackground(new Color(0xF8, 0xFA, 0xFC));
+                expBox.setBorder(BorderFactory.createCompoundBorder(
+                    BorderFactory.createLineBorder(new Color(0xE2, 0xE8, 0xF0), 1, true),
+                    new EmptyBorder(8, 12, 8, 12)));
+
+                JLabel lblExpTitle = new JLabel("Giải thích: ");
+                lblExpTitle.setFont(Theme.SMALL_BOLD);
+                lblExpTitle.setForeground(Theme.BLUE);
+
+                JLabel lblExpText = new JLabel("<html><body style='width: 440px;'>" + q.explanation() + "</body></html>");
+                lblExpText.setFont(Theme.SMALL);
+                lblExpText.setForeground(Theme.DARK_TEXT);
+
+                expBox.add(lblExpTitle, BorderLayout.WEST);
+                expBox.add(lblExpText, BorderLayout.CENTER);
+
+                contentPanel.add(Box.createVerticalStrut(10));
+                contentPanel.add(expBox);
+            }
+
             card.add(contentPanel, BorderLayout.CENTER);
 
             listContainer.add(card);
@@ -181,17 +267,17 @@ public class ReviewAnswersDialog extends JDialog {
             bg = new Color(0xE8, 0xF5, 0xE9);
             border = Theme.GREEN;
             fg = new Color(0x1B, 0x5E, 0x20);
-            statusNote = "✓ Lựa chọn của bạn (Chính xác)";
+            statusNote = "Lựa chọn của bạn (Chính xác)";
         } else if (isUserChoice && !isCorrectChoice) {
             bg = new Color(0xFF, 0xEB, 0xEE);
             border = Theme.RED;
             fg = new Color(0xB7, 0x1C, 0x1C);
-            statusNote = "✗ Lựa chọn của bạn";
+            statusNote = "Lựa chọn của bạn";
         } else if (!isUserChoice && isCorrectChoice) {
             bg = new Color(0xED, 0xF7, 0xED);
             border = Theme.GREEN;
             fg = new Color(0x1B, 0x5E, 0x20);
-            statusNote = "★ Đáp án chính xác";
+            statusNote = "Đáp án chính xác";
         }
 
         row.setBackground(bg);

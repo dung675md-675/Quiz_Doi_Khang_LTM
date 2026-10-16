@@ -171,7 +171,7 @@ public class UIPreview {
         JPanel p5Btns = new JPanel(new FlowLayout(FlowLayout.LEFT, 12, 6));
         p5Btns.setOpaque(false);
 
-        ModernButton btnDemoMatch = new ModernButton("⚔️ Mở MatchScreen Demo", ModernButton.Style.PRIMARY);
+        ModernButton btnDemoMatch = new ModernButton("Mở MatchScreen Demo", ModernButton.Style.PRIMARY);
         btnDemoMatch.addActionListener(e -> {
             JFrame matchFrame = new JFrame("Demo MatchScreen 1v1 — Quiz Arena");
             matchFrame.setSize(960, 720);
@@ -189,11 +189,23 @@ public class UIPreview {
                 answers -> ToastManager.success(matchFrame, "Đã gửi nộp bài! Đang chờ đối thủ..."),
                 matchFrame::dispose
             );
+            final int[] userDemoScore = {0};
+            final int[] oppDemoScore = {0};
+            screen.setOnAnswerListener((qIdx, choice) -> {
+                if (choice != -1) {
+                    userDemoScore[0]++;
+                    screen.setMyScore(userDemoScore[0]);
+                }
+                if (new java.util.Random().nextInt(100) < 70) {
+                    oppDemoScore[0]++;
+                    screen.setOpponentScore(oppDemoScore[0]);
+                }
+            });
             matchFrame.setContentPane(screen);
             matchFrame.setVisible(true);
         });
 
-        ModernButton btnDemoWin = new ModernButton("🏆 Result Dialog (Thắng)", ModernButton.Style.SUCCESS);
+        ModernButton btnDemoWin = new ModernButton("Result Dialog (Thắng)", ModernButton.Style.SUCCESS);
         btnDemoWin.addActionListener(e -> {
             new ResultDialog(
                 frame, "alice", "alice",
@@ -203,7 +215,7 @@ public class UIPreview {
             ).setVisible(true);
         });
 
-        ModernButton btnDemoLose = new ModernButton("💔 Result Dialog (Thua)", ModernButton.Style.DANGER);
+        ModernButton btnDemoLose = new ModernButton("Result Dialog (Thua)", ModernButton.Style.DANGER);
         btnDemoLose.addActionListener(e -> {
             new ResultDialog(
                 frame, "alice", "bob",
@@ -213,7 +225,7 @@ public class UIPreview {
             ).setVisible(true);
         });
 
-        ModernButton btnDemoDraw = new ModernButton("🤝 Result Dialog (Hòa)", ModernButton.Style.ACCENT_PURPLE);
+        ModernButton btnDemoDraw = new ModernButton("Result Dialog (Hòa)", ModernButton.Style.ACCENT_PURPLE);
         btnDemoDraw.addActionListener(e -> {
             new ResultDialog(
                 frame, "alice", "HÒA",
@@ -223,7 +235,21 @@ public class UIPreview {
             ).setVisible(true);
         });
 
+        ModernButton btnDemoSubmitFull = new ModernButton("Xác Nhận Nộp (Đủ 10/10)", ModernButton.Style.EMERALD);
+        btnDemoSubmitFull.addActionListener(e -> {
+            int[] fullAns = new int[]{0, 1, 2, 3, 0, 1, 2, 3, 0, 1};
+            new SubmitConfirmDialog(frame, null, fullAns, 9).setVisible(true);
+        });
+
+        ModernButton btnDemoSubmitPartial = new ModernButton("Xác Nhận Nộp (Thiếu 6/10)", ModernButton.Style.ORANGE);
+        btnDemoSubmitPartial.addActionListener(e -> {
+            int[] partialAns = new int[]{0, 1, -1, 3, -1, 1, 2, -1, 0, -1};
+            new SubmitConfirmDialog(frame, null, partialAns, 2).setVisible(true);
+        });
+
         p5Btns.add(btnDemoMatch);
+        p5Btns.add(btnDemoSubmitFull);
+        p5Btns.add(btnDemoSubmitPartial);
         p5Btns.add(btnDemoWin);
         p5Btns.add(btnDemoLose);
         p5Btns.add(btnDemoDraw);
@@ -242,28 +268,28 @@ public class UIPreview {
         JPanel soundBtns = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 6));
         soundBtns.setOpaque(false);
 
-        ModernButton sndClick = new ModernButton("🔊 Click Haptic", ModernButton.Style.SECONDARY);
+        ModernButton sndClick = new ModernButton("Click Haptic", ModernButton.Style.SECONDARY);
         sndClick.addActionListener(e -> SoundManager.playClick());
 
-        ModernButton sndTick = new ModernButton("⏱️ Tick Đếm Ngược", ModernButton.Style.SECONDARY);
+        ModernButton sndTick = new ModernButton("Tick Đếm Ngược", ModernButton.Style.SECONDARY);
         sndTick.addActionListener(e -> SoundManager.playTick());
 
-        ModernButton sndInvite = new ModernButton("🔔 Chuông Thách Đấu", ModernButton.Style.PRIMARY);
+        ModernButton sndInvite = new ModernButton("Chuông Thách Đấu", ModernButton.Style.PRIMARY);
         sndInvite.addActionListener(e -> SoundManager.playInviteAlert());
 
-        ModernButton sndWin = new ModernButton("🏆 Fanfare Thắng", ModernButton.Style.SUCCESS);
+        ModernButton sndWin = new ModernButton("Fanfare Thắng", ModernButton.Style.SUCCESS);
         sndWin.addActionListener(e -> SoundManager.playVictory());
 
-        ModernButton sndLose = new ModernButton("💔 Nhạc Thất Bại", ModernButton.Style.DANGER);
+        ModernButton sndLose = new ModernButton("Nhạc Thất Bại", ModernButton.Style.DANGER);
         sndLose.addActionListener(e -> SoundManager.playDefeat());
 
-        ModernButton sndEmote = new ModernButton("✨ Reaction Pop", ModernButton.Style.ACCENT_PURPLE);
+        ModernButton sndEmote = new ModernButton("Reaction Pop", ModernButton.Style.ACCENT_PURPLE);
         sndEmote.addActionListener(e -> SoundManager.playEmote());
 
-        ModernButton sndToggle = new ModernButton(SoundManager.isMuted() ? "🔇 Đang Tắt Âm" : "🔊 Đang Bật Âm", ModernButton.Style.OUTLINE_GRAY);
+        ModernButton sndToggle = new ModernButton(SoundManager.isMuted() ? "Âm: Đang Tắt" : "Âm: Đang Bật", ModernButton.Style.OUTLINE_GRAY);
         sndToggle.addActionListener(e -> {
             SoundManager.toggleMute();
-            sndToggle.setText(SoundManager.isMuted() ? "🔇 Đang Tắt Âm" : "🔊 Đang Bật Âm");
+            sndToggle.setText(SoundManager.isMuted() ? "Âm: Đang Tắt" : "Âm: Đang Bật");
         });
 
         soundBtns.add(sndClick);
@@ -276,6 +302,19 @@ public class UIPreview {
         soundCard.add(soundBtns, BorderLayout.CENTER);
 
         mainPanel.add(soundCard);
+
+        // 7. Section: Phase 8 - Topic Cards & Visual Selector
+        ModernCard topicPreviewCard = new ModernCard(new BorderLayout(10, 10));
+        topicPreviewCard.setAlignmentX(Component.LEFT_ALIGNMENT);
+        JLabel topicTitle = new JLabel("7. Visual Topic Cards & Cover Crop (Nâng Cấp Giao Diện Chọn Chủ Đề)");
+        topicTitle.setFont(Theme.SUBTITLE);
+        topicPreviewCard.add(topicTitle, BorderLayout.NORTH);
+
+        TopicSelector previewTopicSelector = new TopicSelector();
+        topicPreviewCard.add(previewTopicSelector, BorderLayout.CENTER);
+
+        mainPanel.add(Box.createVerticalStrut(16));
+        mainPanel.add(topicPreviewCard);
 
         JScrollPane scroll = new JScrollPane(mainPanel);
         scroll.setBorder(null);

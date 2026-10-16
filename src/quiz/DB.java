@@ -78,10 +78,15 @@ public final class DB implements AutoCloseable {
                     username VARCHAR(50) PRIMARY KEY,
                     password VARCHAR(255) NOT NULL,
                     score INT NOT NULL DEFAULT 0 CHECK (score >= 0),
+                    avatar_id VARCHAR(20) NOT NULL DEFAULT 'avatar_01',
                     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
                     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
                 );
             """);
+            // Migration: thêm cột avatar_id nếu chưa có (tương thích DB cũ)
+            try {
+                st.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar_id VARCHAR(20) NOT NULL DEFAULT 'avatar_01'");
+            } catch (Exception ignored) {}
 
             st.execute("""
                 CREATE TABLE IF NOT EXISTS question_sets (
@@ -224,7 +229,7 @@ public final class DB implements AutoCloseable {
                         psUser.executeBatch();
                     }
 
-                    String insertMatchSql = "INSERT INTO match_results(id, left_player, right_player, topic, level, set_id, left_correct, right_correct, left_ms, right_ms, duration, winner) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT (id) DO NOTHING";
+                    String insertMatchSql = "INSERT INTO match_results(id, left_player, right_player, topic, level, set_id, left_correct, right_correct, left_ms, right_ms, duration, winner, created_at) VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT (id) DO NOTHING";
                     try (PreparedStatement psMatch = conn.prepareStatement(insertMatchSql)) {
                         for (Model.Result r : store.results) {
                             psMatch.setString(1, r.match());
@@ -239,6 +244,7 @@ public final class DB implements AutoCloseable {
                             psMatch.setLong(10, r.rightMs());
                             psMatch.setInt(11, r.duration());
                             psMatch.setString(12, r.winner());
+                            psMatch.setTimestamp(13, new Timestamp(r.timestamp()));
                             psMatch.addBatch();
                         }
                         psMatch.executeBatch();
@@ -278,7 +284,7 @@ public final class DB implements AutoCloseable {
 
     public Model.User getUser(String username) {
         if (!connected) return null;
-        String sql = "SELECT username, password, score FROM users WHERE username = ?";
+        String sql = "SELECT username, password, score, avatar_id FROM users WHERE username = ?";
         try (Connection conn = getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, username);
@@ -286,6 +292,8 @@ public final class DB implements AutoCloseable {
                 if (rs.next()) {
                     Model.User u = new Model.User(rs.getString("username"), rs.getString("password"));
                     u.score = rs.getInt("score");
+                    try { u.avatarId = rs.getString("avatar_id"); } catch (Exception ignored) {}
+                    if (u.avatarId == null || u.avatarId.isBlank()) u.avatarId = "avatar_01";
                     return u;
                 }
             }
@@ -293,6 +301,21 @@ public final class DB implements AutoCloseable {
             System.err.println("[DATABASE] Lỗi lấy thông tin user " + username + ": " + e.getMessage());
         }
         return null;
+    }
+
+    public boolean updateAvatar(String username, String avatarId) {
+        if (!connected) return false;
+        String sql = "UPDATE users SET avatar_id = ?, updated_at = CURRENT_TIMESTAMP WHERE username = ?";
+        try (Connection conn = getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, avatarId);
+            ps.setString(2, username);
+            ps.executeUpdate();
+            return true;
+        } catch (SQLException e) {
+            System.err.println("[DATABASE] Lỗi cập nhật avatar cho " + username + ": " + e.getMessage());
+            return false;
+        }
     }
 
     public void updatePassword(String username, String newPasswordHash) {
@@ -337,13 +360,15 @@ public final class DB implements AutoCloseable {
     public Map<String, Model.User> getAllUsers() {
         Map<String, Model.User> map = new HashMap<>();
         if (!connected) return map;
-        String sql = "SELECT username, password, score FROM users";
+        String sql = "SELECT username, password, score, avatar_id FROM users";
         try (Connection conn = getConnection();
              Statement st = conn.createStatement();
              ResultSet rs = st.executeQuery(sql)) {
             while (rs.next()) {
                 Model.User u = new Model.User(rs.getString("username"), rs.getString("password"));
                 u.score = rs.getInt("score");
+                try { u.avatarId = rs.getString("avatar_id"); } catch (Exception ignored) {}
+                if (u.avatarId == null || u.avatarId.isBlank()) u.avatarId = "avatar_01";
                 map.put(u.name, u);
             }
         } catch (SQLException e) {
@@ -381,7 +406,7 @@ public final class DB implements AutoCloseable {
     public List<Model.Result> getAllResults() {
         List<Model.Result> list = new ArrayList<>();
         if (!connected) return list;
-        String sql = "SELECT id, left_player, right_player, topic, level, set_id, left_correct, right_correct, left_ms, right_ms, duration, winner FROM match_results ORDER BY created_at ASC";
+        String sql = "SELECT id, left_player, right_player, topic, level, set_id, left_correct, right_correct, left_ms, right_ms, duration, winner, created_at FROM match_results ORDER BY created_at ASC";
         try (Connection conn = getConnection();
              Statement st = conn.createStatement();
              ResultSet rs = st.executeQuery(sql)) {
@@ -398,7 +423,8 @@ public final class DB implements AutoCloseable {
                     rs.getLong("left_ms"),
                     rs.getLong("right_ms"),
                     rs.getInt("duration"),
-                    rs.getString("winner")
+                    rs.getString("winner"),
+                    rs.getTimestamp("created_at").getTime()
                 ));
             }
         } catch (SQLException e) {
@@ -410,7 +436,7 @@ public final class DB implements AutoCloseable {
     public List<Model.Result> getUserHistory(String username) {
         List<Model.Result> list = new ArrayList<>();
         if (!connected) return list;
-        String sql = "SELECT id, left_player, right_player, topic, level, set_id, left_correct, right_correct, left_ms, right_ms, duration, winner " +
+        String sql = "SELECT id, left_player, right_player, topic, level, set_id, left_correct, right_correct, left_ms, right_ms, duration, winner, created_at " +
                      "FROM match_results WHERE left_player = ? OR right_player = ? ORDER BY created_at DESC";
         try (Connection conn = getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
@@ -430,7 +456,8 @@ public final class DB implements AutoCloseable {
                         rs.getLong("left_ms"),
                         rs.getLong("right_ms"),
                         rs.getInt("duration"),
-                        rs.getString("winner")
+                        rs.getString("winner"),
+                        rs.getTimestamp("created_at").getTime()
                     ));
                 }
             }

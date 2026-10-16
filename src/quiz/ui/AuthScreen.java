@@ -74,8 +74,14 @@ public class AuthScreen extends JPanel {
         tabLogin = createTabButton("Đăng nhập", true);
         tabRegister = createTabButton("Đăng ký", false);
 
-        tabLogin.addActionListener(e -> setMode(Mode.LOGIN));
-        tabRegister.addActionListener(e -> setMode(Mode.REGISTER));
+        tabLogin.addActionListener(e -> {
+            SoundManager.playClick();
+            setMode(Mode.LOGIN);
+        });
+        tabRegister.addActionListener(e -> {
+            SoundManager.playClick();
+            setMode(Mode.REGISTER);
+        });
 
         tabContainer.add(tabLogin);
         tabContainer.add(tabRegister);
@@ -315,4 +321,21 @@ public class AuthScreen extends JPanel {
     public void clearPassword() {
         txtPassword.setText("");
     }
+
+    /**
+     * Reset toàn bộ trạng thái AuthScreen để dùng lại sau logout.
+     * Xóa input fields, thông báo lỗi, loading state.
+     */
+    public void resetForReuse() {
+        txtUsername.setText("");
+        txtPassword.setText("");
+        lblUserError.setText(" ");
+        lblPassError.setText(" ");
+        lblGlobalMessage.setText(" ");
+        txtUsername.setError(false);
+        txtPassword.setError(false);
+        setLoading(false);
+        setMode(Mode.LOGIN);
+    }
 }
+

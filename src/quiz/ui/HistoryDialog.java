@@ -5,7 +5,8 @@ import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 
 /**
- * HistoryDialog - Hộp thoại hiển thị Lịch sử thi đấu của người chơi dưới dạng các thẻ trực quan,
+ * HistoryDialog - Hộp thoại hiển thị Lịch sử thi đấu của người chơi dưới dạng
+ * các thẻ trực quan,
  * phân biệt rõ Thắng / Thua / Hòa và tỉ số chi tiết.
  */
 public class HistoryDialog extends JDialog {
@@ -23,7 +24,7 @@ public class HistoryDialog extends JDialog {
         header.setBackground(Theme.WHITE);
         header.setBorder(new EmptyBorder(18, 24, 14, 24));
 
-        JLabel title = new JLabel("📜 LỊCH SỬ THI ĐẤU");
+        JLabel title = new JLabel(" LỊCH SỬ THI ĐẤU");
         title.setFont(Theme.TITLE);
         title.setForeground(Theme.BLUE);
         title.setAlignmentX(Component.LEFT_ALIGNMENT);
@@ -55,7 +56,8 @@ public class HistoryDialog extends JDialog {
         } else {
             String[] lines = rawData.split("\n");
             for (String line : lines) {
-                if (line.isBlank()) continue;
+                if (line.isBlank())
+                    continue;
                 listPanel.add(createMatchHistoryCard(currentUserName, line));
                 listPanel.add(Box.createVerticalStrut(10));
             }
@@ -72,7 +74,10 @@ public class HistoryDialog extends JDialog {
         footer.setBackground(Theme.WHITE);
         ModernButton btnClose = new ModernButton("Đóng", ModernButton.Style.PRIMARY);
         btnClose.setPreferredSize(new Dimension(100, 36));
-        btnClose.addActionListener(e -> dispose());
+        btnClose.addActionListener(e -> {
+            SoundManager.playClick();
+            dispose();
+        });
         footer.add(btnClose);
         add(footer, BorderLayout.SOUTH);
     }

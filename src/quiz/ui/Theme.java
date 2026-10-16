@@ -31,6 +31,20 @@ public final class Theme {
     public static final Color BORDER_DARK = new Color(0x3B, 0x4B, 0x72);   // Viền card dark
 
     // ==========================================
+    // 1.1 BẢNG MÀU TƯƠI SÁNG (Vibrant Palette)
+    // ==========================================
+    public static final Color EMERALD = new Color(0x10, 0xB9, 0x81);       // #10B981 - Xanh ngọc / Xanh lá tươi
+    public static final Color EMERALD_DARK = new Color(0x05, 0x96, 0x69);  // #059669 - Xanh ngọc đậm
+    public static final Color EMERALD_LIGHT = new Color(0xEC, 0xFD, 0xF5); // #ECFDF5 - Nền xanh ngọc pastel
+    public static final Color ORANGE = new Color(0xF9, 0x73, 0x16);        // #F97316 - Cam tươi rực rỡ
+    public static final Color ORANGE_DARK = new Color(0xEA, 0x58, 0x0C);   // #EA580C - Cam đậm
+    public static final Color AMBER = new Color(0xF5, 0x9E, 0x0B);         // #F59E0B - Vàng cam hổ phách
+    public static final Color AMBER_LIGHT = new Color(0xFF, 0xFB, 0xEB);   // #FFFBEB - Nền cam vàng pastel
+    public static final Color CYAN = new Color(0x06, 0xB6, 0xD4);          // #06B6D4 - Xanh lơ cyan tươi
+    public static final Color SKY_BLUE = new Color(0x0E, 0xA5, 0xE9);      // #0EA5E9 - Xanh da trời tươi
+    public static final Color SKY_LIGHT = new Color(0xEF, 0xF6, 0xFF);     // #EFF6FF - Nền xanh da trời pastel
+
+    // ==========================================
     // 2. TYPOGRAPHY
     // ==========================================
     private static final String FONT_FAMILY = resolveFontFamily();
