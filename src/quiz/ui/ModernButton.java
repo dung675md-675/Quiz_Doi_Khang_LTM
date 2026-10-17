@@ -57,6 +57,7 @@ public class ModernButton extends JButton {
     }
 
     public float getAnimScale() { return animScale; }
+    public String getPrefixBadge() { return prefixBadge; }
 
     public void setRevealColors(Color bg, Color fg) {
         this.revealBgColor = bg;
@@ -187,9 +188,23 @@ public class ModernButton extends JButton {
         Color fg = resolveFgColor();
         Color border = resolveBorderColor();
 
-        // 1. Vẽ nền bo góc
-        g2.setColor(bg);
-        g2.fill(new RoundRectangle2D.Float(1, 1, w - 2, h - 2, cornerRadius, cornerRadius));
+        int pressOffset = (isPressed && isEnabled()) ? 2 : 0;
+        boolean isSolid = (style != Style.SECONDARY && style != Style.OUTLINE_GRAY && style != Style.SECONDARY_SKY);
+        int depth = isSolid ? 3 : 0;
+
+        // 1. Vẽ nền bo góc (với hiệu ứng 3D bevel tactile cho các nút chính/đáp án)
+        if (isSolid && depth > 0 && isEnabled()) {
+            Color shadowColor = bg.darker();
+            g2.setColor(shadowColor);
+            g2.fill(new RoundRectangle2D.Float(1, 1 + depth, w - 2, h - 2 - depth, cornerRadius, cornerRadius));
+
+            g2.setColor(bg);
+            int faceH = h - 2 - (pressOffset > 0 ? 0 : depth);
+            g2.fill(new RoundRectangle2D.Float(1, 1 + pressOffset, w - 2, faceH, cornerRadius, cornerRadius));
+        } else {
+            g2.setColor(bg);
+            g2.fill(new RoundRectangle2D.Float(1, 1 + pressOffset, w - 2, h - 2 - pressOffset, cornerRadius, cornerRadius));
+        }
 
         // 2. Vẽ viền nếu có (hoặc khi reveal / selected)
         if (revealBgColor != null) {
@@ -198,15 +213,20 @@ public class ModernButton extends JButton {
                     : new Color(0xFE, 0xCA, 0xCA);
             g2.setColor(revealBorder);
             g2.setStroke(new BasicStroke(2.5f));
-            g2.draw(new RoundRectangle2D.Float(1.5f, 1.5f, w - 3, h - 3, cornerRadius, cornerRadius));
+            g2.draw(new RoundRectangle2D.Float(1.5f, 1.5f + pressOffset, w - 3, h - 3 - pressOffset, cornerRadius, cornerRadius));
         } else if (isSelectedState) {
             g2.setColor(Theme.PURPLE);
             g2.setStroke(new BasicStroke(3f));
-            g2.draw(new RoundRectangle2D.Float(1.5f, 1.5f, w - 3, h - 3, cornerRadius, cornerRadius));
+            g2.draw(new RoundRectangle2D.Float(1.5f, 1.5f + pressOffset, w - 3, h - 3 - pressOffset, cornerRadius, cornerRadius));
         } else if (border != null) {
             g2.setColor(border);
             g2.setStroke(new BasicStroke(1.5f));
-            g2.draw(new RoundRectangle2D.Float(1, 1, w - 2, h - 2, cornerRadius, cornerRadius));
+            g2.draw(new RoundRectangle2D.Float(1, 1 + pressOffset, w - 2, h - 2 - pressOffset, cornerRadius, cornerRadius));
+        }
+
+        // Dịch chuyển nội dung chữ/icon theo độ lún khi bấm
+        if (pressOffset > 0) {
+            g2.translate(0, pressOffset);
         }
 
         String text = getText();
@@ -228,10 +248,7 @@ public class ModernButton extends JButton {
 
             g2.setColor(fg);
             g2.setFont(new Font("Segoe UI", Font.BOLD, Math.max(20, badgeSize - 12)));
-            FontMetrics fmBadge = g2.getFontMetrics();
-            int bx = startX + (badgeSize - fmBadge.stringWidth(prefixBadge)) / 2;
-            int by = badgeY + ((badgeSize - fmBadge.getHeight()) / 2) + fmBadge.getAscent();
-            g2.drawString(prefixBadge, bx, by);
+            drawBadgeSymbol(g2, prefixBadge, startX, badgeY, badgeSize, fg);
 
             if (text != null && !text.isEmpty()) {
                 g2.setFont(textFont);
@@ -253,12 +270,8 @@ public class ModernButton extends JButton {
             g2.setColor(new Color(0, 0, 0, 40));
             g2.fillRoundRect(badgeX, badgeY, badgeSize, badgeSize, 6, 6);
 
-            g2.setColor(fg);
             g2.setFont(Theme.BODY_BOLD);
-            FontMetrics fmBadge = g2.getFontMetrics();
-            int bx = badgeX + (badgeSize - fmBadge.stringWidth(prefixBadge)) / 2;
-            int by = badgeY + ((badgeSize - fmBadge.getHeight()) / 2) + fmBadge.getAscent();
-            g2.drawString(prefixBadge, bx, by);
+            drawBadgeSymbol(g2, prefixBadge, badgeX, badgeY, badgeSize, fg);
 
             textOffsetLeft = badgeSize + 16;
         }
@@ -271,6 +284,32 @@ public class ModernButton extends JButton {
         }
 
         g2.dispose();
+    }
+
+    private void drawBadgeSymbol(Graphics2D g2, String badge, int bx, int by, int bSize, Color fg) {
+        g2.setColor(fg);
+        if ("✓".equals(badge) || "\u2713".equals(badge)) {
+            // Draw crisp vector checkmark
+            g2.setStroke(new BasicStroke(3.2f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+            int cx = bx + bSize / 2;
+            int cy = by + bSize / 2;
+            int s = (int) (bSize * 0.55f);
+            g2.drawLine(cx - s / 2, cy + 1, cx - s / 6, cy + s / 3 + 1);
+            g2.drawLine(cx - s / 6, cy + s / 3 + 1, cx + s / 2, cy - s / 3 + 1);
+        } else if ("✗".equals(badge) || "\u2717".equals(badge) || "✕".equals(badge) || "\u2715".equals(badge)) {
+            // Draw crisp vector cross
+            g2.setStroke(new BasicStroke(3.2f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+            int cx = bx + bSize / 2;
+            int cy = by + bSize / 2;
+            int s = (int) (bSize * 0.45f);
+            g2.drawLine(cx - s / 2, cy - s / 2, cx + s / 2, cy + s / 2);
+            g2.drawLine(cx + s / 2, cy - s / 2, cx - s / 2, cy + s / 2);
+        } else {
+            FontMetrics fmBadge = g2.getFontMetrics();
+            int tx = bx + (bSize - fmBadge.stringWidth(badge)) / 2;
+            int ty = by + ((bSize - fmBadge.getHeight()) / 2) + fmBadge.getAscent();
+            g2.drawString(badge, tx, ty);
+        }
     }
 
     private void drawWrappedOrCenteredText(Graphics2D g2, String text, int startX, int availableWidth, int buttonWidth, int buttonHeight, Color fg, boolean hasPrefix) {
@@ -350,8 +389,8 @@ public class ModernButton extends JButton {
 
             case SECONDARY:
             case OUTLINE_GRAY:
-                if (isPressed) return new Color(230, 235, 245);
-                if (isHovered) return new Color(243, 246, 252);
+                if (isPressed) return new Color(0xE2, 0xE8, 0xF0);
+                if (isHovered) return Theme.SURFACE_HOVER;
                 return Theme.WHITE;
 
             case ACCENT_PURPLE:
@@ -362,13 +401,13 @@ public class ModernButton extends JButton {
             case SUCCESS:
             case ANSWER_D:
                 if (isPressed) return Theme.GREEN.darker();
-                if (isHovered) return new Color(0x1F, 0x75, 0x0A);
+                if (isHovered) return Theme.EMERALD_DARK;
                 return Theme.GREEN;
 
             case DANGER:
             case ANSWER_A:
                 if (isPressed) return Theme.RED.darker();
-                if (isHovered) return new Color(0xC7, 0x15, 0x32);
+                if (isHovered) return new Color(0xBE, 0x12, 0x3C);
                 return Theme.RED;
 
             case ANSWER_B:
@@ -377,8 +416,8 @@ public class ModernButton extends JButton {
                 return Theme.BLUE;
 
             case ANSWER_C:
-                if (isPressed) return new Color(0xBD, 0x8A, 0x00);
-                if (isHovered) return new Color(0xEB, 0xAC, 0x00);
+                if (isPressed) return new Color(0xB4, 0x53, 0x09);
+                if (isHovered) return Theme.AMBER;
                 return Theme.YELLOW;
 
             case EMERALD:
@@ -402,13 +441,13 @@ public class ModernButton extends JButton {
                 return Theme.WHITE;
 
             case TRUE_BLUE:
-                if (isPressed) return new Color(0x0F, 0x55, 0xA8);
-                if (isHovered) return new Color(0x1E, 0x7E, 0xF5);
-                return new Color(0x13, 0x68, 0xCE);
+                if (isPressed) return Theme.BLUE.darker();
+                if (isHovered) return Theme.BLUE_HOVER;
+                return Theme.BLUE;
 
             case FALSE_YELLOW:
                 if (isPressed) return new Color(0xB4, 0x53, 0x09);
-                if (isHovered) return new Color(0xF5, 0x9E, 0x0B);
+                if (isHovered) return Theme.AMBER;
                 return new Color(0xD9, 0x77, 0x06);
 
             default:

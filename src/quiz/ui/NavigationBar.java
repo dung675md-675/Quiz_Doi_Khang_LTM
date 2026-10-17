@@ -37,6 +37,7 @@ public class NavigationBar extends JPanel {
 
     public void selectTab(String name) {
         for (NavigationTab tab : tabs) {
+            if (!tab.isVisible()) continue;
             if (tab.getText().equals(name) && !tab.isActive()) {
                 SoundManager.playClick();
                 tab.setActive(true);
@@ -47,5 +48,35 @@ public class NavigationBar extends JPanel {
                 tab.setActive(false);
             }
         }
+    }
+
+    public void setTabVisible(String name, boolean visible) {
+        boolean activeHidden = false;
+        for (NavigationTab tab : tabs) {
+            if (tab.getText().equals(name)) {
+                tab.setVisible(visible);
+                if (!visible && tab.isActive()) {
+                    tab.setActive(false);
+                    activeHidden = true;
+                }
+            }
+        }
+        if (activeHidden && !tabs.isEmpty()) {
+            for (NavigationTab tab : tabs) {
+                if (tab.isVisible()) {
+                    selectTab(tab.getText());
+                    break;
+                }
+            }
+        }
+        revalidate();
+        repaint();
+    }
+
+    public String getActiveTab() {
+        for (NavigationTab tab : tabs) {
+            if (tab.isActive()) return tab.getText();
+        }
+        return tabs.isEmpty() ? "" : tabs.get(0).getText();
     }
 }

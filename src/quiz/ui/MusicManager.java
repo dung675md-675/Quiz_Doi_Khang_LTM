@@ -98,21 +98,29 @@ public final class MusicManager {
     }
 
     /**
-     * Phát nhạc sảnh. Nếu đang phát lobby rồi thì không làm gì.
+     * Phát nhạc sảnh. Nếu forceRestart = false và đang phát rồi thì không làm gì.
      */
     public static void playLobbyMusic() {
+        playLobbyMusic(false);
+    }
+
+    public static void playLobbyMusic(boolean forceRestart) {
         currentTrack = "lobby_music.mp3";
         if (musicMuted) return;
-        playTrack("lobby_music.mp3");
+        playTrack("lobby_music.mp3", forceRestart);
     }
 
     /**
-     * Phát nhạc trận đấu. Nếu đang phát battle rồi thì không làm gì.
+     * Phát nhạc trận đấu. Nếu forceRestart = false và đang phát rồi thì không làm gì.
      */
     public static void playBattleMusic() {
+        playBattleMusic(false);
+    }
+
+    public static void playBattleMusic(boolean forceRestart) {
         currentTrack = "battle_music.mp3";
         if (musicMuted) return;
-        playTrack("battle_music.mp3");
+        playTrack("battle_music.mp3", forceRestart);
     }
 
     /**
@@ -126,7 +134,12 @@ public final class MusicManager {
         stopRequested.set(true);
         SourceDataLine line = activeLine;
         if (line != null) {
-            try { line.stop(); } catch (Exception ignored) {}
+            try {
+                line.stop();
+                line.flush();
+                line.close();
+            } catch (Exception ignored) {}
+            activeLine = null;
         }
         Thread t = musicThread;
         if (t != null && t.isAlive()) {
@@ -161,20 +174,29 @@ public final class MusicManager {
      * Dừng track cũ trước.
      */
     private static void playTrack(String filename) {
-        // Nếu thread cũ đang phát đúng track này thì không khởi động lại!
+        playTrack(filename, false);
+    }
+
+    private static void playTrack(String filename, boolean forceRestart) {
+        // Nếu thread cũ đang phát đúng track này và không yêu cầu phát lại thì giữ nguyên
         Thread old = musicThread;
-        if (old != null && old.isAlive() && filename.equals(currentTrack) && !stopRequested.get()) {
+        if (!forceRestart && old != null && old.isAlive() && filename.equals(currentTrack) && !stopRequested.get()) {
             return;
         }
 
         stopRequested.set(true);
         SourceDataLine oldLine = activeLine;
         if (oldLine != null) {
-            try { oldLine.stop(); } catch (Exception ignored) {}
+            try {
+                oldLine.stop();
+                oldLine.flush();
+                oldLine.close();
+            } catch (Exception ignored) {}
+            activeLine = null;
         }
         if (old != null && old.isAlive()) {
             old.interrupt();
-            try { old.join(300); } catch (InterruptedException ignored) {}
+            try { old.join(250); } catch (InterruptedException ignored) {}
         }
 
         stopRequested.set(false);

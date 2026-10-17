@@ -10,31 +10,41 @@ import javax.swing.*;
 public final class Theme {
 
     // ==========================================
-    // 1. BẢNG MÀU CỐT LÕI (Core Palette)
+    // 1. BẢNG MÀU CỐT LÕI (Core Modern Quiz Palette)
     // ==========================================
-    public static final Color RED = new Color(0xE2, 0x1B, 0x3C);           // #E21B3C - Đáp án A / Lỗi / Cảnh báo
-    public static final Color BLUE = new Color(0x13, 0x68, 0xCE);          // #1368CE - Đáp án B / Hành động chính
-    public static final Color BLUE_HOVER = new Color(0x0F, 0x5C, 0xB8);    // #0F5CB8 - Hover nút chính
-    public static final Color YELLOW = new Color(0xD8, 0x9E, 0x00);        // #D89E00 - Đáp án C / Sắp hết giờ / Cảnh báo
-    public static final Color GREEN = new Color(0x26, 0x89, 0x0C);         // #26890C - Đáp án D / Đúng / Thành công
-    public static final Color PURPLE = new Color(0x86, 0x4C, 0xBF);        // #864CBF - Accent phụ / Rank / Selected
-    public static final Color PURPLE_HOVER = new Color(0x75, 0x3E, 0xAA);  // Hover cho nút tím
+    public static final Color RED = new Color(0xE1, 0x1D, 0x48);           // #E11D48 - Đáp án A / Lỗi / Cảnh báo (Rose-600)
+    public static final Color BLUE = new Color(0x25, 0x63, 0xEB);          // #2563EB - Đáp án B / Hành động chính (Blue-600)
+    public static final Color BLUE_HOVER = new Color(0x1D, 0x4E, 0xD8);    // #1D4ED8 - Hover nút chính (Blue-700)
+    public static final Color YELLOW = new Color(0xD9, 0x77, 0x06);        // #D97706 - Đáp án C / Cảnh báo / Hổ phách (Amber-600)
+    public static final Color GREEN = new Color(0x05, 0x96, 0x69);         // #059669 - Đáp án D / Đúng / Thành công (Emerald-600)
+    public static final Color PURPLE = new Color(0x7C, 0x3A, 0xED);        // #7C3AED - Accent / Rank / Selected (Violet-600)
+    public static final Color PURPLE_HOVER = new Color(0x6D, 0x28, 0xD9);  // #6D28D9 - Hover cho nút tím
 
-    public static final Color DEEP_NAVY = new Color(0x1F, 0x2A, 0x44);     // #1F2A44 - Nền chính Battle Screen
-    public static final Color NAVY_CARD = new Color(0x2A, 0x37, 0x59);     // Nền card trên dark UI
-    public static final Color OFF_WHITE = new Color(0xF7, 0xF7, 0xF7);     // #F7F7F7 - Nền sáng / Vùng nội dung
+    // Nền & Phân lớp sáng/tối
+    public static final Color DEEP_NAVY = new Color(0x0F, 0x17, 0x2A);     // #0F172A - Nền chính Battle Screen (Slate-900)
+    public static final Color NAVY_CARD = new Color(0x1E, 0x29, 0x3B);     // #1E293B - Nền card trên dark UI (Slate-800)
+    public static final Color NAVY_CARD_HOVER = new Color(0x33, 0x41, 0x55);// #334155 - Hover card dark UI (Slate-700)
+    public static final Color OFF_WHITE = new Color(0xF8, 0xFA, 0xFC);     // #F8FAFC - Nền sáng / Vùng nội dung (Slate-50)
+    public static final Color BG_LIGHT = new Color(0xF8, 0xFA, 0xFC);      // #F8FAFC - Alias nền sáng
     public static final Color WHITE = new Color(0xFF, 0xFF, 0xFF);         // #FFFFFF - Nền card sáng / Chữ trên nền đậm
-    public static final Color DARK_TEXT = new Color(0x25, 0x25, 0x25);     // #252525 - Chữ trên nền sáng / trên nền vàng
-    public static final Color MUTED_GRAY = new Color(0x6B, 0x72, 0x80);    // #6B7280 - Text phụ / Metadata
-    public static final Color DISABLED = new Color(0x9C, 0xA3, 0xAF);      // #9CA3AF - Không thể thao tác
-    public static final Color BORDER_LIGHT = new Color(0xE5, 0xE7, 0xEB);  // Viền card sáng
-    public static final Color BORDER_DARK = new Color(0x3B, 0x4B, 0x72);   // Viền card dark
+    public static final Color SURFACE_LIGHT = new Color(0xFF, 0xFF, 0xFF);  // #FFFFFF - Bề mặt thẻ sáng
+    public static final Color SURFACE_HOVER = new Color(0xF1, 0xF5, 0xF9);  // #F1F5F9 - Bề mặt hover sáng (Slate-100)
+    public static final Color DARK_TEXT = new Color(0x0F, 0x17, 0x2A);     // #0F172A - Chữ chính trên nền sáng (Slate-900)
+    public static final Color TEXT_BODY = new Color(0x33, 0x41, 0x55);     // #334155 - Chữ thân bài (Slate-700)
+    public static final Color MUTED_GRAY = new Color(0x64, 0x74, 0x8B);    // #64748B - Text phụ / Metadata (Slate-500)
+    public static final Color DISABLED = new Color(0x94, 0xA3, 0xB8);      // #94A3B8 - Không thể thao tác (Slate-400)
+    public static final Color BORDER_LIGHT = new Color(0xE2, 0xE8, 0xF0);  // #E2E8F0 - Viền card sáng (Slate-200)
+    public static final Color BORDER_SUBTLE = new Color(0xCB, 0xD5, 0xE1); // #CBD5E1 - Viền card hover/đậm hơn (Slate-300)
+    public static final Color BORDER_DARK = new Color(0x33, 0x41, 0x55);   // #334155 - Viền card dark (Slate-700)
 
     // ==========================================
     // 1.1 BẢNG MÀU TƯƠI SÁNG (Vibrant Palette)
     // ==========================================
+    public static final Color INDIGO = new Color(0x63, 0x66, 0xF1);        // #6366F1 - Indigo hiện đại (Indigo-500)
+    public static final Color INDIGO_DARK = new Color(0x4F, 0x46, 0xE5);   // #4F46E5 - Indigo đậm (Indigo-600)
+    public static final Color INDIGO_LIGHT = new Color(0xEE, 0xF2, 0xFF);  // #EEF2FF - Nền Indigo pastel
     public static final Color EMERALD = new Color(0x10, 0xB9, 0x81);       // #10B981 - Xanh ngọc / Xanh lá tươi
-    public static final Color EMERALD_DARK = new Color(0x05, 0x96, 0x69);  // #059669 - Xanh ngọc đậm
+    public static final Color EMERALD_DARK = new Color(0x05, 0x96, 0x69);  // #059669 - Xanh ngọc đậm (Emerald-600)
     public static final Color EMERALD_LIGHT = new Color(0xEC, 0xFD, 0xF5); // #ECFDF5 - Nền xanh ngọc pastel
     public static final Color ORANGE = new Color(0xF9, 0x73, 0x16);        // #F97316 - Cam tươi rực rỡ
     public static final Color ORANGE_DARK = new Color(0xEA, 0x58, 0x0C);   // #EA580C - Cam đậm
@@ -43,6 +53,11 @@ public final class Theme {
     public static final Color CYAN = new Color(0x06, 0xB6, 0xD4);          // #06B6D4 - Xanh lơ cyan tươi
     public static final Color SKY_BLUE = new Color(0x0E, 0xA5, 0xE9);      // #0EA5E9 - Xanh da trời tươi
     public static final Color SKY_LIGHT = new Color(0xEF, 0xF6, 0xFF);     // #EFF6FF - Nền xanh da trời pastel
+
+    // Huân chương Rank (Medals)
+    public static final Color GOLD = new Color(0xF5, 0x9E, 0x0B);          // #F59E0B - Vàng Top 1
+    public static final Color SILVER = new Color(0x94, 0xA3, 0xB8);        // #94A3B8 - Bạc Top 2
+    public static final Color BRONZE = new Color(0xD9, 0x77, 0x06);        // #D97706 - Đồng Top 3
 
     // ==========================================
     // 2. TYPOGRAPHY
