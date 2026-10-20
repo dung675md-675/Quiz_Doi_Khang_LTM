@@ -441,6 +441,18 @@ public final class Client {
     String from=Wire.field(a,1);String emote=Wire.field(a,2);
     if(currentMatchScreen!=null){currentMatchScreen.showOpponentEmote(from, emote);}
    }
+   case "MATCH_PHASE"->{
+    if(userLeftMatch || currentMatchScreen==null) return;
+    currentMatchScreen.handleMatchPhase(a);
+   }
+   case "READY_STATUS"->{
+    if(userLeftMatch || currentMatchScreen==null) return;
+    String p1=Wire.field(a,1);
+    boolean r1=Boolean.parseBoolean(Wire.field(a,2));
+    String p2=Wire.field(a,3);
+    boolean r2=Boolean.parseBoolean(Wire.field(a,4));
+    currentMatchScreen.updateReadyStatus(p1, r1, p2, r2);
+   }
    case "MATCHMAKING"->{
     lobbyScreen.onMatchmakingStarted(Wire.field(a,1));
    }
@@ -545,7 +557,7 @@ public final class Client {
     if(currentMatchScreen!=null){
      currentMatchScreen.onMatchFinished();
      fillInInputs = currentMatchScreen.getUserFillInAnswers();
-     if(currentSubmittedAnswers==null){currentSubmittedAnswers=currentMatchScreen.getSelectedAnswers();}
+     currentSubmittedAnswers=currentMatchScreen.getSelectedAnswers();
      if(currentQuestions==null){currentQuestions=currentMatchScreen.getQuestions();}
     }
     String winner=Wire.field(a,1);String leftInfo=Wire.field(a,2);String rightInfo=Wire.field(a,3);
@@ -612,7 +624,14 @@ public final class Client {
     botTimer.start();
    }
   });
-  currentMatchScreen.setOnAnswerListener((qIndex,choice)->send("ANSWER",matchId,""+qIndex,""+choice));
+  currentMatchScreen.setOnAnswerListener((qIndex,choice)->{
+      if(currentSubmittedAnswers!=null&&qIndex>=0&&qIndex<currentSubmittedAnswers.length){
+          currentSubmittedAnswers[qIndex]=choice;
+      }
+      send("ANSWER",matchId,""+qIndex,""+choice);
+  });
+  currentMatchScreen.setOnReadyListener(()->send("READY",matchId));
+  currentMatchScreen.setOnSkipRevealListener(qIdx->send("SKIP_REVEAL",matchId,String.valueOf(qIdx)));
   frame.getContentPane().removeAll();frame.getContentPane().setLayout(new BorderLayout());frame.getContentPane().add(currentMatchScreen,BorderLayout.CENTER);refresh();
  }
 

@@ -41,9 +41,18 @@ public class ReviewAnswersDialog extends JDialog {
         int total = (questions != null) ? questions.size() : 0;
         int correctCount = 0;
         for (int i = 0; i < total; i++) {
+            MatchQuestion q = (questions != null && i < questions.size()) ? questions.get(i) : null;
             int uAns = (userAnswers != null && i < userAnswers.length) ? userAnswers[i] : -1;
-            int cAns = (correctAnswers != null && i < correctAnswers.length) ? correctAnswers[i] : -1;
-            if (uAns != -1 && uAns == cAns) {
+            int cAns = (correctAnswers != null && i < correctAnswers.length && correctAnswers[i] != -1)
+                    ? correctAnswers[i]
+                    : ((q != null) ? q.correctAnswer() : -1);
+            boolean isCorrect;
+            if (q != null && (q.isFillIn() || q.isDragAndDrop())) {
+                isCorrect = (uAns == 1 || (uAns != -1 && uAns == cAns));
+            } else {
+                isCorrect = (uAns != -1 && uAns == cAns);
+            }
+            if (isCorrect) {
                 correctCount++;
             }
         }
@@ -94,9 +103,22 @@ public class ReviewAnswersDialog extends JDialog {
         for (int i = 0; i < total; i++) {
             MatchQuestion q = questions.get(i);
             int uAns = (userAnswers != null && i < userAnswers.length) ? userAnswers[i] : -1;
-            int cAns = (correctAnswers != null && i < correctAnswers.length) ? correctAnswers[i] : -1;
-            boolean isCorrect = (uAns != -1 && uAns == cAns);
-            boolean isSkipped = (uAns == -1);
+            int cAns = (correctAnswers != null && i < correctAnswers.length && correctAnswers[i] != -1)
+                    ? correctAnswers[i]
+                    : q.correctAnswer();
+            boolean isCorrect;
+            boolean isSkipped;
+            if (q.isFillIn()) {
+                isCorrect = (uAns == 1 || (uAns != -1 && uAns == cAns));
+                String typed = (userFillInAnswers != null && i < userFillInAnswers.length) ? userFillInAnswers[i] : null;
+                isSkipped = (uAns == -1) && (typed == null || typed.trim().isEmpty());
+            } else if (q.isDragAndDrop()) {
+                isCorrect = (uAns == 1 || (uAns != -1 && uAns == cAns));
+                isSkipped = (uAns == -1);
+            } else {
+                isCorrect = (uAns != -1 && uAns == cAns);
+                isSkipped = (uAns == -1);
+            }
 
             ModernCard card = new ModernCard(new BorderLayout(0, 10));
             card.setCardPadding(14, 16, 14, 16);
@@ -107,7 +129,7 @@ public class ReviewAnswersDialog extends JDialog {
 
             String typeBadge = "";
             if (q.type() != null && !q.type().isBlank()) {
-                typeBadge = " • " + quiz.Model.QuestionType.fromString(q.type()).getDisplayName();
+                typeBadge = " - " + quiz.Model.QuestionType.fromString(q.type()).getDisplayName();
             }
             JLabel lblQNum = new JLabel("CÂU HỎI " + (i + 1) + " / " + total + typeBadge);
             lblQNum.setFont(Theme.SMALL_BOLD);
@@ -116,7 +138,7 @@ public class ReviewAnswersDialog extends JDialog {
 
             ModernBadge cardBadge;
             if (isSkipped) {
-                cardBadge = new ModernBadge("— Chưa chọn", ModernBadge.Type.WARNING);
+                cardBadge = new ModernBadge("- Chưa chọn", ModernBadge.Type.WARNING);
             } else if (isCorrect) {
                 cardBadge = new ModernBadge("Đúng (+1)", ModernBadge.Type.READY);
             } else {

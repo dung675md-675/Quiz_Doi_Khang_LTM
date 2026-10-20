@@ -63,8 +63,19 @@ public final class Server {
   final int[] currentQ=new int[2];
   final ScheduledFuture<?>[] disconnectFutures=new ScheduledFuture<?>[2];
   ScheduledFuture<?> expireFuture;
+  enum MatchPhase { READY_CHECK, COUNTDOWN, QUESTION_INTRO, ACTIVE, REVEAL, FINISHED }
+  MatchPhase currentPhase = MatchPhase.READY_CHECK;
+  final boolean[] ready = new boolean[2];
+  final boolean[] skipReveal = new boolean[2];
+  int currentQuestionIndex = 0;
+  int countdownStep = 3;
+  ScheduledFuture<?> phaseFuture = null;
   Match(String a,String b,String t,String l){left=a;right=b;topic=t;level=l;isSolo="Bot Luyện Tập".equals(b);}
+  synchronized void cancelPhaseTimer(){
+   if(phaseFuture!=null){phaseFuture.cancel(false);phaseFuture=null;}
+  }
   synchronized void cancelTimers(){
+   cancelPhaseTimer();
    if(expireFuture!=null){expireFuture.cancel(false);expireFuture=null;}
    for(int k=0;k<2;k++){
     if(disconnectFutures[k]!=null){disconnectFutures[k].cancel(false);disconnectFutures[k]=null;}
@@ -185,20 +196,198 @@ public final class Server {
     Arrays.fill(scoredQuestion[1],false);
     Arrays.fill(currentQ,0);
     done=false;
+    currentQuestionIndex=0;
+    Arrays.fill(ready,false);
+    Arrays.fill(skipReveal,false);
     start=System.nanoTime();
     Arrays.fill(questionStartNano,start);
-    deadline=start+TimeUnit.SECONDS.toNanos(set.duration()+35);
+    deadline=start+TimeUnit.SECONDS.toNanos(set.duration()+150);
     String[] matchPkt=buildMatchPacket().toArray(String[]::new);
     send(left,matchPkt);
     if(!isSolo)send(right,matchPkt);
     sendScores();
     sendProgress();
+    startReadyCheckPhase();
     final String currentSetId=set.id();
-    expireFuture=timer.schedule(()->{synchronized(Match.this){if(!done&&set!=null&&set.id().equals(currentSetId))finishExpired();}},set.duration()+35,TimeUnit.SECONDS);
+    expireFuture=timer.schedule(()->{synchronized(Match.this){if(!done&&set!=null&&set.id().equals(currentSetId))finishExpired();}},set.duration()+150,TimeUnit.SECONDS);
     broadcast();
    }catch(Exception e){
     e.printStackTrace();
     close("Lỗi khi bắt đầu trận: "+e.getMessage());
+   }
+  }
+  synchronized void startReadyCheckPhase(){
+   cancelPhaseTimer();
+   currentPhase=MatchPhase.READY_CHECK;
+   Arrays.fill(ready,false);
+   if(isSolo)ready[1]=true;
+   send(left,"MATCH_PHASE","READY_CHECK",id,"10",String.valueOf(ready[0]),String.valueOf(ready[1]));
+   if(!isSolo)send(right,"MATCH_PHASE","READY_CHECK",id,"10",String.valueOf(ready[1]),String.valueOf(ready[0]));
+   phaseFuture=timer.schedule(()->{
+    synchronized(Match.this){
+     if(done||currentPhase!=MatchPhase.READY_CHECK)return;
+     if(!ready[0]||!ready[1]){
+      String notReady=!ready[0]?left:right;
+      close("Trận đấu bị hủy do "+notReady+" không sẵn sàng kịp thời.");
+     }
+    }
+   },10,TimeUnit.SECONDS);
+  }
+  synchronized void onPlayerReady(String name){
+   if(done||currentPhase!=MatchPhase.READY_CHECK)return;
+   int i=index(name);if(i<0)return;
+   ready[i]=true;
+   send(left,"READY_STATUS",left,String.valueOf(ready[0]),right,String.valueOf(ready[1]));
+   if(!isSolo)send(right,"READY_STATUS",right,String.valueOf(ready[1]),left,String.valueOf(ready[0]));
+   if(ready[0]&&ready[1]){
+    cancelPhaseTimer();
+    startCountdownPhase();
+   }
+  }
+  synchronized void startCountdownPhase(){
+   cancelPhaseTimer();
+   currentPhase=MatchPhase.COUNTDOWN;
+   countdownStep=3;
+   runCountdownStep(3);
+  }
+  synchronized void runCountdownStep(int step){
+   if(done||currentPhase!=MatchPhase.COUNTDOWN)return;
+   countdownStep=step;
+   String stepStr=(step==0)?"GO":String.valueOf(step);
+   send(left,"MATCH_PHASE","COUNTDOWN",id,stepStr);
+   if(!isSolo)send(right,"MATCH_PHASE","COUNTDOWN",id,stepStr);
+   if(step>0){
+    phaseFuture=timer.schedule(()->{
+     synchronized(Match.this){
+      runCountdownStep(step-1);
+     }
+    },1000,TimeUnit.MILLISECONDS);
+   }else{
+    phaseFuture=timer.schedule(()->{
+     synchronized(Match.this){
+      startQuestionIntroPhase(0);
+     }
+    },700,TimeUnit.MILLISECONDS);
+   }
+  }
+  synchronized void startQuestionIntroPhase(int qIndex){
+   if(done)return;
+   cancelPhaseTimer();
+   currentPhase=MatchPhase.QUESTION_INTRO;
+   currentQuestionIndex=qIndex;
+   currentQ[0]=qIndex;currentQ[1]=qIndex;
+   sendProgress();
+   Model.Question q=(set!=null&&qIndex<set.questions().size())?set.questions().get(qIndex):null;
+   String qType=(q!=null&&q.type()!=null)?q.type().name():"MULTIPLE_CHOICE";
+   String[] introPkt=new String[]{"MATCH_PHASE","QUESTION_INTRO",id,String.valueOf(qIndex),topic,qType,"800"};
+   send(left,introPkt);
+   if(!isSolo)send(right,introPkt);
+   phaseFuture=timer.schedule(()->{
+    synchronized(Match.this){
+     startQuestionActivePhase(qIndex);
+    }
+   },800,TimeUnit.MILLISECONDS);
+  }
+  synchronized void startQuestionActivePhase(int qIndex){
+   if(done)return;
+   cancelPhaseTimer();
+   currentPhase=MatchPhase.ACTIVE;
+   currentQuestionIndex=qIndex;
+   questionStartNano[0]=System.nanoTime();
+   questionStartNano[1]=System.nanoTime();
+   int perQSec=Math.max(10,Math.min(25,set.duration()/10));
+   String[] activePkt=new String[]{"MATCH_PHASE","QUESTION_ACTIVE",id,String.valueOf(qIndex),String.valueOf(perQSec)};
+   send(left,activePkt);
+   if(!isSolo)send(right,activePkt);
+   if(isSolo){
+    int delay=1200+ThreadLocalRandom.current().nextInt(Math.min(3500,Math.max(1500,perQSec*1000-1500)));
+    timer.schedule(()->{
+     synchronized(Match.this){
+      if(currentPhase==MatchPhase.ACTIVE&&currentQuestionIndex==qIndex&&liveAnswers[1][qIndex]==-1){
+       simulateBotStep(qIndex);
+       checkBothAnsweredAndReveal(qIndex);
+      }
+     }
+    },delay,TimeUnit.MILLISECONDS);
+   }
+   phaseFuture=timer.schedule(()->{
+    synchronized(Match.this){
+     if(currentPhase==MatchPhase.ACTIVE&&currentQuestionIndex==qIndex){
+      startQuestionRevealPhase(qIndex);
+     }
+    }
+   },perQSec,TimeUnit.SECONDS);
+  }
+  synchronized void checkBothAnsweredAndReveal(int qIndex){
+   if(currentPhase!=MatchPhase.ACTIVE||currentQuestionIndex!=qIndex)return;
+   boolean p0Answered=(liveAnswers[0][qIndex]!=-1);
+   boolean p1Answered=(liveAnswers[1][qIndex]!=-1);
+   if(p0Answered&&p1Answered){
+    cancelPhaseTimer();
+    phaseFuture=timer.schedule(()->{
+     synchronized(Match.this){
+      if(currentPhase==MatchPhase.ACTIVE&&currentQuestionIndex==qIndex){
+       startQuestionRevealPhase(qIndex);
+      }
+     }
+    },300,TimeUnit.MILLISECONDS);
+   }
+  }
+  synchronized void startQuestionRevealPhase(int qIndex){
+   if(done)return;
+   cancelPhaseTimer();
+   currentPhase=MatchPhase.REVEAL;
+   currentQuestionIndex=qIndex;
+   Arrays.fill(skipReveal,false);
+   if(isSolo)skipReveal[1]=true;
+   Model.Question q=(set!=null&&qIndex<set.questions().size())?set.questions().get(qIndex):null;
+   int correctAns=(q!=null)?q.answer():-1;
+   String exp=(q!=null&&q.explanation()!=null)?q.explanation():"";
+   String[] revealLeft=new String[]{
+    "MATCH_PHASE","QUESTION_REVEAL",id,String.valueOf(qIndex),String.valueOf(correctAns),exp,
+    String.valueOf(points[0]),String.valueOf(points[1]),
+    String.valueOf(streak[0]),String.valueOf(streak[1]),
+    String.valueOf(liveAnswers[0][qIndex]),String.valueOf(liveAnswers[1][qIndex])
+   };
+   send(left,revealLeft);
+   if(!isSolo){
+    String[] revealRight=new String[]{
+     "MATCH_PHASE","QUESTION_REVEAL",id,String.valueOf(qIndex),String.valueOf(correctAns),exp,
+     String.valueOf(points[1]),String.valueOf(points[0]),
+     String.valueOf(streak[1]),String.valueOf(streak[0]),
+     String.valueOf(liveAnswers[1][qIndex]),String.valueOf(liveAnswers[0][qIndex])
+    };
+    send(right,revealRight);
+   }
+   sendScores();
+   sendProgress();
+   phaseFuture=timer.schedule(()->{
+    synchronized(Match.this){
+     if(currentPhase==MatchPhase.REVEAL&&currentQuestionIndex==qIndex){
+      advanceAfterReveal(qIndex);
+     }
+    }
+   },1800,TimeUnit.MILLISECONDS);
+  }
+  synchronized void onPlayerSkipReveal(String name,int qIndex){
+   if(done||currentPhase!=MatchPhase.REVEAL||currentQuestionIndex!=qIndex)return;
+   int i=index(name);if(i<0)return;
+   skipReveal[i]=true;
+   if(skipReveal[0]&&skipReveal[1]){
+    cancelPhaseTimer();
+    advanceAfterReveal(qIndex);
+   }
+  }
+  synchronized void advanceAfterReveal(int qIndex){
+   cancelPhaseTimer();
+   if(qIndex+1<10&&set!=null&&qIndex+1<set.questions().size()){
+    startQuestionIntroPhase(qIndex+1);
+   }else{
+    for(int i=0;i<2;i++){
+     submitted[i]=true;
+     currentQ[i]=9;
+    }
+    finish();
    }
   }
   synchronized void answer(String name,int qIndex,int choice){
@@ -219,6 +408,7 @@ public final class Server {
     }
     sendScores();
     sendProgress();
+    checkBothAnsweredAndReveal(qIndex);
    }
   }
   synchronized void submit(String name,String[] a){
@@ -366,6 +556,25 @@ public final class Server {
    resumeMsg.add(String.valueOf(submitted[i]));
    for(int k=0;k<10;k++)resumeMsg.add(String.valueOf(liveAnswers[i][k]));
    send(name,resumeMsg.toArray(String[]::new));
+   if(currentPhase==MatchPhase.READY_CHECK){
+    send(name,"MATCH_PHASE","READY_CHECK",id,"10",String.valueOf(ready[i]),String.valueOf(ready[1-i]));
+   }else if(currentPhase==MatchPhase.COUNTDOWN){
+    send(name,"MATCH_PHASE","COUNTDOWN",id,String.valueOf(countdownStep));
+   }else if(currentPhase==MatchPhase.QUESTION_INTRO){
+    Model.Question q=(currentQuestionIndex<set.questions().size())?set.questions().get(currentQuestionIndex):null;
+    String qType=(q!=null&&q.type()!=null)?q.type().name():"MULTIPLE_CHOICE";
+    send(name,"MATCH_PHASE","QUESTION_INTRO",id,String.valueOf(currentQuestionIndex),topic,qType,"400");
+   }else if(currentPhase==MatchPhase.ACTIVE){
+    send(name,"MATCH_PHASE","QUESTION_ACTIVE",id,String.valueOf(currentQuestionIndex),"12");
+   }else if(currentPhase==MatchPhase.REVEAL){
+    Model.Question q=(currentQuestionIndex<set.questions().size())?set.questions().get(currentQuestionIndex):null;
+    int correctAns=(q!=null)?q.answer():-1;
+    String exp=(q!=null&&q.explanation()!=null)?q.explanation():"";
+    send(name,"MATCH_PHASE","QUESTION_REVEAL",id,String.valueOf(currentQuestionIndex),String.valueOf(correctAns),exp,
+         String.valueOf(points[0]),String.valueOf(points[1]),
+         String.valueOf(streak[0]),String.valueOf(streak[1]),
+         String.valueOf(liveAnswers[0][currentQuestionIndex]),String.valueOf(liveAnswers[1][currentQuestionIndex]));
+   }
    sendScores();
    sendProgress();
    if(!isSolo){
@@ -638,6 +847,8 @@ public final class Server {
     matches.put(p.name,m);
     m.start();
    }
+   case "READY","MATCH_READY"->{Match m=matches.get(p.name);if(m!=null)m.onPlayerReady(p.name);}
+   case "SKIP_REVEAL"->{Match m=matches.get(p.name);if(m!=null){try{int qIdx=Integer.parseInt(Wire.field(a,2));m.onPlayerSkipReveal(p.name,qIdx);}catch(Exception ignored){}}}
    case "ANSWER"->{Match m=matches.get(p.name);if(m!=null&&m.id.equals(Wire.field(a,1))){try{int qIdx=Integer.parseInt(Wire.field(a,2));int ch=Integer.parseInt(Wire.field(a,3));m.answer(p.name,qIdx,ch);}catch(Exception ignored){}}}
    case "PROGRESS"->{Match m=matches.get(p.name);if(m!=null&&m.id.equals(Wire.field(a,1))){try{int qIdx=Integer.parseInt(Wire.field(a,2));m.progress(p.name,qIdx);}catch(Exception ignored){}}}
    case "SUBMIT"->{Match m=matches.get(p.name);if(m!=null&&m.id.equals(Wire.field(a,1)))m.submit(p.name,a);}

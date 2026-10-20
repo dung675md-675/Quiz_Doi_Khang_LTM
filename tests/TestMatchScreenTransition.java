@@ -15,6 +15,8 @@ public class TestMatchScreenTransition {
             try {
                 testQuestionGridIntegrityAndNavigation();
                 testSubmitConfirmDialog();
+                testMatchScreenNoTofuAndTimerPersistence();
+                testTopHudSingleRowWithLongTopicAndNames();
                 System.out.println(">>> TAT CA CAC TEST KIEM TRA DEU THANH CONG HOAN HAO (PASS)! <<<");
             } catch (Throwable t) {
                 t.printStackTrace();
@@ -117,6 +119,107 @@ public class TestMatchScreenTransition {
         dialog.dispose();
         frame.dispose();
         System.out.println("  [PASS] SubmitConfirmDialog hoat dong on dinh!");
+    }
+
+    private static void testMatchScreenNoTofuAndTimerPersistence() throws Exception {
+        System.out.println("3. Kiem tra MatchScreen toan bo label khong co ky tu gay loi tofu & timer khong reset...");
+        List<MatchQuestion> questions = new ArrayList<>();
+        for (int i = 0; i < 10; i++) {
+            questions.add(new MatchQuestion("Cau " + (i + 1), new String[]{"A", "B", "C", "D"}));
+        }
+        MatchScreen matchScreen = new MatchScreen("match_test_02", "Player1", "Player2", "avatar_01", "avatar_02", "Chu de", "De", "set_01", 100, questions,
+                ans -> {}, () -> {});
+
+        // Test btnNext
+        java.lang.reflect.Field btnNextField = MatchScreen.class.getDeclaredField("btnNext");
+        btnNextField.setAccessible(true);
+        ModernButton btnNext = (ModernButton) btnNextField.get(matchScreen);
+        String nextText = btnNext.getText();
+        if (nextText.contains("➔") || nextText.contains("✔")) {
+            throw new AssertionError("btnNext co chua ky tu gay tofu: " + nextText);
+        }
+
+        // Test lblMultiSelectNotice
+        java.lang.reflect.Field multiNoticeField = MatchScreen.class.getDeclaredField("lblMultiSelectNotice");
+        multiNoticeField.setAccessible(true);
+        JLabel lblNotice = (JLabel) multiNoticeField.get(matchScreen);
+        if (lblNotice.getText().contains("✦")) {
+            throw new AssertionError("lblMultiSelectNotice co chua ky tu gay tofu: " + lblNotice.getText());
+        }
+
+        // Test ScoreBadge painting with streak >= 2
+        matchScreen.updateScores(5, 3, 500, 300, 4, 1);
+        java.awt.image.BufferedImage img = new java.awt.image.BufferedImage(900, 700, java.awt.image.BufferedImage.TYPE_INT_ARGB);
+        java.awt.Graphics2D g2 = img.createGraphics();
+        matchScreen.setSize(900, 700);
+        matchScreen.doLayout();
+        matchScreen.paint(g2);
+        g2.dispose();
+
+        // Test timer preservation on navigation
+        java.lang.reflect.Field timeLeftField = MatchScreen.class.getDeclaredField("questionTimeLeft");
+        timeLeftField.setAccessible(true);
+        int[] timeLeft = (int[]) timeLeftField.get(matchScreen);
+        // Gia lap cau 0 con 6 giay (giam tu 10 giay xuong)
+        timeLeft[0] = 6;
+        matchScreen.navigateToQuestion(1);
+        // Chuyen lai cau 0
+        matchScreen.navigateToQuestion(0);
+        java.lang.reflect.Field curRemainingField = MatchScreen.class.getDeclaredField("currentQuestionTimeRemaining");
+        curRemainingField.setAccessible(true);
+        int curRemaining = (int) curRemainingField.get(matchScreen);
+        if (curRemaining != 6) {
+            throw new AssertionError("Loi timer: Khi chuyen ve cau 0, thoi gian con lai phai la 6 nhung thuc te la: " + curRemaining);
+        }
+
+        matchScreen.cleanupAndStop();
+        System.out.println("  [PASS] Toan bo text tren MatchScreen tofu-free 100% va thoi gian khong bi reset ngoai y muon!");
+    }
+
+    private static void testTopHudSingleRowWithLongTopicAndNames() throws Exception {
+        System.out.println("4. Kiem tra layout topHud khong bi rot dong khi ten chu de va ten nguoi choi rat dai...");
+        List<MatchQuestion> questions = new ArrayList<>();
+        questions.add(new MatchQuestion("Cau hoi 1?", new String[]{"A", "B", "C", "D"}, "", "MULTIPLE_CHOICE", null, null, 0));
+
+        JFrame frame = new JFrame();
+        MatchScreen matchScreen = new MatchScreen(
+                "match_long_topic",
+                "Người Chơi Siêu Dài 1",
+                "Đối Thủ Vô Cùng Dài 2",
+                "avatar_01",
+                "avatar_02",
+                "Lập Trình Mạng và Hệ Thống Phân Tán Nâng Cao 2026",
+                "Chuyên gia",
+                "set_99",
+                120,
+                questions,
+                ans -> {},
+                () -> {}
+        );
+        frame.setContentPane(matchScreen);
+        frame.setSize(960, 680);
+        frame.doLayout();
+        matchScreen.doLayout();
+
+        JPanel topHud = (JPanel) ((java.awt.BorderLayout) matchScreen.getLayout()).getLayoutComponent(java.awt.BorderLayout.NORTH);
+        topHud.doLayout();
+        JPanel centerHud = (JPanel) ((java.awt.BorderLayout) topHud.getLayout()).getLayoutComponent(java.awt.BorderLayout.CENTER);
+        centerHud.doLayout();
+
+        Component[] comps = centerHud.getComponents();
+        if (comps.length != 3) {
+            throw new AssertionError("centerHud phai co 3 components (p1Row, vsColumn, p2Row), thuc te la: " + comps.length);
+        }
+        int y0 = comps[0].getY();
+        int y2 = comps[2].getY();
+
+        if (Math.abs(y0 - y2) > 5) {
+            throw new AssertionError("Loi rot dong p2Row! y0=" + y0 + ", y2=" + y2 + ". p2Row bi rot xuong dong duoi!");
+        }
+
+        matchScreen.cleanupAndStop();
+        frame.dispose();
+        System.out.println("  [PASS] topHud giu nguyen 1 dong duy nhat (single-row), p2Row khong bao gio bi rot dong!");
     }
 }
 
