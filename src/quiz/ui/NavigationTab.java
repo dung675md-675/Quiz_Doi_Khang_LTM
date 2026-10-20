@@ -51,20 +51,25 @@ public class NavigationTab extends JButton {
     
     @Override
     protected void paintComponent(Graphics g) {
-        super.paintComponent(g);
-        if (active || hovered) {
-            Graphics2D g2 = (Graphics2D) g.create();
-            Theme.setupAntiAliasing(g2);
-            
-            if (active) {
-                g2.setColor(Theme.BLUE);
-                g2.fillRoundRect(0, getHeight() - 3, getWidth(), 3, 3, 3);
-            } else if (hovered) {
-                g2.setColor(new Color(Theme.MUTED_GRAY.getRed(), Theme.MUTED_GRAY.getGreen(), Theme.MUTED_GRAY.getBlue(), 100));
-                g2.fillRoundRect(0, getHeight() - 3, getWidth(), 3, 3, 3);
-            }
-            
-            g2.dispose();
+        Graphics2D g2 = (Graphics2D) g.create();
+        Theme.setupAntiAliasing(g2);
+        
+        int w = getWidth();
+        int h = getHeight();
+
+        // 1. Hover pill background khi chưa active
+        if (hovered && !active) {
+            g2.setColor(new Color(0xF1, 0xF5, 0xF9));
+            g2.fillRoundRect(4, 6, w - 8, h - 16, 8, 8);
         }
+
+        // 2. Active bottom indicator bar
+        if (active) {
+            g2.setColor(Theme.BLUE);
+            g2.fillRoundRect(8, h - 4, w - 16, 4, 4, 4);
+        }
+
+        g2.dispose();
+        super.paintComponent(g);
     }
 }

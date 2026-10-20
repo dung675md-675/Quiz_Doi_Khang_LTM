@@ -15,25 +15,36 @@ public class LeaderboardDialog extends JDialog {
 
     public LeaderboardDialog(Frame owner, String rawData) {
         super(owner, "Bảng Xếp Hạng — Quiz Arena", true);
-        setSize(650, 480);
+        setSize(680, 520);
         setLocationRelativeTo(owner);
         setLayout(new BorderLayout());
-        getContentPane().setBackground(Theme.WHITE);
+        getContentPane().setBackground(Theme.BG_LIGHT);
 
-        // 1. HEADER
-        JPanel header = new JPanel();
+        // 1. MODERN HEADER
+        JPanel header = new JPanel() {
+            @Override
+            protected void paintComponent(Graphics g) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                Theme.setupAntiAliasing(g2);
+                int w = getWidth();
+                int h = getHeight();
+                GradientPaint gp = new GradientPaint(0, 0, Theme.BLUE, w, h, Theme.INDIGO);
+                g2.setPaint(gp);
+                g2.fillRect(0, 0, w, h);
+                g2.dispose();
+            }
+        };
         header.setLayout(new BoxLayout(header, BoxLayout.Y_AXIS));
-        header.setBackground(Theme.WHITE);
-        header.setBorder(new EmptyBorder(20, 24, 12, 24));
+        header.setBorder(new EmptyBorder(18, 24, 16, 24));
 
-        JLabel title = new JLabel("BẢNG XẾP HẠNG CAO THỦ");
+        JLabel title = new JLabel("BẢNG XẾP HẠNG CAO THỦ 1V1");
         title.setFont(Theme.TITLE);
-        title.setForeground(Theme.BLUE);
+        title.setForeground(Theme.WHITE);
         title.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-        JLabel desc = new JLabel("Xếp theo: Điểm số giảm dần → Điểm TB đối thủ → Tỉ lệ thời gian thắng");
+        JLabel desc = new JLabel("Thứ tự ưu tiên: Điểm xếp hạng cao nhất → Điểm TB đối thủ → Tỉ lệ thời gian thắng");
         desc.setFont(Theme.SMALL);
-        desc.setForeground(Theme.MUTED_GRAY);
+        desc.setForeground(new Color(255, 255, 255, 220));
         desc.setAlignmentX(Component.LEFT_ALIGNMENT);
 
         header.add(title);
@@ -70,27 +81,55 @@ public class LeaderboardDialog extends JDialog {
             }
         }
 
-        JTable table = new JTable(model);
-        table.setRowHeight(38);
+        JTable table = new JTable(model) {
+            @Override
+            public Component prepareRenderer(javax.swing.table.TableCellRenderer renderer, int row, int col) {
+                Component c = super.prepareRenderer(renderer, row, col);
+                if (!isRowSelected(row)) {
+                    c.setBackground(row % 2 == 0 ? Theme.WHITE : new Color(0xF8, 0xFA, 0xFC));
+                }
+                return c;
+            }
+        };
+        table.setRowHeight(42);
         table.setFont(Theme.BODY);
         table.setShowGrid(false);
         table.setIntercellSpacing(new Dimension(0, 0));
         table.setSelectionBackground(new Color(0xEE, 0xF2, 0xFF));
+        table.setSelectionForeground(Theme.DARK_TEXT);
         table.getTableHeader().setFont(Theme.BODY_BOLD);
-        table.getTableHeader().setBackground(Theme.OFF_WHITE);
+        table.getTableHeader().setBackground(new Color(0xF1, 0xF5, 0xF9));
         table.getTableHeader().setForeground(Theme.DARK_TEXT);
-        table.getTableHeader().setPreferredSize(new Dimension(0, 36));
+        table.getTableHeader().setPreferredSize(new Dimension(0, 40));
 
-        // Center renderers
-        DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
-        centerRenderer.setHorizontalAlignment(SwingConstants.CENTER);
-        table.getColumnModel().getColumn(0).setCellRenderer(centerRenderer);
-        table.getColumnModel().getColumn(0).setPreferredWidth(80);
+        // Rank column renderer with medals
+        DefaultTableCellRenderer rankRenderer = new DefaultTableCellRenderer() {
+            @Override
+            public Component getTableCellRendererComponent(JTable t, Object val, boolean sel, boolean foc, int row, int col) {
+                Component c = super.getTableCellRendererComponent(t, val, sel, foc, row, col);
+                setHorizontalAlignment(SwingConstants.CENTER);
+                setFont(Theme.BODY_BOLD);
+                String str = String.valueOf(val);
+                if ("TOP 1".equals(str)) {
+                    setForeground(Theme.GOLD);
+                } else if ("TOP 2".equals(str)) {
+                    setForeground(Theme.SILVER.darker());
+                } else if ("TOP 3".equals(str)) {
+                    setForeground(Theme.BRONZE);
+                } else {
+                    setForeground(Theme.MUTED_GRAY);
+                    setFont(Theme.BODY);
+                }
+                return c;
+            }
+        };
+        table.getColumnModel().getColumn(0).setCellRenderer(rankRenderer);
+        table.getColumnModel().getColumn(0).setPreferredWidth(90);
 
+        // Score renderer
         DefaultTableCellRenderer scoreRenderer = new DefaultTableCellRenderer() {
             @Override
-            public Component getTableCellRendererComponent(JTable t, Object val, boolean sel, boolean foc, int row,
-                    int col) {
+            public Component getTableCellRendererComponent(JTable t, Object val, boolean sel, boolean foc, int row, int col) {
                 Component c = super.getTableCellRendererComponent(t, val, sel, foc, row, col);
                 setForeground(Theme.PURPLE);
                 setFont(Theme.BODY_BOLD);
@@ -99,6 +138,12 @@ public class LeaderboardDialog extends JDialog {
             }
         };
         table.getColumnModel().getColumn(2).setCellRenderer(scoreRenderer);
+
+        // Center remaining columns
+        DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
+        centerRenderer.setHorizontalAlignment(SwingConstants.CENTER);
+        table.getColumnModel().getColumn(3).setCellRenderer(centerRenderer);
+        table.getColumnModel().getColumn(4).setCellRenderer(centerRenderer);
 
         JScrollPane scrollPane = new JScrollPane(table);
         scrollPane.setBorder(BorderFactory.createMatteBorder(1, 0, 1, 0, Theme.BORDER_LIGHT));
@@ -109,7 +154,7 @@ public class LeaderboardDialog extends JDialog {
         JPanel footer = new JPanel(new FlowLayout(FlowLayout.RIGHT, 20, 14));
         footer.setBackground(Theme.WHITE);
         ModernButton btnClose = new ModernButton("Đóng", ModernButton.Style.PRIMARY);
-        btnClose.setPreferredSize(new Dimension(100, 36));
+        btnClose.setPreferredSize(new Dimension(110, 38));
         btnClose.addActionListener(e -> {
             SoundManager.playClick();
             dispose();

@@ -80,11 +80,20 @@ public class ModernTextField extends JTextField {
         int w = getWidth();
         int h = getHeight();
 
-        // 1. Vẽ nền trắng bo góc
+        // 1. Hiệu ứng viền phát sáng (focus glow) khi đang nhập liệu
+        if (isFocused && !hasError) {
+            g2.setColor(new Color(19, 104, 206, 35));
+            g2.fill(new RoundRectangle2D.Float(0, 0, w, h, cornerRadius + 2, cornerRadius + 2));
+        } else if (hasError) {
+            g2.setColor(new Color(226, 27, 60, 30));
+            g2.fill(new RoundRectangle2D.Float(0, 0, w, h, cornerRadius + 2, cornerRadius + 2));
+        }
+
+        // 2. Vẽ nền trắng bo góc
         g2.setColor(isEnabled() ? Theme.WHITE : Theme.OFF_WHITE);
         g2.fill(new RoundRectangle2D.Float(1, 1, w - 2, h - 2, cornerRadius, cornerRadius));
 
-        // 2. Vẽ viền (thay đổi theo focus hoặc error)
+        // 3. Vẽ viền tinh tế
         if (hasError) {
             g2.setColor(Theme.RED);
             g2.setStroke(new BasicStroke(1.8f));
@@ -100,11 +109,11 @@ public class ModernTextField extends JTextField {
         g2.dispose();
         super.paintComponent(g);
 
-        // 3. Vẽ placeholder khi chưa nhập chữ
+        // 4. Vẽ placeholder khi chưa nhập chữ
         if (getText().isEmpty() && !isFocused && placeholder != null && !placeholder.isEmpty()) {
             Graphics2D gPlaceholder = (Graphics2D) g.create();
             Theme.setupAntiAliasing(gPlaceholder);
-            gPlaceholder.setColor(Theme.MUTED_GRAY);
+            gPlaceholder.setColor(new Color(156, 163, 175));
             gPlaceholder.setFont(getFont());
             Insets insets = getInsets();
             FontMetrics fm = gPlaceholder.getFontMetrics();

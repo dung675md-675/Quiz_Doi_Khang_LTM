@@ -79,13 +79,22 @@ public final class DB implements AutoCloseable {
                     password VARCHAR(255) NOT NULL,
                     score INT NOT NULL DEFAULT 0 CHECK (score >= 0),
                     avatar_id VARCHAR(20) NOT NULL DEFAULT 'avatar_01',
+                    full_name VARCHAR(100) NOT NULL DEFAULT '',
+                    email VARCHAR(120) NOT NULL DEFAULT '',
+                    bio VARCHAR(255) NOT NULL DEFAULT '',
+                    role VARCHAR(20) NOT NULL DEFAULT 'PLAYER',
                     created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
                     updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
                 );
             """);
-            // Migration: thêm cột avatar_id nếu chưa có (tương thích DB cũ)
+            // Migration: thêm cột avatar_id, full_name, email, bio, role nếu chưa có (tương thích DB cũ)
             try {
                 st.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS avatar_id VARCHAR(20) NOT NULL DEFAULT 'avatar_01'");
+                st.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS full_name VARCHAR(100) NOT NULL DEFAULT ''");
+                st.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS email VARCHAR(120) NOT NULL DEFAULT ''");
+                st.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS bio VARCHAR(255) NOT NULL DEFAULT ''");
+                st.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS role VARCHAR(20) NOT NULL DEFAULT 'PLAYER'");
+                st.execute("UPDATE users SET role = 'ADMIN' WHERE LOWER(username) = 'admin'");
             } catch (Exception ignored) {}
 
             st.execute("""
@@ -269,12 +278,26 @@ public final class DB implements AutoCloseable {
     // --- USER DAO METHODS ---
 
     public boolean registerUser(String username, String passwordHash) {
+        return createUser(username, passwordHash, 0, "avatar_01", "", "", "", "admin".equalsIgnoreCase(username) ? "ADMIN" : "PLAYER");
+    }
+
+    public boolean createUser(String username, String passwordHash, int score, String avatarId, String fullName, String email, String bio) {
+        return createUser(username, passwordHash, score, avatarId, fullName, email, bio, "admin".equalsIgnoreCase(username) ? "ADMIN" : "PLAYER");
+    }
+
+    public boolean createUser(String username, String passwordHash, int score, String avatarId, String fullName, String email, String bio, String role) {
         if (!connected) return false;
-        String sql = "INSERT INTO users(username, password, score) VALUES(?, ?, 0)";
+        String sql = "INSERT INTO users(username, password, score, avatar_id, full_name, email, bio, role) VALUES(?, ?, ?, ?, ?, ?, ?, ?)";
         try (Connection conn = getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, username);
             ps.setString(2, passwordHash);
+            ps.setInt(3, Math.max(0, score));
+            ps.setString(4, (avatarId != null && !avatarId.isBlank()) ? avatarId : "avatar_01");
+            ps.setString(5, fullName != null ? fullName : "");
+            ps.setString(6, email != null ? email : "");
+            ps.setString(7, bio != null ? bio : "");
+            ps.setString(8, (role != null && !role.isBlank()) ? role.toUpperCase() : "PLAYER");
             ps.executeUpdate();
             return true;
         } catch (SQLException e) {
@@ -282,9 +305,57 @@ public final class DB implements AutoCloseable {
         }
     }
 
+    public boolean updateUser(String username, String newPasswordHashOrNull, int score, String avatarId, String fullName, String email, String bio) {
+        return updateUser(username, newPasswordHashOrNull, score, avatarId, fullName, email, bio, null);
+    }
+
+    public boolean updateUser(String username, String newPasswordHashOrNull, int score, String avatarId, String fullName, String email, String bio, String roleOrNull) {
+        if (!connected) return false;
+        boolean hasPass = (newPasswordHashOrNull != null && !newPasswordHashOrNull.isBlank());
+        boolean hasRole = (roleOrNull != null && !roleOrNull.isBlank());
+        StringBuilder sb = new StringBuilder("UPDATE users SET ");
+        if (hasPass) sb.append("password = ?, ");
+        sb.append("score = ?, avatar_id = ?, full_name = ?, email = ?, bio = ?");
+        if (hasRole) sb.append(", role = ?");
+        sb.append(", updated_at = CURRENT_TIMESTAMP WHERE username = ?");
+        try (Connection conn = getConnection();
+             PreparedStatement ps = conn.prepareStatement(sb.toString())) {
+            int idx = 1;
+            if (hasPass) {
+                ps.setString(idx++, newPasswordHashOrNull);
+            }
+            ps.setInt(idx++, Math.max(0, score));
+            ps.setString(idx++, (avatarId != null && !avatarId.isBlank()) ? avatarId : "avatar_01");
+            ps.setString(idx++, fullName != null ? fullName : "");
+            ps.setString(idx++, email != null ? email : "");
+            ps.setString(idx++, bio != null ? bio : "");
+            if (hasRole) {
+                ps.setString(idx++, roleOrNull.toUpperCase());
+            }
+            ps.setString(idx, username);
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            System.err.println("[DATABASE] Lỗi cập nhật thông tin user " + username + ": " + e.getMessage());
+            return false;
+        }
+    }
+
+    public boolean deleteUser(String username) {
+        if (!connected) return false;
+        String sql = "DELETE FROM users WHERE username = ?";
+        try (Connection conn = getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, username);
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            System.err.println("[DATABASE] Lỗi xóa user " + username + ": " + e.getMessage());
+            return false;
+        }
+    }
+
     public Model.User getUser(String username) {
         if (!connected) return null;
-        String sql = "SELECT username, password, score, avatar_id FROM users WHERE username = ?";
+        String sql = "SELECT username, password, score, avatar_id, full_name, email, bio, role FROM users WHERE username = ?";
         try (Connection conn = getConnection();
              PreparedStatement ps = conn.prepareStatement(sql)) {
             ps.setString(1, username);
@@ -294,6 +365,14 @@ public final class DB implements AutoCloseable {
                     u.score = rs.getInt("score");
                     try { u.avatarId = rs.getString("avatar_id"); } catch (Exception ignored) {}
                     if (u.avatarId == null || u.avatarId.isBlank()) u.avatarId = "avatar_01";
+                    try { u.fullName = rs.getString("full_name"); } catch (Exception ignored) {}
+                    if (u.fullName == null) u.fullName = "";
+                    try { u.email = rs.getString("email"); } catch (Exception ignored) {}
+                    if (u.email == null) u.email = "";
+                    try { u.bio = rs.getString("bio"); } catch (Exception ignored) {}
+                    if (u.bio == null) u.bio = "";
+                    try { u.role = rs.getString("role"); } catch (Exception ignored) {}
+                    if (u.role == null || u.role.isBlank()) u.role = "admin".equalsIgnoreCase(u.name) ? "ADMIN" : "PLAYER";
                     return u;
                 }
             }
@@ -360,7 +439,7 @@ public final class DB implements AutoCloseable {
     public Map<String, Model.User> getAllUsers() {
         Map<String, Model.User> map = new HashMap<>();
         if (!connected) return map;
-        String sql = "SELECT username, password, score, avatar_id FROM users";
+        String sql = "SELECT username, password, score, avatar_id, full_name, email, bio, role FROM users";
         try (Connection conn = getConnection();
              Statement st = conn.createStatement();
              ResultSet rs = st.executeQuery(sql)) {
@@ -369,6 +448,14 @@ public final class DB implements AutoCloseable {
                 u.score = rs.getInt("score");
                 try { u.avatarId = rs.getString("avatar_id"); } catch (Exception ignored) {}
                 if (u.avatarId == null || u.avatarId.isBlank()) u.avatarId = "avatar_01";
+                try { u.fullName = rs.getString("full_name"); } catch (Exception ignored) {}
+                if (u.fullName == null) u.fullName = "";
+                try { u.email = rs.getString("email"); } catch (Exception ignored) {}
+                if (u.email == null) u.email = "";
+                try { u.bio = rs.getString("bio"); } catch (Exception ignored) {}
+                if (u.bio == null) u.bio = "";
+                try { u.role = rs.getString("role"); } catch (Exception ignored) {}
+                if (u.role == null || u.role.isBlank()) u.role = "admin".equalsIgnoreCase(u.name) ? "ADMIN" : "PLAYER";
                 map.put(u.name, u);
             }
         } catch (SQLException e) {

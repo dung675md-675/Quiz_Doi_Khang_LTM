@@ -19,9 +19,12 @@ import javax.swing.border.EmptyBorder;
  */
 public class ResultDialog extends JDialog {
 
-    public record PlayerStat(String name, int correct, long durationMs, boolean isWinner, boolean isMe, String avatarId) {
+    public record PlayerStat(String name, int correct, long durationMs, boolean isWinner, boolean isMe, String avatarId, int points, int maxStreak) {
         public PlayerStat(String name, int correct, long durationMs, boolean isWinner, boolean isMe) {
-            this(name, correct, durationMs, isWinner, isMe, "avatar_01");
+            this(name, correct, durationMs, isWinner, isMe, "avatar_01", correct * 100, 0);
+        }
+        public PlayerStat(String name, int correct, long durationMs, boolean isWinner, boolean isMe, String avatarId) {
+            this(name, correct, durationMs, isWinner, isMe, avatarId, correct * 100, 0);
         }
     }
 
@@ -38,6 +41,8 @@ public class ResultDialog extends JDialog {
     private List<MatchQuestion> questions;
     private int[] userAnswers;
     private int[] correctAnswers;
+    private String[] userFillInAnswers;
+    private boolean actionTaken = false;
 
     private final ModernButton btnReview;
     private final ModernButton btnRematch;
@@ -52,7 +57,7 @@ public class ResultDialog extends JDialog {
             String rightRaw,
             Runnable onRematchYes,
             Runnable onRematchNo) {
-        this(owner, currentUsername, winner, leftRaw, rightRaw, onRematchYes, onRematchNo, null, null, null, "avatar_01", "avatar_01");
+        this(owner, currentUsername, winner, leftRaw, rightRaw, onRematchYes, onRematchNo, null, null, null, "avatar_01", "avatar_01", null);
     }
 
     public ResultDialog(
@@ -66,7 +71,7 @@ public class ResultDialog extends JDialog {
             List<MatchQuestion> questions,
             int[] userAnswers,
             int[] correctAnswers) {
-        this(owner, currentUsername, winner, leftRaw, rightRaw, onRematchYes, onRematchNo, questions, userAnswers, correctAnswers, "avatar_01", "avatar_01");
+        this(owner, currentUsername, winner, leftRaw, rightRaw, onRematchYes, onRematchNo, questions, userAnswers, correctAnswers, "avatar_01", "avatar_01", null);
     }
 
     public ResultDialog(
@@ -82,6 +87,23 @@ public class ResultDialog extends JDialog {
             int[] correctAnswers,
             String myAvatarId,
             String opponentAvatarId) {
+        this(owner, currentUsername, winner, leftRaw, rightRaw, onRematchYes, onRematchNo, questions, userAnswers, correctAnswers, myAvatarId, opponentAvatarId, null);
+    }
+
+    public ResultDialog(
+            Frame owner,
+            String currentUsername,
+            String winner,
+            String leftRaw,
+            String rightRaw,
+            Runnable onRematchYes,
+            Runnable onRematchNo,
+            List<MatchQuestion> questions,
+            int[] userAnswers,
+            int[] correctAnswers,
+            String myAvatarId,
+            String opponentAvatarId,
+            String[] userFillInAnswers) {
 
         super(owner, "Kết Quả Trận Đấu — Quiz Arena", true);
         this.owner = owner;
@@ -94,11 +116,12 @@ public class ResultDialog extends JDialog {
         this.questions = questions;
         this.userAnswers = userAnswers;
         this.correctAnswers = correctAnswers;
+        this.userFillInAnswers = userFillInAnswers;
 
         this.player1 = parseStat(leftRaw, this.winner, this.currentUsername, this.myAvatarId, this.opponentAvatarId);
         this.player2 = parseStat(rightRaw, this.winner, this.currentUsername, this.myAvatarId, this.opponentAvatarId);
 
-        setSize(560, 530);
+        setSize(580, 560);
         setLocationRelativeTo(owner);
         setResizable(false);
         setLayout(new BorderLayout());
@@ -116,7 +139,8 @@ public class ResultDialog extends JDialog {
             SoundManager.playDefeat();
         }
 
-        Color bannerBg = isWin ? Theme.GREEN : (isDraw ? Theme.PURPLE : Theme.RED);
+        Color bannerStart = isWin ? Theme.EMERALD : (isDraw ? Theme.INDIGO : Theme.RED);
+        Color bannerEnd = isWin ? Theme.EMERALD_DARK : (isDraw ? Theme.PURPLE : new Color(0x9F, 0x12, 0x39));
         String bannerTitle = isWin ? "CHIẾN THẮNG!" : (isDraw ? "TRẬN ĐẤU HÒA!" : "THẤT BẠI!");
         String bannerSubtitle = isWin
                 ? "+2 Điểm Xếp Hạng • Bạn đã thể hiện rất xuất sắc!"
@@ -128,13 +152,20 @@ public class ResultDialog extends JDialog {
             protected void paintComponent(Graphics g) {
                 Graphics2D g2 = (Graphics2D) g.create();
                 Theme.setupAntiAliasing(g2);
-                g2.setColor(bannerBg);
-                g2.fillRect(0, 0, getWidth(), getHeight());
+                int w = getWidth();
+                int h = getHeight();
+                GradientPaint gp = new GradientPaint(0, 0, bannerStart, w, h, bannerEnd);
+                g2.setPaint(gp);
+                g2.fillRect(0, 0, w, h);
+
+                g2.setColor(new Color(255, 255, 255, 20));
+                g2.fillOval(-20, -20, 100, 100);
+                g2.fillOval(w - 70, h - 50, 110, 110);
                 g2.dispose();
             }
         };
         bannerPanel.setLayout(new BoxLayout(bannerPanel, BoxLayout.Y_AXIS));
-        bannerPanel.setBorder(new EmptyBorder(20, 24, 20, 24));
+        bannerPanel.setBorder(new EmptyBorder(22, 24, 20, 24));
 
         JLabel lblTitle = new JLabel(bannerTitle, SwingConstants.CENTER);
         lblTitle.setFont(Theme.TITLE_XL);
@@ -157,21 +188,21 @@ public class ResultDialog extends JDialog {
         JPanel centerPanel = new JPanel();
         centerPanel.setLayout(new BoxLayout(centerPanel, BoxLayout.Y_AXIS));
         centerPanel.setOpaque(false);
-        centerPanel.setBorder(new EmptyBorder(20, 24, 16, 24));
+        centerPanel.setBorder(new EmptyBorder(18, 24, 16, 24));
 
         ModernCard vsCard = new ModernCard(new GridLayout(1, 2, 16, 0));
-        vsCard.setCardBackground(Theme.OFF_WHITE);
+        vsCard.setCardBackground(Theme.WHITE);
         vsCard.setBorderColor(Theme.BORDER_LIGHT);
         vsCard.setCardPadding(16, 16, 16, 16);
 
         vsCard.add(createPlayerColumn(player1));
         vsCard.add(createPlayerColumn(player2));
         centerPanel.add(vsCard);
-        centerPanel.add(Box.createVerticalStrut(16));
+        centerPanel.add(Box.createVerticalStrut(14));
 
         // Rematch Prompt Box
         ModernCard rematchBox = new ModernCard(new BorderLayout(8, 8));
-        rematchBox.setCardBackground(new Color(0xF3, 0xF4, 0xF6));
+        rematchBox.setCardBackground(Theme.BG_LIGHT);
         rematchBox.setBorderColor(Theme.BORDER_LIGHT);
         rematchBox.setCardPadding(12, 16, 12, 16);
 
@@ -202,6 +233,7 @@ public class ResultDialog extends JDialog {
         btnLobby.setPreferredSize(new Dimension(150, 42));
         btnLobby.addActionListener(e -> {
             SoundManager.playClick();
+            actionTaken = true;
             dispose();
             if (this.onRematchNo != null) {
                 this.onRematchNo.run();
@@ -231,7 +263,8 @@ public class ResultDialog extends JDialog {
         addWindowListener(new java.awt.event.WindowAdapter() {
             @Override
             public void windowClosing(java.awt.event.WindowEvent e) {
-                if (onRematchNo != null) {
+                if (!actionTaken && onRematchNo != null) {
+                    actionTaken = true;
                     onRematchNo.run();
                 }
             }
@@ -243,10 +276,7 @@ public class ResultDialog extends JDialog {
         col.setLayout(new BoxLayout(col, BoxLayout.Y_AXIS));
         col.setOpaque(false);
 
-        // Avatar + Name
-        JPanel top = new JPanel(new FlowLayout(FlowLayout.CENTER, 8, 0));
-        top.setOpaque(false);
-
+        // Avatar căn giữa phía trên tên người chơi để không tràn ngang với tên dài
         JPanel avatar = new JPanel() {
             @Override
             protected void paintComponent(Graphics g) {
@@ -260,16 +290,19 @@ public class ResultDialog extends JDialog {
                 g2.dispose();
             }
         };
-        avatar.setPreferredSize(new Dimension(40, 40));
+        avatar.setPreferredSize(new Dimension(44, 44));
+        avatar.setMaximumSize(new Dimension(44, 44));
+        avatar.setAlignmentX(Component.CENTER_ALIGNMENT);
         avatar.setOpaque(false);
 
-        JLabel lblName = new JLabel(stat.name() + (stat.isMe() ? " (Bạn)" : ""));
+        JLabel lblName = new JLabel(stat.name() + (stat.isMe() ? " (Bạn)" : ""), SwingConstants.CENTER);
         lblName.setFont(Theme.SUBTITLE);
         lblName.setForeground(Theme.DARK_TEXT);
+        lblName.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        top.add(avatar);
-        top.add(lblName);
-        col.add(top);
+        col.add(avatar);
+        col.add(Box.createVerticalStrut(6));
+        col.add(lblName);
         col.add(Box.createVerticalStrut(8));
 
         // Result Pill Badge
@@ -283,7 +316,7 @@ public class ResultDialog extends JDialog {
             badgeRow.add(new ModernBadge("Thua Cuộc", ModernBadge.Type.BUSY));
         }
         col.add(badgeRow);
-        col.add(Box.createVerticalStrut(12));
+        col.add(Box.createVerticalStrut(10));
 
         // Stat: Correct answers
         JLabel lblScore = new JLabel(stat.correct() + " / 10", SwingConstants.CENTER);
@@ -297,7 +330,16 @@ public class ResultDialog extends JDialog {
         lblScoreSub.setForeground(Theme.MUTED_GRAY);
         lblScoreSub.setAlignmentX(Component.CENTER_ALIGNMENT);
         col.add(lblScoreSub);
-        col.add(Box.createVerticalStrut(10));
+        col.add(Box.createVerticalStrut(6));
+
+        // Stat: Speed Bonus + Streak Points
+        String bonusText = stat.points() + " điểm • Chuỗi " + stat.maxStreak();
+        JLabel lblBonus = new JLabel(bonusText, SwingConstants.CENTER);
+        lblBonus.setFont(Theme.SMALL_BOLD);
+        lblBonus.setForeground(Theme.PURPLE);
+        lblBonus.setAlignmentX(Component.CENTER_ALIGNMENT);
+        col.add(lblBonus);
+        col.add(Box.createVerticalStrut(6));
 
         // Stat: Duration
         String durText = String.format("%.2f giây", stat.durationMs() / 1000.0);
@@ -321,6 +363,8 @@ public class ResultDialog extends JDialog {
 
             int correct = 0;
             long durationMs = 0;
+            int points = -1;
+            int maxStreak = 0;
 
             int cauIdx = details.indexOf("câu");
             if (cauIdx != -1) {
@@ -329,14 +373,30 @@ public class ResultDialog extends JDialog {
 
             int commaIdx = details.indexOf(",");
             int msIdx = details.indexOf("ms");
-            if (commaIdx != -1 && msIdx != -1) {
+            if (commaIdx != -1 && msIdx != -1 && msIdx > commaIdx) {
                 durationMs = Long.parseLong(details.substring(commaIdx + 1, msIdx).replaceAll("[^0-9]", ""));
             }
+
+            int ptsIdx = details.indexOf("pts=");
+            if (ptsIdx != -1) {
+                int endPts = details.indexOf(";", ptsIdx);
+                String sub = endPts != -1 ? details.substring(ptsIdx + 4, endPts) : details.substring(ptsIdx + 4);
+                try { points = Integer.parseInt(sub.replaceAll("[^0-9]", "")); } catch (Exception ignored) {}
+            }
+
+            int strkIdx = details.indexOf("streak=");
+            if (strkIdx != -1) {
+                int endStrk = details.indexOf(";", strkIdx);
+                String sub = endStrk != -1 ? details.substring(strkIdx + 7, endStrk) : details.substring(strkIdx + 7);
+                try { maxStreak = Integer.parseInt(sub.replaceAll("[^0-9]", "")); } catch (Exception ignored) {}
+            }
+
+            if (points < 0) points = correct * 100;
 
             boolean isWin = name.equalsIgnoreCase(winner);
             boolean isMe = name.equalsIgnoreCase(currentUsername);
             String avatarId = isMe ? (myAvatar != null ? myAvatar : "avatar_01") : (oppAvatar != null ? oppAvatar : "avatar_01");
-            return new PlayerStat(name, correct, durationMs, isWin, isMe, avatarId);
+            return new PlayerStat(name, correct, durationMs, isWin, isMe, avatarId, points, maxStreak);
         } catch (Exception e) {
             return new PlayerStat(raw, 0, 0, false, false, "avatar_01");
         }
@@ -353,6 +413,21 @@ public class ResultDialog extends JDialog {
         }
     }
 
+    /**
+     * Khi đối thủ rời phòng hoặc từ chối tái đấu trong lúc người chơi đang xem bảng kết quả / đáp án:
+     * Không đóng cưỡng bức hộp thoại, chỉ khóa nút Tái Đấu và hiển thị trạng thái.
+     */
+    public void onOpponentLeft(String message) {
+        if (btnRematch != null) {
+            btnRematch.setEnabled(false);
+            btnRematch.setText("Đối Thủ Đã Rời");
+        }
+        if (lblRematchStatus != null) {
+            lblRematchStatus.setText(message != null && !message.isBlank() ? message : "Đối thủ đã về sảnh chờ.");
+            lblRematchStatus.setForeground(Theme.RED);
+        }
+    }
+
     public void setReviewData(List<MatchQuestion> questions, int[] userAnswers, int[] correctAnswers) {
         this.questions = questions;
         this.userAnswers = userAnswers;
@@ -365,7 +440,7 @@ public class ResultDialog extends JDialog {
     public ReviewAnswersDialog openReviewDialog() {
         if (this.questions != null && !this.questions.isEmpty()) {
             ReviewAnswersDialog dlg = new ReviewAnswersDialog(this, this.questions, this.userAnswers,
-                    this.correctAnswers);
+                    this.correctAnswers, this.userFillInAnswers);
             dlg.setVisible(true);
             return dlg;
         }

@@ -65,7 +65,28 @@ public final class Model {
   public String name,password;
   public int score;
   public String avatarId="avatar_01";
-  public User(String n,String p){name=n;password=p;}
+  public String fullName="";
+  public String email="";
+  public String bio="";
+  public String role="PLAYER";
+  public User(String n,String p){
+   name=n;password=p;
+   this.role="admin".equalsIgnoreCase(n)?"ADMIN":"PLAYER";
+  }
+  public User(String n,String p,int score,String avatarId,String fullName,String email,String bio){
+   this(n,p,score,avatarId,fullName,email,bio,"admin".equalsIgnoreCase(n)?"ADMIN":"PLAYER");
+  }
+  public User(String n,String p,int score,String avatarId,String fullName,String email,String bio,String role){
+   this.name=n;this.password=p;this.score=Math.max(0,score);
+   this.avatarId=(avatarId!=null&&!avatarId.isBlank())?avatarId:"avatar_01";
+   this.fullName=fullName!=null?fullName:"";
+   this.email=email!=null?email:"";
+   this.bio=bio!=null?bio:"";
+   this.role=(role!=null&&!role.isBlank())?role.toUpperCase():("admin".equalsIgnoreCase(n)?"ADMIN":"PLAYER");
+  }
+  public boolean isAdmin(){
+   return "ADMIN".equalsIgnoreCase(role)||"admin".equalsIgnoreCase(name);
+  }
  }
  public static record Result(String match,String left,String right,String topic,String level,String setId,int leftCorrect,int rightCorrect,long leftMs,long rightMs,int duration,String winner,long timestamp) implements Serializable {}
  public static final class Store implements Serializable {
