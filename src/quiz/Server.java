@@ -43,7 +43,7 @@ public final class Server {
    return u!=null&&u.isAdmin();
   }
  }
- static final class Peer {final Socket socket;final DataInputStream in;final DataOutputStream out;volatile String name;Peer(Socket s)throws IOException{socket=s;in=new DataInputStream(s.getInputStream());out=new DataOutputStream(s.getOutputStream());}void send(String... a){try{Wire.send(out,a);}catch(IOException e){try{socket.close();}catch(IOException ignored){}}}}
+ static final class Peer {final Socket socket;final DataInputStream in;final DataOutputStream out;volatile String name;Peer(Socket s)throws IOException{socket=s;try{s.setTcpNoDelay(true);}catch(Exception ignored){}in=new DataInputStream(s.getInputStream());out=new DataOutputStream(s.getOutputStream());}void send(String... a){try{Wire.send(out,a);}catch(IOException e){try{socket.close();}catch(IOException ignored){}}}}
  final class Match {
   final String id=UUID.randomUUID().toString(),left,right,topic,level;
   final boolean isSolo;
@@ -110,6 +110,7 @@ public final class Server {
   void recordQuestionScore(int i,int qIndex,int choice,long elapsedMs){
    if(qIndex<0||qIndex>=10||scoredQuestion[i][qIndex]||set==null||qIndex>=set.questions().size())return;
    scoredQuestion[i][qIndex]=true;
+   duration[i]+=Math.max(100L,elapsedMs);
    if(choice!=-1&&choice==set.questions().get(qIndex).answer()){
     streak[i]++;
     if(streak[i]>maxStreak[i])maxStreak[i]=streak[i];
@@ -293,6 +294,12 @@ public final class Server {
    cancelPhaseTimer();
    currentPhase=MatchPhase.ACTIVE;
    currentQuestionIndex=qIndex;
+   if(qIndex>=0&&qIndex<10){
+    liveAnswers[0][qIndex]=-1;
+    liveAnswers[1][qIndex]=-1;
+    scoredQuestion[0][qIndex]=false;
+    scoredQuestion[1][qIndex]=false;
+   }
    questionStartNano[0]=System.nanoTime();
    questionStartNano[1]=System.nanoTime();
    int perQSec=Math.max(10,Math.min(25,set.duration()/10));
@@ -340,6 +347,12 @@ public final class Server {
    currentQuestionIndex=qIndex;
    Arrays.fill(skipReveal,false);
    if(isSolo)skipReveal[1]=true;
+   long timeoutMs=set!=null?Math.max(10,Math.min(25,set.duration()/10))*1000L:15000L;
+   for(int pIdx=0;pIdx<2;pIdx++){
+    if(qIndex>=0&&qIndex<10&&!scoredQuestion[pIdx][qIndex]){
+     recordQuestionScore(pIdx,qIndex,liveAnswers[pIdx][qIndex],timeoutMs);
+    }
+   }
    Model.Question q=(set!=null&&qIndex<set.questions().size())?set.questions().get(qIndex):null;
    int correctAns=(q!=null)?q.answer():-1;
    String exp=(q!=null&&q.explanation()!=null)?q.explanation():"";
@@ -392,6 +405,7 @@ public final class Server {
   }
   synchronized void answer(String name,int qIndex,int choice){
    int i=index(name);if(i<0||done||submitted[i])return;
+   if(currentPhase==MatchPhase.QUESTION_INTRO||currentPhase==MatchPhase.REVEAL||currentPhase==MatchPhase.COUNTDOWN)return;
    if(qIndex>=0&&qIndex<10&&set!=null){
     long elapsedMs=Math.max(100L,TimeUnit.NANOSECONDS.toMillis(System.nanoTime()-questionStartNano[i]));
     currentQ[i]=qIndex;
@@ -1087,6 +1101,6 @@ public final class Server {
  void leaderboard(Peer p){StringBuilder b=new StringBuilder();synchronized(store){List<Model.User> users=new ArrayList<>(store.users.values());Map<String,Double> opponent=new HashMap<>(),speed=new HashMap<>();Map<String,Integer> totalMatches=new HashMap<>();Map<String,Double> winRate=new HashMap<>();for(Model.User u:users){List<Model.Result> rs=store.results.stream().filter(r->r.left().equals(u.name)||r.right().equals(u.name)).toList();int matchesCount=rs.size();totalMatches.put(u.name,matchesCount);long wins=rs.stream().filter(r->r.winner().equals(u.name)).count();winRate.put(u.name,matchesCount>0?(wins*100.0/matchesCount):0.0);opponent.put(u.name,rs.stream().mapToInt(r->{Model.User other=store.users.get(r.left().equals(u.name)?r.right():r.left());return other==null?0:other.score;}).average().orElse(0));speed.put(u.name,rs.stream().filter(r->r.winner().equals(u.name)).mapToDouble(r->(r.left().equals(u.name)?r.leftMs():r.rightMs())/(r.duration()*1000.0)).average().orElse(Double.POSITIVE_INFINITY));}
   users.sort(Comparator.comparingInt((Model.User u)->u.score).reversed().thenComparing(Comparator.comparingDouble((Model.User u)->opponent.get(u.name)).reversed()).thenComparingDouble(u->speed.get(u.name)).thenComparing(u->u.name));
   for(Model.User u:users){String rankLabel=Rank.fromScore(u.score).getDisplayName();b.append(u.name).append(';').append(u.score).append(';').append(String.format(Locale.ROOT,"%.2f",opponent.get(u.name))).append(';').append(Double.isInfinite(speed.get(u.name))?"—":String.format(Locale.ROOT,"%.3f",speed.get(u.name))).append(';').append(totalMatches.get(u.name)).append(';').append(String.format(Locale.ROOT,"%.1f%%",winRate.get(u.name))).append(';').append(rankLabel).append('|');}}p.send("LEADERBOARD",b.toString());}
- void history(Peer p){StringBuilder b=new StringBuilder();synchronized(store){List<Model.Result> rs=db.isAvailable()?db.getUserHistory(p.name):store.results.stream().filter(r->r.left().equals(p.name)||r.right().equals(p.name)).toList();for(Model.Result r:rs)b.append(r.topic()).append(" / ").append(r.level()).append(" / ").append(r.setId()).append(": ").append(r.left()).append(" ").append(r.leftCorrect()).append("–").append(r.rightCorrect()).append(" ").append(r.right()).append(" → ").append(r.winner()).append(" | ").append(r.duration()).append(" | ").append(r.timestamp()).append('\n');}p.send("HISTORY",b.toString());}
+ void history(Peer p){StringBuilder b=new StringBuilder();synchronized(store){List<Model.Result> rs=db.isAvailable()?db.getUserHistory(p.name):store.results.stream().filter(r->r.left().equals(p.name)||r.right().equals(p.name)).toList();for(Model.Result r:rs){long pMs=r.left().equals(p.name)?r.leftMs():r.rightMs();long dispMs=pMs>0?pMs:(r.duration()*1000L);b.append(r.topic()).append(" / ").append(r.level()).append(" / ").append(r.setId()).append(": ").append(r.left()).append(" ").append(r.leftCorrect()).append("–").append(r.rightCorrect()).append(" ").append(r.right()).append(" → ").append(r.winner()).append(" | ").append(dispMs).append(" | ").append(r.timestamp()).append('\n');}}p.send("HISTORY",b.toString());}
  public static void main(String[] args)throws Exception{int port=args.length>0?Integer.parseInt(args[0]):5050;Path folder=Path.of(args.length>1?args[1]:"data");Server app=new Server(folder);try(ServerSocket socket=new ServerSocket(port)){System.out.println("Quiz server: port "+port+", data "+folder.toAbsolutePath());try{String ip=InetAddress.getLocalHost().getHostAddress();System.out.println("Dia chi IP may chu (de cac may khac ket noi): "+ip+":"+port);}catch(Exception ignored){}while(true){Peer p=new Peer(socket.accept());app.workers.submit(()->app.serve(p));}}}
 }

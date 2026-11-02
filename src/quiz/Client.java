@@ -170,7 +170,7 @@ public final class Client {
 
  /** Tạo socket mới và khởi động reader thread. Gọi khi khởi động, sau logout, hoặc khi reconnect. */
  void connectAndStartReader() throws Exception {
-  Socket socket = new Socket(host, port);
+  Socket socket = new Socket(host, port); try { socket.setTcpNoDelay(true); } catch (Exception ignored) {}
   sendQueue.clear();
   out = new DataOutputStream(socket.getOutputStream());
   DataInputStream in = new DataInputStream(socket.getInputStream());

@@ -42,7 +42,7 @@ public class LeaderboardDialog extends JDialog {
         title.setForeground(Theme.WHITE);
         title.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-        JLabel desc = new JLabel("Thứ tự ưu tiên: Điểm xếp hạng cao nhất → Điểm TB đối thủ → Tỉ lệ thời gian thắng");
+        JLabel desc = new JLabel("Thứ tự ưu tiên: Điểm xếp hạng cao nhất → Tỉ lệ chiến thắng");
         desc.setFont(Theme.SMALL);
         desc.setForeground(new Color(255, 255, 255, 220));
         desc.setAlignmentX(Component.LEFT_ALIGNMENT);
@@ -53,7 +53,7 @@ public class LeaderboardDialog extends JDialog {
         add(header, BorderLayout.NORTH);
 
         // 2. TABLE
-        String[] columnNames = { "Hạng", "Người chơi", "Điểm số", "TB Đối thủ", "Tốc độ thắng" };
+        String[] columnNames = { "Hạng", "Người chơi", "Điểm số", "Tổng trận", "Tỉ lệ thắng" };
         DefaultTableModel model = new DefaultTableModel(columnNames, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
@@ -68,14 +68,16 @@ public class LeaderboardDialog extends JDialog {
                 if (r.isBlank())
                     continue;
                 String[] f = r.split(";");
-                if (f.length >= 4) {
+                if (f.length >= 2) {
                     String rankText = switch (rank) {
                         case 1 -> "TOP 1";
                         case 2 -> "TOP 2";
                         case 3 -> "TOP 3";
                         default -> "#" + rank;
                     };
-                    model.addRow(new Object[] { rankText, f[0], f[1] + " pts", f[2], f[3] });
+                    String totalMatches = f.length >= 5 ? f[4] : "—";
+                    String winRate = f.length >= 6 ? f[5] : "—";
+                    model.addRow(new Object[] { rankText, f[0], f[1] + " pts", totalMatches, winRate });
                     rank++;
                 }
             }

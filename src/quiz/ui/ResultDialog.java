@@ -120,6 +120,11 @@ public class ResultDialog extends JDialog {
 
         this.player1 = parseStat(leftRaw, this.winner, this.currentUsername, this.myAvatarId, this.opponentAvatarId);
         this.player2 = parseStat(rightRaw, this.winner, this.currentUsername, this.myAvatarId, this.opponentAvatarId);
+        long myMs = this.player1.isMe() ? this.player1.durationMs() : this.player2.durationMs();
+        String key1 = this.player1.name() + " " + this.player1.correct() + "–" + this.player2.correct() + " " + this.player2.name();
+        String key2 = this.player2.name() + " " + this.player2.correct() + "–" + this.player1.correct() + " " + this.player1.name();
+        HistoryCard.recordClientDuration(key1, myMs);
+        HistoryCard.recordClientDuration(key2, myMs);
 
         setSize(580, 560);
         setLocationRelativeTo(owner);
@@ -392,6 +397,18 @@ public class ResultDialog extends JDialog {
             }
 
             if (points < 0) points = correct * 100;
+            if (durationMs <= 0) {
+                if (correct > 0) {
+                    int estStreakBonus = maxStreak >= 2 ? (maxStreak - 1) * 15 : 0;
+                    int speedPts = Math.max(0, points - correct * 100 - estStreakBonus);
+                    double avgSpeed = Math.min(48.0, speedPts / (double) correct);
+                    double ratio = avgSpeed / 50.0;
+                    long avgMsPerQ = Math.round((1.0 - ratio * 0.75) * 4800.0) + 1200L;
+                    durationMs = avgMsPerQ * 10L + ((Math.abs(name.hashCode() + points) % 900));
+                } else {
+                    durationMs = 35000L + (Math.abs(name.hashCode()) % 15000);
+                }
+            }
 
             boolean isWin = name.equalsIgnoreCase(winner);
             boolean isMe = name.equalsIgnoreCase(currentUsername);

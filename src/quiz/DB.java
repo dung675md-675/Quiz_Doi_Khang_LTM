@@ -160,17 +160,35 @@ public final class DB implements AutoCloseable {
                 Map<String, String[]> metadata = new LinkedHashMap<>();
                 Map<String, List<Model.Question>> questionsMap = new LinkedHashMap<>();
 
-                for (String line : lines) {
+                for (String raw : lines) {
+                    String line = raw.trim();
                     if (line.isBlank() || line.startsWith("#")) continue;
-                    String[] a = line.split("\\|", 7);
-                    if (a.length != 7) continue;
-                    String setId = a[0], topic = a[1], level = a[2];
-                    int duration = Integer.parseInt(a[3]);
-                    int answer = Integer.parseInt(a[4]);
-                    String[] choices = a[6].split(";", -1);
-                    metadata.putIfAbsent(setId, new String[]{topic, level, String.valueOf(duration)});
-                    questionsMap.computeIfAbsent(setId, k -> new ArrayList<>())
-                                .add(new Model.Question(a[5], choices, answer));
+                    String[] a = line.split("\\|", -1);
+                    try {
+                        if (a.length >= 8) {
+                            Model.Question q = Bank.parseFields(a);
+                            String setId = q.id();
+                            String[] c = q.choices();
+                            String[] norm = new String[]{
+                                c.length > 0 ? c[0] : "",
+                                c.length > 1 ? c[1] : "",
+                                c.length > 2 ? c[2] : "",
+                                c.length > 3 ? c[3] : ""
+                            };
+                            int ans = Math.max(0, Math.min(3, q.answer()));
+                            metadata.putIfAbsent(setId, new String[]{q.topic(), q.level(), "100"});
+                            questionsMap.computeIfAbsent(setId, k -> new ArrayList<>())
+                                        .add(new Model.Question(q.text(), norm, ans));
+                        } else if (a.length == 7) {
+                            String setId = a[0], topic = a[1], level = a[2];
+                            int duration = Integer.parseInt(a[3]);
+                            int answer = Integer.parseInt(a[4]);
+                            String[] choices = a[6].split(";", -1);
+                            metadata.putIfAbsent(setId, new String[]{topic, level, String.valueOf(duration)});
+                            questionsMap.computeIfAbsent(setId, k -> new ArrayList<>())
+                                        .add(new Model.Question(a[5], choices, answer));
+                        }
+                    } catch (Exception ignored) {}
                 }
 
                 conn.setAutoCommit(false);
