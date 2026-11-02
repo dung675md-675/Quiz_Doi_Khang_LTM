@@ -21,10 +21,19 @@ public class ReviewAnswersDialog extends JDialog {
             List<MatchQuestion> questions,
             int[] userAnswers,
             int[] correctAnswers) {
+        this(owner, questions, userAnswers, correctAnswers, null);
+    }
+
+    public ReviewAnswersDialog(
+            Window owner,
+            List<MatchQuestion> questions,
+            int[] userAnswers,
+            int[] correctAnswers,
+            String[] userFillInAnswers) {
 
         super(owner, "Chi Tiết Đáp Án — Quiz Arena", ModalityType.APPLICATION_MODAL);
 
-        setSize(680, 720);
+        setSize(700, 740);
         setLocationRelativeTo(owner);
         setLayout(new BorderLayout());
         getContentPane().setBackground(Theme.OFF_WHITE);
@@ -32,9 +41,18 @@ public class ReviewAnswersDialog extends JDialog {
         int total = (questions != null) ? questions.size() : 0;
         int correctCount = 0;
         for (int i = 0; i < total; i++) {
+            MatchQuestion q = (questions != null && i < questions.size()) ? questions.get(i) : null;
             int uAns = (userAnswers != null && i < userAnswers.length) ? userAnswers[i] : -1;
-            int cAns = (correctAnswers != null && i < correctAnswers.length) ? correctAnswers[i] : -1;
-            if (uAns != -1 && uAns == cAns) {
+            int cAns = (correctAnswers != null && i < correctAnswers.length && correctAnswers[i] != -1)
+                    ? correctAnswers[i]
+                    : ((q != null) ? q.correctAnswer() : -1);
+            boolean isCorrect;
+            if (q != null && (q.isFillIn() || q.isDragAndDrop())) {
+                isCorrect = (uAns == 1 || (uAns != -1 && uAns == cAns));
+            } else {
+                isCorrect = (uAns != -1 && uAns == cAns);
+            }
+            if (isCorrect) {
                 correctCount++;
             }
         }
@@ -85,13 +103,25 @@ public class ReviewAnswersDialog extends JDialog {
         for (int i = 0; i < total; i++) {
             MatchQuestion q = questions.get(i);
             int uAns = (userAnswers != null && i < userAnswers.length) ? userAnswers[i] : -1;
-            int cAns = (correctAnswers != null && i < correctAnswers.length) ? correctAnswers[i] : -1;
-            boolean isCorrect = (uAns != -1 && uAns == cAns);
-            boolean isSkipped = (uAns == -1);
+            int cAns = (correctAnswers != null && i < correctAnswers.length && correctAnswers[i] != -1)
+                    ? correctAnswers[i]
+                    : q.correctAnswer();
+            boolean isCorrect;
+            boolean isSkipped;
+            if (q.isFillIn()) {
+                isCorrect = (uAns == 1 || (uAns != -1 && uAns == cAns));
+                String typed = (userFillInAnswers != null && i < userFillInAnswers.length) ? userFillInAnswers[i] : null;
+                isSkipped = (uAns == -1) && (typed == null || typed.trim().isEmpty());
+            } else if (q.isDragAndDrop()) {
+                isCorrect = (uAns == 1 || (uAns != -1 && uAns == cAns));
+                isSkipped = (uAns == -1);
+            } else {
+                isCorrect = (uAns != -1 && uAns == cAns);
+                isSkipped = (uAns == -1);
+            }
 
             ModernCard card = new ModernCard(new BorderLayout(0, 10));
             card.setCardPadding(14, 16, 14, 16);
-            card.setMaximumSize(new Dimension(Integer.MAX_VALUE, 260));
 
             // Card Header: Question number + Status Badge
             JPanel cardHeader = new JPanel(new BorderLayout());
@@ -99,7 +129,7 @@ public class ReviewAnswersDialog extends JDialog {
 
             String typeBadge = "";
             if (q.type() != null && !q.type().isBlank()) {
-                typeBadge = " • " + quiz.Model.QuestionType.fromString(q.type()).getDisplayName();
+                typeBadge = " - " + quiz.Model.QuestionType.fromString(q.type()).getDisplayName();
             }
             JLabel lblQNum = new JLabel("CÂU HỎI " + (i + 1) + " / " + total + typeBadge);
             lblQNum.setFont(Theme.SMALL_BOLD);
@@ -108,7 +138,7 @@ public class ReviewAnswersDialog extends JDialog {
 
             ModernBadge cardBadge;
             if (isSkipped) {
-                cardBadge = new ModernBadge("— Chưa chọn", ModernBadge.Type.WARNING);
+                cardBadge = new ModernBadge("- Chưa chọn", ModernBadge.Type.WARNING);
             } else if (isCorrect) {
                 cardBadge = new ModernBadge("Đúng (+1)", ModernBadge.Type.READY);
             } else {
@@ -122,7 +152,7 @@ public class ReviewAnswersDialog extends JDialog {
             contentPanel.setLayout(new BoxLayout(contentPanel, BoxLayout.Y_AXIS));
             contentPanel.setOpaque(false);
 
-            JLabel lblQuestionText = new JLabel("<html><body style='width: 480px;'>" + q.text() + "</body></html>");
+            JLabel lblQuestionText = new JLabel("<html><body style='width: 500px;'>" + q.text() + "</body></html>");
             lblQuestionText.setFont(Theme.BODY_BOLD);
             lblQuestionText.setForeground(Theme.DARK_TEXT);
             contentPanel.add(lblQuestionText);
@@ -140,7 +170,7 @@ public class ReviewAnswersDialog extends JDialog {
                         BorderFactory.createLineBorder(new Color(0x6E, 0xE7, 0xB7), 1, true),
                         new EmptyBorder(4, 8, 4, 8)
                     ));
-                    JLabel lblSlot = new JLabel("Chỗ trống (" + slotIndex++ + ") ➜ Đáp án đúng: ");
+                    JLabel lblSlot = new JLabel("Chỗ trống (" + slotIndex++ + ") -> Đáp án đúng: ");
                     lblSlot.setFont(Theme.SMALL_BOLD);
                     lblSlot.setForeground(new Color(0x06, 0x5F, 0x46));
                     JLabel lblAns = new JLabel(entry.getValue());
@@ -154,6 +184,27 @@ public class ReviewAnswersDialog extends JDialog {
             } else if (q.isFillIn()) {
                 JPanel fillInReviewBox = new JPanel(new GridLayout(0, 1, 0, 6));
                 fillInReviewBox.setOpaque(false);
+
+                String typedText = (userFillInAnswers != null && i < userFillInAnswers.length && userFillInAnswers[i] != null && !userFillInAnswers[i].isBlank())
+                        ? userFillInAnswers[i]
+                        : (isSkipped ? "(Chưa nhập)" : (isCorrect ? ((q.choices() != null && q.choices().length > 0) ? q.choices()[0] : "Đúng") : "(Đã trả lời sai)"));
+
+                JPanel userRow = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 4));
+                userRow.setOpaque(true);
+                userRow.setBackground(isCorrect ? new Color(0xE8, 0xF5, 0xE9) : new Color(0xFF, 0xEB, 0xEE));
+                userRow.setBorder(BorderFactory.createCompoundBorder(
+                    BorderFactory.createLineBorder(isCorrect ? Theme.GREEN : Theme.RED, 1, true),
+                    new EmptyBorder(6, 12, 6, 12)
+                ));
+                JLabel lblUserTitle = new JLabel("Câu trả lời của bạn: ");
+                lblUserTitle.setFont(Theme.SMALL_BOLD);
+                lblUserTitle.setForeground(isCorrect ? new Color(0x1B, 0x5E, 0x20) : new Color(0xB7, 0x1C, 0x1C));
+                JLabel lblUserVal = new JLabel(typedText);
+                lblUserVal.setFont(Theme.BODY_BOLD);
+                lblUserVal.setForeground(isCorrect ? new Color(0x1B, 0x5E, 0x20) : new Color(0xB7, 0x1C, 0x1C));
+                userRow.add(lblUserTitle);
+                userRow.add(lblUserVal);
+                fillInReviewBox.add(userRow);
 
                 JPanel row = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 4));
                 row.setOpaque(true);

@@ -111,19 +111,30 @@ public class SubmitConfirmDialog extends JDialog {
                 g2.setStroke(new BasicStroke(2f));
                 g2.drawOval(1, 1, size - 2, size - 2);
 
+                // Vẽ biểu tượng vector: Dấu tick hoàn thành hoặc Dấu chấm than cảnh báo
+                if (isAllAnswered) {
+                    g2.setColor(Theme.EMERALD_DARK);
+                    g2.setStroke(new BasicStroke(3.5f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+                    g2.drawLine(size * 28 / 100, size * 52 / 100, size * 44 / 100, size * 68 / 100);
+                    g2.drawLine(size * 44 / 100, size * 68 / 100, size * 72 / 100, size * 34 / 100);
+                } else {
+                    g2.setColor(Theme.ORANGE_DARK);
+                    g2.setFont(new Font("Segoe UI", Font.BOLD, 26));
+                    FontMetrics fm = g2.getFontMetrics();
+                    String ex = "!";
+                    int tx = (size - fm.stringWidth(ex)) / 2;
+                    int ty = (size - fm.getHeight()) / 2 + fm.getAscent();
+                    g2.drawString(ex, tx, ty);
+                }
+
                 g2.dispose();
-                super.paintComponent(g);
             }
         };
-        iconBadge.setLayout(new GridBagLayout());
         iconBadge.setPreferredSize(new Dimension(48, 48));
         iconBadge.setMaximumSize(new Dimension(48, 48));
         iconBadge.setOpaque(false);
         iconBadge.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        JLabel lblIcon = new JLabel(isAllAnswered ? "🚀" : "⚠️");
-        lblIcon.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 24));
-        iconBadge.add(lblIcon);
         headerPanel.add(iconBadge);
         headerPanel.add(Box.createVerticalStrut(8));
 
@@ -249,7 +260,7 @@ public class SubmitConfirmDialog extends JDialog {
         lblMatrixTitle.setForeground(Theme.DARK_TEXT);
         matrixHeader.add(lblMatrixTitle, BorderLayout.WEST);
 
-        JLabel lblMatrixHint = new JLabel("👆 Bấm vào câu để làm tiếp");
+        JLabel lblMatrixHint = new JLabel("Bấm vào câu để làm tiếp");
         lblMatrixHint.setFont(Theme.SMALL_BOLD);
         lblMatrixHint.setForeground(Theme.PURPLE);
         matrixHeader.add(lblMatrixHint, BorderLayout.EAST);
@@ -309,8 +320,9 @@ public class SubmitConfirmDialog extends JDialog {
         noticeCard.setOpaque(false);
         noticeCard.setMaximumSize(new Dimension(Integer.MAX_VALUE, 65));
 
-        JLabel lblNoticeIcon = new JLabel(isAllAnswered ? "💡" : "⚠️");
-        lblNoticeIcon.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 20));
+        JLabel lblNoticeIcon = new JLabel(isAllAnswered ? "[OK]" : "[!]");
+        lblNoticeIcon.setFont(Theme.BODY_BOLD);
+        lblNoticeIcon.setForeground(isAllAnswered ? Theme.EMERALD_DARK : Theme.ORANGE_DARK);
         lblNoticeIcon.setVerticalAlignment(SwingConstants.TOP);
         noticeCard.add(lblNoticeIcon, BorderLayout.WEST);
 
@@ -333,8 +345,8 @@ public class SubmitConfirmDialog extends JDialog {
         footerPanel.setBackground(new Color(0xF8, 0xFA, 0xFC));
         footerPanel.setBorder(BorderFactory.createMatteBorder(1, 0, 0, 0, new Color(0xE2, 0xE8, 0xF0)));
 
-        ModernButton btnCancel = new ModernButton("✏️ TIẾP TỤC LÀM BÀI", ModernButton.Style.SECONDARY_SKY);
-        btnCancel.setPreferredSize(new Dimension(185, 42));
+        ModernButton btnCancel = new ModernButton("TIẾP TỤC LÀM BÀI", ModernButton.Style.SECONDARY_SKY);
+        btnCancel.setPreferredSize(new Dimension(175, 42));
         btnCancel.addActionListener(e -> {
             SoundManager.playClick();
             userChoice = Choice.CANCEL;
@@ -342,9 +354,9 @@ public class SubmitConfirmDialog extends JDialog {
         });
 
         ModernButton btnSubmit = new ModernButton(
-                isAllAnswered ? "🚀 NỘP BÀI NGAY" : "⚡ VẪN NỘP BÀI",
+                isAllAnswered ? "NỘP BÀI NGAY" : "XÁC NHẬN NỘP BÀI",
                 ModernButton.Style.EMERALD);
-        btnSubmit.setPreferredSize(new Dimension(165, 42));
+        btnSubmit.setPreferredSize(new Dimension(175, 42));
         btnSubmit.addActionListener(e -> {
             SoundManager.playClick();
             userChoice = Choice.SUBMIT;
@@ -524,8 +536,8 @@ public class SubmitConfirmDialog extends JDialog {
                 g2.draw(new RoundRectangle2D.Float(1, 1, w - 2, h - 2, radius, radius));
             }
 
-            // Vẽ text nhãn: "✓ Câu 1" hoặc "✕ Câu 3"
-            String label = (isAnswered ? "✓ C." : "✕ C.") + questionNum;
+            // Vẽ text nhãn: "Câu 1", "Câu 2"...
+            String label = "Câu " + questionNum;
             g2.setFont(Theme.BODY_BOLD);
             g2.setColor(Theme.WHITE);
             FontMetrics fm = g2.getFontMetrics();

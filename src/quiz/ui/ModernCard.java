@@ -15,6 +15,9 @@ public class ModernCard extends JPanel {
     private int cornerRadius = 14;
     private boolean drawBorder = true;
 
+    private boolean hasShadow = true;
+    private Color shadowColor = new Color(0, 0, 0, 22);
+
     public ModernCard() {
         this(new BorderLayout());
     }
@@ -30,6 +33,11 @@ public class ModernCard extends JPanel {
         this.cardBackground = bg;
         this.borderColor = border;
         this.cornerRadius = radius;
+    }
+
+    public void setHasShadow(boolean shadow) {
+        this.hasShadow = shadow;
+        repaint();
     }
 
     public void setCardBackground(Color bg) {
@@ -63,6 +71,15 @@ public class ModernCard extends JPanel {
 
         int w = getWidth();
         int h = getHeight();
+
+        // 0. Vẽ bóng đổ nhẹ mềm mại (soft diffused ambient shadow)
+        if (hasShadow) {
+            for (int s = 1; s <= 4; s++) {
+                int alpha = Math.max(2, 12 - s * 2);
+                g2.setColor(new Color(15, 23, 42, alpha));
+                g2.fill(new RoundRectangle2D.Float(1, 1 + s, w - 2, h - 2, cornerRadius + 2, cornerRadius + 2));
+            }
+        }
 
         // 1. Vẽ nền bo góc
         g2.setColor(cardBackground);

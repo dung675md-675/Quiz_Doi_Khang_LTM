@@ -28,6 +28,10 @@ public class ModernBadge extends JComponent {
         setOpaque(false);
     }
 
+    public String getText() {
+        return text;
+    }
+
     public void setText(String text) {
         this.text = text;
         revalidate();

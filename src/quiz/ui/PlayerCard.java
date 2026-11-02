@@ -89,8 +89,8 @@ public class PlayerCard extends ModernCard {
         // RIGHT: Challenge Button
         JPanel rightPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 8));
         rightPanel.setOpaque(false);
-        btnChallenge = new ModernButton(isReady ? "Thách đấu" : "Đang bận", ModernButton.Style.PRIMARY);
-        btnChallenge.setPreferredSize(new Dimension(110, 36));
+        btnChallenge = new ModernButton(isReady ? "Thách đấu" : "Đang bận", isReady ? ModernButton.Style.EMERALD : ModernButton.Style.OUTLINE_GRAY);
+        btnChallenge.setPreferredSize(new Dimension(114, 38));
         btnChallenge.setFont(Theme.BODY_BOLD);
         btnChallenge.setEnabled(isReady);
         btnChallenge.addActionListener(e -> {
@@ -105,7 +105,7 @@ public class PlayerCard extends ModernCard {
         // Hover
         addMouseListener(new MouseAdapter() {
             @Override public void mouseClicked(MouseEvent e) { if (onSelectCallback != null) onSelectCallback.accept(PlayerCard.this); }
-            @Override public void mouseEntered(MouseEvent e) { if (!isSelected) { setBorderColor(Theme.BLUE); repaint(); } }
+            @Override public void mouseEntered(MouseEvent e) { if (!isSelected) { setBorderColor(Theme.BORDER_SUBTLE); repaint(); } }
             @Override public void mouseExited(MouseEvent e) { if (!isSelected) { setBorderColor(Theme.BORDER_LIGHT); repaint(); } }
         });
     }

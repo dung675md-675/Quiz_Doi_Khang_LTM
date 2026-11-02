@@ -3,16 +3,17 @@ package quiz.ui;
 import java.awt.*;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
+import java.awt.geom.RoundRectangle2D;
 import java.util.function.BiConsumer;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 
 /**
- * AuthScreen - Màn hình Đăng nhập / Đăng ký hiện đại.
- * Hỗ trợ chuyển tab mượt mà, validation ngay tại field, hiển thị lỗi rõ ràng
- * và trạng thái loading khi gửi yêu cầu lên Server.
+ * AuthScreen - Màn hình Đăng nhập / Đăng ký phong cách Quiz Battle hiện đại.
+ * - Sử dụng GridBagLayout đảm bảo các trường nhập và nút bấm luôn giữ đúng kích thước, không lệch lạc khi chuyển màn hình/logout.
+ * - Bảng màu & hiệu ứng Game Quiz đối kháng sinh động: Logo huy hiệu, Tab Pill chuyển chế độ, Viền focus sáng, Validation trực quan.
  */
-public class AuthScreen extends JPanel {
+public class AuthScreen extends KahootBackgroundPanel {
 
     public enum Mode {
         LOGIN, REGISTER
@@ -22,14 +23,20 @@ public class AuthScreen extends JPanel {
 
     // Components
     private final ModernCard card;
+    private final JLabel lblLogoBadge;
     private final JLabel lblTitle;
     private final JLabel lblSubtitle;
-    private final JButton tabLogin;
-    private final JButton tabRegister;
+    private final TabButton tabLogin;
+    private final TabButton tabRegister;
+    private final JLabel lblUserHeader;
     private final ModernTextField txtUsername;
-    private final ModernPasswordField txtPassword;
     private final JLabel lblUserError;
+    private final JLabel lblPassHeader;
+    private final ModernPasswordField txtPassword;
     private final JLabel lblPassError;
+    private final JLabel lblConfirmHeader;
+    private final ModernPasswordField txtConfirmPassword;
+    private final JLabel lblConfirmError;
     private final JLabel lblGlobalMessage;
     private final ModernButton btnSubmit;
 
@@ -38,41 +45,95 @@ public class AuthScreen extends JPanel {
     private BiConsumer<String, String> onRegister;
 
     public AuthScreen() {
-        setLayout(new GridBagLayout());
-        setBackground(Theme.OFF_WHITE);
+        super(new GridBagLayout());
 
-        // Khởi tạo Card chính
-        card = new ModernCard(new BorderLayout(0, 16));
-        card.setPreferredSize(new Dimension(420, 520));
-        card.setCardPadding(28, 32, 28, 32);
+        // Card chính với kích thước chuẩn, viền bo góc mượt mà và đổ bóng nhẹ
+        card = new ModernCard(new BorderLayout(0, 14));
+        card.setPreferredSize(new Dimension(460, 560));
+        card.setMinimumSize(new Dimension(420, 520));
+        card.setMaximumSize(new Dimension(480, 580));
+        card.setCardPadding(28, 36, 26, 36);
+        card.setCornerRadius(20);
+        card.setBorderColor(new Color(225, 232, 245));
 
-        // 1. HEADER (Title & Subtitle)
+        // ==========================================
+        // 1. HEADER (Logo Badge, Title & Mode Tabs)
+        // ==========================================
         JPanel headerPanel = new JPanel();
         headerPanel.setLayout(new BoxLayout(headerPanel, BoxLayout.Y_AXIS));
         headerPanel.setOpaque(false);
 
+        // Logo icon / badge
+        lblLogoBadge = new JLabel("", SwingConstants.CENTER) {
+            @Override
+            protected void paintComponent(Graphics g) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                Theme.setupAntiAliasing(g2);
+                int size = Math.min(getWidth(), getHeight()) - 4;
+                int x = (getWidth() - size) / 2;
+                int y = (getHeight() - size) / 2;
+                // Vòng gradient tròn
+                GradientPaint gp = new GradientPaint(x, y, new Color(0x3B, 0x82, 0xF6), x + size, y + size, new Color(0x8B, 0x5C, 0xF6));
+                g2.setPaint(gp);
+                g2.fillOval(x, y, size, size);
+
+                // Vẽ tia sét vector màu trắng sắc nét (không dùng emoji tránh lỗi tofu font)
+                java.awt.geom.Path2D bolt = new java.awt.geom.Path2D.Float();
+                bolt.moveTo(x + size * 0.54f, y + size * 0.20f);
+                bolt.lineTo(x + size * 0.32f, y + size * 0.54f);
+                bolt.lineTo(x + size * 0.49f, y + size * 0.54f);
+                bolt.lineTo(x + size * 0.44f, y + size * 0.82f);
+                bolt.lineTo(x + size * 0.68f, y + size * 0.46f);
+                bolt.lineTo(x + size * 0.52f, y + size * 0.46f);
+                bolt.closePath();
+                g2.setColor(Color.WHITE);
+                g2.fill(bolt);
+
+                g2.dispose();
+            }
+        };
+        lblLogoBadge.setPreferredSize(new Dimension(56, 56));
+        lblLogoBadge.setMaximumSize(new Dimension(56, 56));
+        lblLogoBadge.setAlignmentX(Component.CENTER_ALIGNMENT);
+
         lblTitle = new JLabel("QUIZ ARENA");
-        lblTitle.setFont(Theme.TITLE_XL);
-        lblTitle.setForeground(Theme.BLUE);
+        lblTitle.setFont(new Font(Theme.TITLE_XL.getFamily(), Font.BOLD, 26));
+        lblTitle.setForeground(new Color(0x1E, 0x29, 0x3B));
         lblTitle.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        lblSubtitle = new JLabel("Game Đối Kháng 1v1 — Tri Thức & Tốc Độ");
+        lblSubtitle = new JLabel("Đấu Trường Trí Tuệ Đối Kháng 1v1");
         lblSubtitle.setFont(Theme.BODY);
         lblSubtitle.setForeground(Theme.MUTED_GRAY);
         lblSubtitle.setAlignmentX(Component.CENTER_ALIGNMENT);
 
+        headerPanel.add(lblLogoBadge);
+        headerPanel.add(Box.createVerticalStrut(8));
         headerPanel.add(lblTitle);
-        headerPanel.add(Box.createVerticalStrut(4));
+        headerPanel.add(Box.createVerticalStrut(3));
         headerPanel.add(lblSubtitle);
-        headerPanel.add(Box.createVerticalStrut(18));
+        headerPanel.add(Box.createVerticalStrut(16));
 
-        // 2. TAB SWITCHER (Đăng nhập / Đăng ký)
-        JPanel tabContainer = new JPanel(new GridLayout(1, 2, 8, 0));
-        tabContainer.setOpaque(false);
-        tabContainer.setMaximumSize(new Dimension(360, 38));
+        // TAB SWITCHER: Thiết kế dạng Pill Capsule bo tròn hiện đại
+        JPanel tabWrapper = new JPanel(new FlowLayout(FlowLayout.CENTER, 0, 0));
+        tabWrapper.setOpaque(false);
 
-        tabLogin = createTabButton("Đăng nhập", true);
-        tabRegister = createTabButton("Đăng ký", false);
+        JPanel tabPill = new JPanel(new GridLayout(1, 2, 4, 0)) {
+            @Override
+            protected void paintComponent(Graphics g) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                Theme.setupAntiAliasing(g2);
+                g2.setColor(new Color(0xEE, 0xF2, 0xF6));
+                g2.fill(new RoundRectangle2D.Float(0, 0, getWidth(), getHeight(), 16, 16));
+                g2.dispose();
+                super.paintComponent(g);
+            }
+        };
+        tabPill.setOpaque(false);
+        tabPill.setPreferredSize(new Dimension(360, 42));
+        tabPill.setBorder(new EmptyBorder(3, 4, 3, 4));
+
+        tabLogin = new TabButton("ĐĂNG NHẬP", true);
+        tabRegister = new TabButton("ĐĂNG KÝ", false);
 
         tabLogin.addActionListener(e -> {
             SoundManager.playClick();
@@ -83,84 +144,131 @@ public class AuthScreen extends JPanel {
             setMode(Mode.REGISTER);
         });
 
-        tabContainer.add(tabLogin);
-        tabContainer.add(tabRegister);
-        headerPanel.add(tabContainer);
+        tabPill.add(tabLogin);
+        tabPill.add(tabRegister);
+        tabWrapper.add(tabPill);
+        headerPanel.add(tabWrapper);
 
         card.add(headerPanel, BorderLayout.NORTH);
 
-        // 3. FORM BODY (Inputs & Validation messages)
-        JPanel formPanel = new JPanel();
-        formPanel.setLayout(new BoxLayout(formPanel, BoxLayout.Y_AXIS));
+        // ==========================================
+        // 2. FORM BODY (GridBagLayout: chống lệch ô, chuẩn kích thước)
+        // ==========================================
+        JPanel formPanel = new JPanel(new GridBagLayout());
         formPanel.setOpaque(false);
+        formPanel.setBorder(new EmptyBorder(4, 4, 4, 4));
+
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.weightx = 1.0;
+        gbc.gridx = 0;
+        gbc.insets = new Insets(0, 0, 0, 0);
+
+        // Header Username
+        lblUserHeader = new JLabel("Tên đăng nhập");
+        lblUserHeader.setFont(Theme.BODY_BOLD);
+        lblUserHeader.setForeground(new Color(0x33, 0x41, 0x55));
+        gbc.gridy = 0;
+        gbc.insets = new Insets(2, 0, 3, 0);
+        formPanel.add(lblUserHeader, gbc);
 
         // Field Username
-        JLabel lblUserHeader = new JLabel("Tên người dùng");
-        lblUserHeader.setFont(Theme.BODY_BOLD);
-        lblUserHeader.setForeground(Theme.DARK_TEXT);
-        lblUserHeader.setAlignmentX(Component.LEFT_ALIGNMENT);
+        txtUsername = new ModernTextField("Nhập tên từ 3-24 ký tự...", 20);
+        txtUsername.setPreferredSize(new Dimension(360, 40));
+        txtUsername.setFont(new Font(Theme.BODY.getFamily(), Font.PLAIN, 14));
+        gbc.gridy = 1;
+        gbc.insets = new Insets(0, 0, 2, 0);
+        formPanel.add(txtUsername, gbc);
 
-        txtUsername = new ModernTextField("Ví dụ: player_one", 15);
-        txtUsername.setMaximumSize(new Dimension(360, 42));
-        txtUsername.setAlignmentX(Component.LEFT_ALIGNMENT);
-
+        // Error Username
         lblUserError = new JLabel(" ");
         lblUserError.setFont(Theme.SMALL_BOLD);
         lblUserError.setForeground(Theme.RED);
-        lblUserError.setAlignmentX(Component.LEFT_ALIGNMENT);
+        gbc.gridy = 2;
+        gbc.insets = new Insets(0, 2, 6, 0);
+        formPanel.add(lblUserError, gbc);
 
-        formPanel.add(lblUserHeader);
-        formPanel.add(Box.createVerticalStrut(4));
-        formPanel.add(txtUsername);
-        formPanel.add(Box.createVerticalStrut(2));
-        formPanel.add(lblUserError);
-        formPanel.add(Box.createVerticalStrut(8));
+        // Header Password
+        lblPassHeader = new JLabel("Mật khẩu");
+        lblPassHeader.setFont(Theme.BODY_BOLD);
+        lblPassHeader.setForeground(new Color(0x33, 0x41, 0x55));
+        gbc.gridy = 3;
+        gbc.insets = new Insets(0, 0, 3, 0);
+        formPanel.add(lblPassHeader, gbc);
 
         // Field Password
-        JLabel lblPassHeader = new JLabel("Mật khẩu");
-        lblPassHeader.setFont(Theme.BODY_BOLD);
-        lblPassHeader.setForeground(Theme.DARK_TEXT);
-        lblPassHeader.setAlignmentX(Component.LEFT_ALIGNMENT);
+        txtPassword = new ModernPasswordField("Nhập mật khẩu từ 4 ký tự...", 20);
+        txtPassword.setPreferredSize(new Dimension(360, 40));
+        txtPassword.setFont(new Font(Theme.BODY.getFamily(), Font.PLAIN, 14));
+        gbc.gridy = 4;
+        gbc.insets = new Insets(0, 0, 2, 0);
+        formPanel.add(txtPassword, gbc);
 
-        txtPassword = new ModernPasswordField("Nhập mật khẩu...", 15);
-        txtPassword.setMaximumSize(new Dimension(360, 42));
-        txtPassword.setAlignmentX(Component.LEFT_ALIGNMENT);
-
+        // Error Password
         lblPassError = new JLabel(" ");
         lblPassError.setFont(Theme.SMALL_BOLD);
         lblPassError.setForeground(Theme.RED);
-        lblPassError.setAlignmentX(Component.LEFT_ALIGNMENT);
+        gbc.gridy = 5;
+        gbc.insets = new Insets(0, 2, 6, 0);
+        formPanel.add(lblPassError, gbc);
 
-        formPanel.add(lblPassHeader);
-        formPanel.add(Box.createVerticalStrut(4));
-        formPanel.add(txtPassword);
-        formPanel.add(Box.createVerticalStrut(2));
-        formPanel.add(lblPassError);
-        formPanel.add(Box.createVerticalStrut(8));
+        // Header Confirm Password (cho chế độ Đăng Ký)
+        lblConfirmHeader = new JLabel("Nhập lại mật khẩu");
+        lblConfirmHeader.setFont(Theme.BODY_BOLD);
+        lblConfirmHeader.setForeground(new Color(0x33, 0x41, 0x55));
+        gbc.gridy = 6;
+        gbc.insets = new Insets(0, 0, 3, 0);
+        formPanel.add(lblConfirmHeader, gbc);
 
-        // Thông báo lỗi chung từ Server
+        // Field Confirm Password
+        txtConfirmPassword = new ModernPasswordField("Xác nhận lại mật khẩu...", 20);
+        txtConfirmPassword.setPreferredSize(new Dimension(360, 40));
+        txtConfirmPassword.setFont(new Font(Theme.BODY.getFamily(), Font.PLAIN, 14));
+        gbc.gridy = 7;
+        gbc.insets = new Insets(0, 0, 2, 0);
+        formPanel.add(txtConfirmPassword, gbc);
+
+        // Error Confirm Password
+        lblConfirmError = new JLabel(" ");
+        lblConfirmError.setFont(Theme.SMALL_BOLD);
+        lblConfirmError.setForeground(Theme.RED);
+        gbc.gridy = 8;
+        gbc.insets = new Insets(0, 2, 4, 0);
+        formPanel.add(lblConfirmError, gbc);
+
+        // Thông báo toàn cục
         lblGlobalMessage = new JLabel(" ", SwingConstants.CENTER);
         lblGlobalMessage.setFont(Theme.BODY_BOLD);
         lblGlobalMessage.setForeground(Theme.RED);
-        lblGlobalMessage.setAlignmentX(Component.CENTER_ALIGNMENT);
-        formPanel.add(lblGlobalMessage);
+        lblGlobalMessage.setPreferredSize(new Dimension(360, 20));
+        gbc.gridy = 9;
+        gbc.insets = new Insets(0, 0, 2, 0);
+        formPanel.add(lblGlobalMessage, gbc);
+
+        // Mặc định ẩn ô Nhập lại mật khẩu khi ở chế độ Đăng Nhập
+        lblConfirmHeader.setVisible(false);
+        txtConfirmPassword.setVisible(false);
+        lblConfirmError.setVisible(false);
 
         card.add(formPanel, BorderLayout.CENTER);
 
-        // 4. FOOTER (Submit Button)
-        JPanel footerPanel = new JPanel(new BorderLayout());
+        // ==========================================
+        // 3. FOOTER (Action Button với Gradient / Hiệu ứng nổi bật)
+        // ==========================================
+        JPanel footerPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 0, 0));
         footerPanel.setOpaque(false);
-        footerPanel.setBorder(new EmptyBorder(8, 0, 0, 0));
+        footerPanel.setBorder(new EmptyBorder(4, 0, 4, 0));
 
-        btnSubmit = new ModernButton("ĐĂNG NHẬP", ModernButton.Style.PRIMARY);
-        btnSubmit.setPreferredSize(new Dimension(360, 44));
-        btnSubmit.setFont(Theme.SUBTITLE);
+        btnSubmit = new ModernButton("VÀO ĐẤU TRƯỜNG", ModernButton.Style.PRIMARY);
+        btnSubmit.setPreferredSize(new Dimension(368, 46));
+        btnSubmit.setFont(new Font(Theme.SUBTITLE.getFamily(), Font.BOLD, 15));
+        btnSubmit.setCornerRadius(12);
         btnSubmit.addActionListener(e -> handleSubmit());
 
-        footerPanel.add(btnSubmit, BorderLayout.CENTER);
+        footerPanel.add(btnSubmit);
         card.add(footerPanel, BorderLayout.SOUTH);
 
-        // Bắt sự kiện phím Enter
+        // Lắng nghe phím Enter
         KeyAdapter enterSubmit = new KeyAdapter() {
             @Override
             public void keyPressed(KeyEvent e) {
@@ -171,30 +279,64 @@ public class AuthScreen extends JPanel {
         };
         txtUsername.addKeyListener(enterSubmit);
         txtPassword.addKeyListener(enterSubmit);
+        txtConfirmPassword.addKeyListener(enterSubmit);
 
         // Đặt Card vào trung tâm màn hình
-        add(card);
+        GridBagConstraints centerGbc = new GridBagConstraints();
+        centerGbc.gridx = 0;
+        centerGbc.gridy = 0;
+        centerGbc.anchor = GridBagConstraints.CENTER;
+        add(card, centerGbc);
     }
 
-    private JButton createTabButton(String text, boolean active) {
-        JButton btn = new JButton(text);
-        btn.setFont(Theme.BODY_BOLD);
-        btn.setFocusPainted(false);
-        btn.setBorderPainted(false);
-        btn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-        applyTabStyle(btn, active);
-        return btn;
-    }
+    private class TabButton extends JButton {
+        private boolean active;
 
-    private void applyTabStyle(JButton btn, boolean active) {
-        if (active) {
-            btn.setBackground(Theme.BLUE);
-            btn.setForeground(Theme.WHITE);
-            btn.setOpaque(true);
-        } else {
-            btn.setBackground(Theme.OFF_WHITE);
-            btn.setForeground(Theme.MUTED_GRAY);
-            btn.setOpaque(true);
+        public TabButton(String text, boolean active) {
+            super(text);
+            this.active = active;
+            setFont(new Font(Theme.BODY_BOLD.getFamily(), Font.BOLD, 13));
+            setFocusPainted(false);
+            setBorderPainted(false);
+            setContentAreaFilled(false);
+            setOpaque(false);
+            setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+            updateStyle();
+        }
+
+        public void setActive(boolean active) {
+            this.active = active;
+            updateStyle();
+            repaint();
+        }
+
+        public boolean isActive() {
+            return active;
+        }
+
+        private void updateStyle() {
+            if (active) {
+                setForeground(currentMode == Mode.LOGIN ? Theme.BLUE : Theme.PURPLE);
+            } else {
+                setForeground(new Color(0x64, 0x74, 0x8B));
+            }
+        }
+
+        @Override
+        protected void paintComponent(Graphics g) {
+            Graphics2D g2 = (Graphics2D) g.create();
+            Theme.setupAntiAliasing(g2);
+            int w = getWidth();
+            int h = getHeight();
+            if (active) {
+                // Nền trắng bo góc nổi lên giống tab capsule
+                g2.setColor(Theme.WHITE);
+                g2.fill(new RoundRectangle2D.Float(1, 1, w - 2, h - 2, 14, 14));
+                g2.setColor(new Color(0, 0, 0, 20));
+                g2.draw(new RoundRectangle2D.Float(1, 1, w - 2, h - 2, 14, 14));
+            }
+            g2.dispose();
+            super.paintComponent(g);
         }
     }
 
@@ -202,17 +344,28 @@ public class AuthScreen extends JPanel {
         this.currentMode = mode;
         clearErrors();
 
-        if (mode == Mode.LOGIN) {
-            applyTabStyle(tabLogin, true);
-            applyTabStyle(tabRegister, false);
-            btnSubmit.setText("ĐĂNG NHẬP");
+        boolean isLogin = (mode == Mode.LOGIN);
+        tabLogin.setActive(isLogin);
+        tabRegister.setActive(!isLogin);
+
+        // Bật / tắt ô Nhập lại mật khẩu để người dùng thấy rõ sự khác biệt giữa 2 chế độ
+        lblConfirmHeader.setVisible(!isLogin);
+        txtConfirmPassword.setVisible(!isLogin);
+        lblConfirmError.setVisible(!isLogin);
+
+        if (isLogin) {
+            btnSubmit.setText("VÀO ĐẤU TRƯỜNG");
             btnSubmit.setStyle(ModernButton.Style.PRIMARY);
+            card.setPreferredSize(new Dimension(460, 540));
         } else {
-            applyTabStyle(tabLogin, false);
-            applyTabStyle(tabRegister, true);
-            btnSubmit.setText("TẠO TÀI KHOẢN");
+            btnSubmit.setText("TẠO TÀI KHOẢN MỚI");
             btnSubmit.setStyle(ModernButton.Style.ACCENT_PURPLE);
+            card.setPreferredSize(new Dimension(460, 610));
         }
+        card.revalidate();
+        card.repaint();
+        revalidate();
+        repaint();
     }
 
     public void setOnLogin(BiConsumer<String, String> handler) {
@@ -226,34 +379,37 @@ public class AuthScreen extends JPanel {
     public void setLoading(boolean loading) {
         txtUsername.setEnabled(!loading);
         txtPassword.setEnabled(!loading);
+        txtConfirmPassword.setEnabled(!loading);
         btnSubmit.setEnabled(!loading);
         tabLogin.setEnabled(!loading);
         tabRegister.setEnabled(!loading);
 
         if (loading) {
-            btnSubmit.setText("Đang xử lý...");
+            btnSubmit.setText("Đang kết nối máy chủ...");
         } else {
-            btnSubmit.setText(currentMode == Mode.LOGIN ? "ĐĂNG NHẬP" : "TẠO TÀI KHOẢN");
+            btnSubmit.setText(currentMode == Mode.LOGIN ? "VÀO ĐẤU TRƯỜNG" : "TẠO TÀI KHOẢN MỚI");
         }
     }
 
     public void showError(String message) {
         setLoading(false);
         lblGlobalMessage.setForeground(Theme.RED);
-        lblGlobalMessage.setText(message);
+        lblGlobalMessage.setText(message != null ? message : "Đã xảy ra lỗi");
     }
 
     public void showSuccess(String message) {
         setLoading(false);
         lblGlobalMessage.setForeground(Theme.GREEN);
-        lblGlobalMessage.setText(message);
+        lblGlobalMessage.setText(message != null ? message : "Thành công!");
     }
 
     public void clearErrors() {
         txtUsername.setError(false);
         txtPassword.setError(false);
+        txtConfirmPassword.setError(false);
         lblUserError.setText(" ");
         lblPassError.setText(" ");
+        lblConfirmError.setText(" ");
         lblGlobalMessage.setText(" ");
     }
 
@@ -263,6 +419,7 @@ public class AuthScreen extends JPanel {
 
         String user = txtUsername.getText().trim();
         String pass = new String(txtPassword.getPassword());
+        String confirmPass = new String(txtConfirmPassword.getPassword());
 
         boolean hasError = false;
 
@@ -277,7 +434,7 @@ public class AuthScreen extends JPanel {
             hasError = true;
         } else if (!user.matches("[A-Za-z0-9_]+")) {
             txtUsername.setError(true);
-            lblUserError.setText("Chỉ cho phép chữ, số và ký tự _");
+            lblUserError.setText("Chỉ cho phép chữ cái, chữ số và dấu _");
             hasError = true;
         }
 
@@ -290,6 +447,19 @@ public class AuthScreen extends JPanel {
             txtPassword.setError(true);
             lblPassError.setText("Mật khẩu phải từ 4 ký tự trở lên");
             hasError = true;
+        }
+
+        // 3. Validate Confirm Password (chỉ khi Đăng Ký)
+        if (currentMode == Mode.REGISTER) {
+            if (confirmPass.isEmpty()) {
+                txtConfirmPassword.setError(true);
+                lblConfirmError.setText("Vui lòng xác nhận lại mật khẩu");
+                hasError = true;
+            } else if (!pass.equals(confirmPass)) {
+                txtConfirmPassword.setError(true);
+                lblConfirmError.setText("Mật khẩu xác nhận không khớp!");
+                hasError = true;
+            }
         }
 
         if (hasError) {
@@ -320,22 +490,30 @@ public class AuthScreen extends JPanel {
 
     public void clearPassword() {
         txtPassword.setText("");
+        txtConfirmPassword.setText("");
     }
 
     /**
-     * Reset toàn bộ trạng thái AuthScreen để dùng lại sau logout.
-     * Xóa input fields, thông báo lỗi, loading state.
+     * Reset toàn bộ trạng thái AuthScreen để dùng lại sau logout hoặc disconnect.
+     * Xóa sạch input fields, thông báo lỗi, loading state và đưa layout về trạng thái chuẩn xác.
      */
     public void resetForReuse() {
         txtUsername.setText("");
         txtPassword.setText("");
+        txtConfirmPassword.setText("");
         lblUserError.setText(" ");
         lblPassError.setText(" ");
+        lblConfirmError.setText(" ");
         lblGlobalMessage.setText(" ");
         txtUsername.setError(false);
         txtPassword.setError(false);
+        txtConfirmPassword.setError(false);
         setLoading(false);
         setMode(Mode.LOGIN);
+        card.revalidate();
+        card.repaint();
+        revalidate();
+        repaint();
     }
 }
 

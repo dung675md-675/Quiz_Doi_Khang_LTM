@@ -27,7 +27,7 @@ public class LeaderboardPanel extends JPanel {
         title.setForeground(Theme.BLUE);
         title.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-        JLabel desc = new JLabel("Xếp theo: Điểm số giảm dần → Điểm TB đối thủ → Tốc độ thắng");
+        JLabel desc = new JLabel("Xếp theo: Điểm số tích lũy & tỉ lệ chiến thắng");
         desc.setFont(Theme.SMALL);
         desc.setForeground(Theme.MUTED_GRAY);
         desc.setAlignmentX(Component.LEFT_ALIGNMENT);
@@ -38,7 +38,7 @@ public class LeaderboardPanel extends JPanel {
         add(header, BorderLayout.NORTH);
 
         // TABLE
-        String[] columnNames = {"Hạng", "Người chơi", "Rank", "Điểm số", "TB Đối thủ", "Tốc độ", "Tổng trận", "Tỉ lệ thắng"};
+        String[] columnNames = {"Hạng", "Người chơi", "Rank", "Điểm số", "Tổng trận", "Tỉ lệ thắng"};
         model = new DefaultTableModel(columnNames, 0) {
             @Override
             public boolean isCellEditable(int row, int column) {
@@ -65,8 +65,6 @@ public class LeaderboardPanel extends JPanel {
         table.getColumnModel().getColumn(0).setPreferredWidth(60);
         table.getColumnModel().getColumn(4).setCellRenderer(centerRenderer);
         table.getColumnModel().getColumn(5).setCellRenderer(centerRenderer);
-        table.getColumnModel().getColumn(6).setCellRenderer(centerRenderer);
-        table.getColumnModel().getColumn(7).setCellRenderer(centerRenderer);
 
         // Rank column styled purple
         DefaultTableCellRenderer rankRenderer = new DefaultTableCellRenderer() {
@@ -120,7 +118,7 @@ public class LeaderboardPanel extends JPanel {
                 };
                 // Format: name;score;avgOpp;speed;totalMatches;winRate;rankLabel
                 String rankLabel = f.length >= 7 ? f[6] : quiz.Rank.fromScore(parseScore(f[1])).getDisplayName();
-                model.addRow(new Object[]{rankText, f[0], rankLabel, f[1] + " pts", f[2], f[3], f[4], f[5]});
+                model.addRow(new Object[]{rankText, f[0], rankLabel, f[1] + " pts", f[4], f[5]});
                 rank++;
             }
         }

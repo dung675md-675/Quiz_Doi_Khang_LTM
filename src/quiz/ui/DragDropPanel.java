@@ -93,16 +93,20 @@ public class DragDropPanel extends JPanel {
 
         // Kiểm tra xem câu hỏi có chứa ký tự chỗ trống "____" không
         if (text != null && text.matches(".*_{2,}.*")) {
-            // Tách câu thành các phân đoạn theo chỗ trống ____
+            // Tách câu thành các phân đoạn theo chỗ trống ____, sau đó tách từng từ để tự động xuống dòng mượt mà
             String[] parts = text.split("_{2,}", -1);
             int slotIdx = 0;
             for (int i = 0; i < parts.length; i++) {
                 String part = parts[i].trim();
                 if (!part.isEmpty()) {
-                    JLabel lblPart = new JLabel(part);
-                    lblPart.setFont(Theme.TITLE);
-                    lblPart.setForeground(Theme.WHITE);
-                    sentencePanel.add(lblPart);
+                    for (String word : part.split("\\s+")) {
+                        if (!word.isEmpty()) {
+                            JLabel lblWord = new JLabel(word);
+                            lblWord.setFont(Theme.TITLE);
+                            lblWord.setForeground(Theme.WHITE);
+                            sentencePanel.add(lblWord);
+                        }
+                    }
                 }
                 if (i < parts.length - 1 && slotIdx < slotList.size()) {
                     sentencePanel.add(slotList.get(slotIdx++));
@@ -256,6 +260,9 @@ public class DragDropPanel extends JPanel {
         private final int slotWidth;
         private final int slotHeight;
         private boolean hovering = false;
+        private boolean dragOver = false;
+        private float snapScale = 1.0f;
+        private javax.swing.Timer snapTimer;
 
         BlankSlot(String id, int width, int height) {
             this.blankId = id;
@@ -303,14 +310,44 @@ public class DragDropPanel extends JPanel {
             return filledText;
         }
 
+        public void setDragOver(boolean over) {
+            this.dragOver = over;
+            repaint();
+        }
+
         public void fill(String text) {
             this.filledText = text;
+            this.dragOver = false;
+            triggerSnapEffect();
+        }
+
+        private void triggerSnapEffect() {
+            if (snapTimer != null && snapTimer.isRunning()) {
+                snapTimer.stop();
+            }
+            final long start = System.currentTimeMillis();
+            snapScale = 1.24f;
+            snapTimer = new javax.swing.Timer(16, e -> {
+                long elapsed = System.currentTimeMillis() - start;
+                if (elapsed >= 240) {
+                    snapScale = 1.0f;
+                    snapTimer.stop();
+                    repaint();
+                } else {
+                    float p = elapsed / 240.0f;
+                    snapScale = 1.0f + 0.24f * (1.0f - p) * (float) Math.cos(p * Math.PI);
+                    repaint();
+                }
+            });
+            snapTimer.start();
             repaint();
         }
 
         public String clear() {
             String old = filledText;
             filledText = null;
+            dragOver = false;
+            snapScale = 1.0f;
             repaint();
             return old;
         }
@@ -321,10 +358,18 @@ public class DragDropPanel extends JPanel {
             Theme.setupAntiAliasing(g2);
             int w = getWidth(), h = getHeight();
 
+            if (snapScale != 1.0f) {
+                int cx = w / 2, cy = h / 2;
+                g2.translate(cx, cy);
+                g2.scale(snapScale, snapScale);
+                g2.translate(-cx, -cy);
+            }
+
             if (filledText != null) {
-                // YÊU CẦU ĐẶC BIỆT: "khi đáp án gắn vào chỗ trống, dù đúng hoặc sai
-                // sẽ chỉ hiện text và mất đi khung hình chữ nhật ở sau"
-                // -> KHÔNG VẼ KHUNG HÌNH CHỮ NHẬT NỀN PHÍA SAU, CHỈ HIỆN TEXT
+                if (dragOver || snapScale > 1.03f) {
+                    g2.setColor(new Color(0x38, 0xBD, 0xF8, 45));
+                    g2.fill(new RoundRectangle2D.Float(2, 2, w - 4, h - 4, 8, 8));
+                }
 
                 g2.setFont(Theme.BODY_BOLD);
                 FontMetrics fm = g2.getFontMetrics();
@@ -332,26 +377,29 @@ public class DragDropPanel extends JPanel {
                 int ty = (h - fm.getHeight()) / 2 + fm.getAscent();
 
                 // Text vàng/cyan nổi bật trên nền tối
-                g2.setColor(hovering ? Theme.YELLOW : new Color(0x67, 0xE8, 0xF9));
+                g2.setColor((hovering || dragOver) ? Theme.YELLOW : new Color(0x67, 0xE8, 0xF9));
                 g2.drawString(filledText, tx, ty);
 
                 // Đường gạch chân tinh tế định vị vị trí chỗ trống
-                g2.setColor(hovering ? Theme.YELLOW : new Color(0x38, 0xBD, 0xF8, 180));
-                g2.setStroke(new BasicStroke(2.0f));
+                g2.setColor((hovering || dragOver) ? Theme.YELLOW : new Color(0x38, 0xBD, 0xF8, 210));
+                g2.setStroke(new BasicStroke(snapScale > 1.02f ? 3.0f : 2.0f));
                 g2.drawLine(4, h - 3, w - 4, h - 3);
             } else {
-                // Trạng thái trống: khung viền nét đứt kèm placeholder ____
-                g2.setColor(new Color(0x1E, 0x29, 0x3B, hovering ? 200 : 140));
+                // Trạng thái trống: khung viền nét đứt kèm hiệu ứng phát sáng khi kéo qua (dragOver)
+                Color fillBg = dragOver
+                        ? new Color(0x02, 0x84, 0xC7, 160)
+                        : new Color(0x1E, 0x29, 0x3B, hovering ? 200 : 140);
+                g2.setColor(fillBg);
                 g2.fill(new RoundRectangle2D.Float(0, 0, w, h, 8, 8));
 
-                g2.setColor(hovering ? Theme.BLUE : new Color(255, 255, 255, 70));
-                g2.setStroke(new BasicStroke(2f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND, 10, new float[]{6, 4}, 0));
+                g2.setColor(dragOver ? new Color(0x38, 0xBD, 0xF8) : (hovering ? Theme.BLUE : new Color(255, 255, 255, 70)));
+                g2.setStroke(new BasicStroke(dragOver ? 2.5f : 2f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND, 10, new float[]{6, 4}, 0));
                 g2.draw(new RoundRectangle2D.Float(1, 1, w - 2, h - 2, 8, 8));
 
                 g2.setFont(Theme.BODY);
-                g2.setColor(new Color(255, 255, 255, hovering ? 180 : 90));
+                g2.setColor(dragOver ? Theme.WHITE : new Color(255, 255, 255, hovering ? 180 : 90));
                 FontMetrics fm = g2.getFontMetrics();
-                String placeholder = "____";
+                String placeholder = dragOver ? "⬇ Thả" : "____";
                 int tx = (w - fm.stringWidth(placeholder)) / 2;
                 int ty = (h - fm.getHeight()) / 2 + fm.getAscent();
                 g2.drawString(placeholder, tx, ty);
@@ -555,7 +603,18 @@ public class DragDropPanel extends JPanel {
         SlotDropHandler(BlankSlot slot) { this.slot = slot; }
 
         @Override
+        public void dragEnter(DropTargetDragEvent dtde) {
+            slot.setDragOver(true);
+        }
+
+        @Override
+        public void dragExit(DropTargetEvent dte) {
+            slot.setDragOver(false);
+        }
+
+        @Override
         public void drop(DropTargetDropEvent dtde) {
+            slot.setDragOver(false);
             try {
                 dtde.acceptDrop(DnDConstants.ACTION_MOVE);
                 Transferable t = dtde.getTransferable();

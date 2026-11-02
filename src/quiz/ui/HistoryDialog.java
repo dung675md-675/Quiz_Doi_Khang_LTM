@@ -13,25 +13,36 @@ public class HistoryDialog extends JDialog {
 
     public HistoryDialog(Frame owner, String currentUserName, String rawData) {
         super(owner, "Lịch Sử Thi Đấu — Quiz Arena", true);
-        setSize(680, 500);
+        setSize(700, 520);
         setLocationRelativeTo(owner);
         setLayout(new BorderLayout());
-        getContentPane().setBackground(Theme.OFF_WHITE);
+        getContentPane().setBackground(Theme.BG_LIGHT);
 
-        // 1. HEADER
-        JPanel header = new JPanel();
+        // 1. MODERN HEADER
+        JPanel header = new JPanel() {
+            @Override
+            protected void paintComponent(Graphics g) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                Theme.setupAntiAliasing(g2);
+                int w = getWidth();
+                int h = getHeight();
+                GradientPaint gp = new GradientPaint(0, 0, Theme.INDIGO, w, h, Theme.PURPLE);
+                g2.setPaint(gp);
+                g2.fillRect(0, 0, w, h);
+                g2.dispose();
+            }
+        };
         header.setLayout(new BoxLayout(header, BoxLayout.Y_AXIS));
-        header.setBackground(Theme.WHITE);
-        header.setBorder(new EmptyBorder(18, 24, 14, 24));
+        header.setBorder(new EmptyBorder(18, 24, 16, 24));
 
-        JLabel title = new JLabel(" LỊCH SỬ THI ĐẤU");
+        JLabel title = new JLabel("LỊCH SỬ THI ĐẤU 1V1");
         title.setFont(Theme.TITLE);
-        title.setForeground(Theme.BLUE);
+        title.setForeground(Theme.WHITE);
         title.setAlignmentX(Component.LEFT_ALIGNMENT);
 
         JLabel desc = new JLabel("Danh sách các trận đối kháng 1v1 bạn đã tham gia gần đây");
         desc.setFont(Theme.SMALL);
-        desc.setForeground(Theme.MUTED_GRAY);
+        desc.setForeground(new Color(255, 255, 255, 220));
         desc.setAlignmentX(Component.LEFT_ALIGNMENT);
 
         header.add(title);
@@ -43,11 +54,13 @@ public class HistoryDialog extends JDialog {
         JPanel listPanel = new JPanel();
         listPanel.setLayout(new BoxLayout(listPanel, BoxLayout.Y_AXIS));
         listPanel.setOpaque(false);
-        listPanel.setBorder(new EmptyBorder(12, 20, 12, 20));
+        listPanel.setBorder(new EmptyBorder(14, 20, 14, 20));
 
         if (rawData == null || rawData.isBlank()) {
             ModernCard emptyCard = new ModernCard(new BorderLayout());
-            emptyCard.setCardPadding(30, 20, 30, 20);
+            emptyCard.setCardBackground(Theme.WHITE);
+            emptyCard.setBorderColor(Theme.BORDER_LIGHT);
+            emptyCard.setCardPadding(36, 20, 36, 20);
             JLabel lblEmpty = new JLabel("Chưa có trận đấu nào được ghi lại.", SwingConstants.CENTER);
             lblEmpty.setFont(Theme.BODY_BOLD);
             lblEmpty.setForeground(Theme.MUTED_GRAY);
@@ -65,15 +78,16 @@ public class HistoryDialog extends JDialog {
 
         JScrollPane scrollPane = new JScrollPane(listPanel);
         scrollPane.setBorder(null);
-        scrollPane.getViewport().setBackground(Theme.OFF_WHITE);
+        scrollPane.getViewport().setBackground(Theme.BG_LIGHT);
         scrollPane.getVerticalScrollBar().setUnitIncrement(14);
         add(scrollPane, BorderLayout.CENTER);
 
         // 3. FOOTER
         JPanel footer = new JPanel(new FlowLayout(FlowLayout.RIGHT, 20, 12));
         footer.setBackground(Theme.WHITE);
+        footer.setBorder(BorderFactory.createMatteBorder(1, 0, 0, 0, Theme.BORDER_LIGHT));
         ModernButton btnClose = new ModernButton("Đóng", ModernButton.Style.PRIMARY);
-        btnClose.setPreferredSize(new Dimension(100, 36));
+        btnClose.setPreferredSize(new Dimension(110, 38));
         btnClose.addActionListener(e -> {
             SoundManager.playClick();
             dispose();
@@ -84,9 +98,11 @@ public class HistoryDialog extends JDialog {
 
     private JPanel createMatchHistoryCard(String currentUser, String line) {
         ModernCard card = new ModernCard(new BorderLayout(12, 0));
-        card.setCardPadding(12, 16, 12, 16);
-        card.setCornerRadius(10);
-        card.setMaximumSize(new Dimension(Integer.MAX_VALUE, 65));
+        card.setCardBackground(Theme.WHITE);
+        card.setBorderColor(Theme.BORDER_LIGHT);
+        card.setCardPadding(14, 18, 14, 18);
+        card.setCornerRadius(12);
+        card.setMaximumSize(new Dimension(Integer.MAX_VALUE, 68));
 
         // Format: topic / level / setId: left leftCorrect–rightCorrect right → winner
         try {
@@ -126,15 +142,15 @@ public class HistoryDialog extends JDialog {
 
             if (winner.equalsIgnoreCase("HÒA")) {
                 outcomeText = "HÒA";
-                outcomeBg = new Color(0xFE, 0xF9, 0xC3);
-                outcomeFg = Theme.YELLOW.darker();
+                outcomeBg = Theme.AMBER_LIGHT;
+                outcomeFg = Theme.AMBER.darker();
             } else if (winner.equalsIgnoreCase(currentUser)) {
                 outcomeText = "THẮNG";
-                outcomeBg = new Color(0xDC, 0xFD, 0xD7);
-                outcomeFg = Theme.GREEN;
+                outcomeBg = Theme.EMERALD_LIGHT;
+                outcomeFg = Theme.EMERALD_DARK;
             } else {
                 outcomeText = "THUA";
-                outcomeBg = new Color(0xFF, 0xE4, 0xE8);
+                outcomeBg = new Color(0xFF, 0xE4, 0xE6);
                 outcomeFg = Theme.RED;
             }
 

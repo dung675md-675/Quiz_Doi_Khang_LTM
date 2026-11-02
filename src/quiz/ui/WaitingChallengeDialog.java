@@ -22,26 +22,42 @@ public class WaitingChallengeDialog extends JDialog {
         this.targetUser = targetUser;
         this.onCancel = onCancel;
 
-        setSize(420, 360);
+        setSize(440, 400);
         setLocationRelativeTo(owner);
         setResizable(false);
         setLayout(new BorderLayout());
-        getContentPane().setBackground(Theme.WHITE);
+        getContentPane().setBackground(Theme.BG_LIGHT);
 
-        // 1. HEADER
-        JPanel header = new JPanel();
+        // 1. HEADER WITH MODERN GRADIENT
+        JPanel header = new JPanel() {
+            @Override
+            protected void paintComponent(Graphics g) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                Theme.setupAntiAliasing(g2);
+                int w = getWidth();
+                int h = getHeight();
+                GradientPaint gp = new GradientPaint(0, 0, Theme.BLUE, w, h, Theme.INDIGO);
+                g2.setPaint(gp);
+                g2.fillRect(0, 0, w, h);
+
+                g2.setColor(new Color(255, 255, 255, 20));
+                g2.fillOval(-15, -15, 80, 80);
+                g2.fillOval(w - 60, h - 45, 90, 90);
+                g2.dispose();
+            }
+        };
         header.setLayout(new BoxLayout(header, BoxLayout.Y_AXIS));
-        header.setBackground(Theme.WHITE);
-        header.setBorder(new EmptyBorder(22, 24, 10, 24));
+        header.setBorder(new EmptyBorder(18, 20, 16, 20));
+        header.setPreferredSize(new Dimension(440, 85));
 
         JLabel title = new JLabel("ĐÃ GỬI LỜI MỜI THÁCH ĐẤU", SwingConstants.CENTER);
         title.setFont(Theme.TITLE);
-        title.setForeground(Theme.BLUE);
+        title.setForeground(Theme.WHITE);
         title.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        JLabel subtitle = new JLabel("Đang chờ " + targetUser + " phản hồi...", SwingConstants.CENTER);
-        subtitle.setFont(Theme.BODY);
-        subtitle.setForeground(Theme.MUTED_GRAY);
+        JLabel subtitle = new JLabel("Đang đợi đối thủ " + targetUser + " chấp nhận lời mời...", SwingConstants.CENTER);
+        subtitle.setFont(Theme.SMALL);
+        subtitle.setForeground(new Color(255, 255, 255, 220));
         subtitle.setAlignmentX(Component.CENTER_ALIGNMENT);
 
         header.add(title);
@@ -53,13 +69,14 @@ public class WaitingChallengeDialog extends JDialog {
         JPanel body = new JPanel();
         body.setLayout(new BoxLayout(body, BoxLayout.Y_AXIS));
         body.setOpaque(false);
-        body.setBorder(new EmptyBorder(10, 28, 10, 28));
+        body.setBorder(new EmptyBorder(16, 24, 14, 24));
 
         // Card đối thủ
         ModernCard userCard = new ModernCard(new BorderLayout(14, 0));
-        userCard.setCardBackground(Theme.OFF_WHITE);
+        userCard.setCardBackground(Theme.WHITE);
+        userCard.setBorderColor(Theme.BORDER_LIGHT);
         userCard.setCardPadding(12, 16, 12, 16);
-        userCard.setMaximumSize(new Dimension(Integer.MAX_VALUE, 60));
+        userCard.setMaximumSize(new Dimension(Integer.MAX_VALUE, 66));
 
         JPanel avatar = new JPanel(new GridBagLayout()) {
             @Override
@@ -72,7 +89,7 @@ public class WaitingChallengeDialog extends JDialog {
                 super.paintComponent(g);
             }
         };
-        avatar.setPreferredSize(new Dimension(38, 38));
+        avatar.setPreferredSize(new Dimension(40, 40));
         avatar.setOpaque(false);
         String letter = (targetUser != null && !targetUser.isEmpty()) ? targetUser.substring(0, 1).toUpperCase() : "?";
         JLabel lblLetter = new JLabel(letter);
@@ -102,8 +119,9 @@ public class WaitingChallengeDialog extends JDialog {
         body.add(Box.createVerticalStrut(14));
 
         ModernCard infoCard = new ModernCard(new GridLayout(2, 2, 8, 8));
-        infoCard.setCardBackground(Theme.OFF_WHITE);
-        infoCard.setCardPadding(14, 16, 14, 16);
+        infoCard.setCardBackground(Theme.WHITE);
+        infoCard.setBorderColor(Theme.BORDER_LIGHT);
+        infoCard.setCardPadding(12, 16, 12, 16);
         infoCard.setMaximumSize(new Dimension(Integer.MAX_VALUE, 70));
 
         JLabel lblTopicTitle = new JLabel("Chủ đề:");
@@ -123,7 +141,7 @@ public class WaitingChallengeDialog extends JDialog {
         infoCard.add(lblLevelTitle);
         infoCard.add(lblLevelVal);
         body.add(infoCard);
-        body.add(Box.createVerticalStrut(18));
+        body.add(Box.createVerticalStrut(16));
 
         lblTimer = new JLabel("Lời mời sẽ hết hạn sau: " + remainingSeconds + "s", SwingConstants.CENTER);
         lblTimer.setFont(Theme.BODY_BOLD);
@@ -135,18 +153,22 @@ public class WaitingChallengeDialog extends JDialog {
         progressBar = new JProgressBar(0, 30);
         progressBar.setValue(30);
         progressBar.setForeground(Theme.BLUE);
-        progressBar.setPreferredSize(new Dimension(320, 6));
-        progressBar.setMaximumSize(new Dimension(Integer.MAX_VALUE, 6));
+        progressBar.setBackground(new Color(0xE2, 0xE8, 0xF0));
+        progressBar.setPreferredSize(new Dimension(340, 8));
+        progressBar.setMaximumSize(new Dimension(Integer.MAX_VALUE, 8));
         progressBar.setBorder(null);
         body.add(progressBar);
 
         add(body, BorderLayout.CENTER);
 
         // 3. FOOTER
-        JPanel footer = new JPanel(new FlowLayout(FlowLayout.CENTER, 0, 16));
+        JPanel footer = new JPanel(new FlowLayout(FlowLayout.CENTER, 0, 14));
         footer.setBackground(Theme.WHITE);
+        footer.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createMatteBorder(1, 0, 0, 0, Theme.BORDER_LIGHT),
+                new EmptyBorder(4, 0, 4, 0)));
 
-        ModernButton btnCancel = new ModernButton("Đóng / Hủy Chờ", ModernButton.Style.SECONDARY);
+        ModernButton btnCancel = new ModernButton("Hủy Lời Mời", ModernButton.Style.SECONDARY);
         btnCancel.setPreferredSize(new Dimension(160, 40));
         btnCancel.addActionListener(e -> {
             SoundManager.playClick();

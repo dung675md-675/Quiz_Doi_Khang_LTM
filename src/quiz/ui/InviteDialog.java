@@ -36,26 +36,43 @@ public class InviteDialog extends JDialog {
         } catch (NumberFormatException ignored) {}
         this.durationSec = dur;
 
-        setSize(460, 480);
+        setSize(480, 520);
         setLocationRelativeTo(owner);
         setResizable(false);
         setLayout(new BorderLayout());
-        getContentPane().setBackground(Theme.WHITE);
+        getContentPane().setBackground(Theme.BG_LIGHT);
 
-        // 1. HEADER
-        JPanel header = new JPanel();
+        // 1. MODERN HEADER WITH VIBRANT GRADIENT
+        JPanel header = new JPanel() {
+            @Override
+            protected void paintComponent(Graphics g) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                Theme.setupAntiAliasing(g2);
+                int w = getWidth();
+                int h = getHeight();
+                GradientPaint gp = new GradientPaint(0, 0, Theme.INDIGO, w, h, Theme.PURPLE);
+                g2.setPaint(gp);
+                g2.fillRect(0, 0, w, h);
+
+                // Subtle circular ambient deco
+                g2.setColor(new Color(255, 255, 255, 20));
+                g2.fillOval(-20, -20, 100, 100);
+                g2.fillOval(w - 70, h - 50, 120, 120);
+                g2.dispose();
+            }
+        };
         header.setLayout(new BoxLayout(header, BoxLayout.Y_AXIS));
-        header.setBackground(Theme.WHITE);
-        header.setBorder(new EmptyBorder(22, 24, 10, 24));
+        header.setBorder(new EmptyBorder(20, 24, 18, 24));
+        header.setPreferredSize(new Dimension(480, 95));
 
-        JLabel title = new JLabel("LỜI MỜI THÁCH ĐẤU", SwingConstants.CENTER);
+        JLabel title = new JLabel("LỜI MỜI THÁCH ĐẤU 1V1", SwingConstants.CENTER);
         title.setFont(Theme.TITLE);
-        title.setForeground(Theme.PURPLE);
+        title.setForeground(Theme.WHITE);
         title.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        JLabel subtitle = new JLabel("Bạn nhận được lời mời so tài trực tiếp 1v1", SwingConstants.CENTER);
+        JLabel subtitle = new JLabel("Đối thủ đang đợi bạn bước vào võ đài so tài kiến thức!", SwingConstants.CENTER);
         subtitle.setFont(Theme.SMALL);
-        subtitle.setForeground(Theme.MUTED_GRAY);
+        subtitle.setForeground(new Color(255, 255, 255, 220));
         subtitle.setAlignmentX(Component.CENTER_ALIGNMENT);
 
         header.add(title);
@@ -67,13 +84,14 @@ public class InviteDialog extends JDialog {
         JPanel body = new JPanel();
         body.setLayout(new BoxLayout(body, BoxLayout.Y_AXIS));
         body.setOpaque(false);
-        body.setBorder(new EmptyBorder(10, 28, 10, 28));
+        body.setBorder(new EmptyBorder(16, 24, 14, 24));
 
         // Card đối thủ
         ModernCard userCard = new ModernCard(new BorderLayout(14, 0));
-        userCard.setCardBackground(Theme.OFF_WHITE);
+        userCard.setCardBackground(Theme.WHITE);
+        userCard.setBorderColor(Theme.BORDER_LIGHT);
         userCard.setCardPadding(12, 16, 12, 16);
-        userCard.setMaximumSize(new Dimension(Integer.MAX_VALUE, 60));
+        userCard.setMaximumSize(new Dimension(Integer.MAX_VALUE, 66));
 
         JPanel avatar = new JPanel(new GridBagLayout()) {
             @Override
@@ -86,7 +104,7 @@ public class InviteDialog extends JDialog {
                 super.paintComponent(g);
             }
         };
-        avatar.setPreferredSize(new Dimension(38, 38));
+        avatar.setPreferredSize(new Dimension(42, 42));
         avatar.setOpaque(false);
         String letter = (fromUser != null && !fromUser.isEmpty()) ? fromUser.substring(0, 1).toUpperCase() : "?";
         JLabel lblLetter = new JLabel(letter);
@@ -111,17 +129,19 @@ public class InviteDialog extends JDialog {
         body.add(Box.createVerticalStrut(14));
 
         // Card chi tiết trận đấu
-        ModernCard matchCard = new ModernCard(new GridLayout(4, 2, 8, 8));
+        ModernCard matchCard = new ModernCard(new GridLayout(2, 2, 12, 12));
+        matchCard.setCardBackground(Theme.WHITE);
+        matchCard.setBorderColor(Theme.BORDER_LIGHT);
         matchCard.setCardPadding(14, 18, 14, 18);
-        matchCard.setMaximumSize(new Dimension(Integer.MAX_VALUE, 130));
+        matchCard.setMaximumSize(new Dimension(Integer.MAX_VALUE, 110));
 
-        addDetailRow(matchCard, "Chủ đề:", topic, Theme.BLUE);
-        addDetailRow(matchCard, "Mức độ:", level, Theme.PURPLE);
-        addDetailRow(matchCard, "Số câu hỏi:", "10 câu", Theme.DARK_TEXT);
-        addDetailRow(matchCard, "Thời gian làm bài:", durationSec + " giây", Theme.DARK_TEXT);
+        addDetailCell(matchCard, "Chủ đề", topic, Theme.BLUE);
+        addDetailCell(matchCard, "Mức độ", level, Theme.PURPLE);
+        addDetailCell(matchCard, "Số lượng", "10 câu hỏi", Theme.DARK_TEXT);
+        addDetailCell(matchCard, "Thời gian", durationSec + " giây", Theme.DARK_TEXT);
 
         body.add(matchCard);
-        body.add(Box.createVerticalStrut(14));
+        body.add(Box.createVerticalStrut(16));
 
         // Đếm ngược 30 giây
         lblCountdown = new JLabel("Tự động từ chối sau: " + remainingSeconds + "s", SwingConstants.CENTER);
@@ -129,13 +149,14 @@ public class InviteDialog extends JDialog {
         lblCountdown.setForeground(Theme.DARK_TEXT);
         lblCountdown.setAlignmentX(Component.CENTER_ALIGNMENT);
         body.add(lblCountdown);
-        body.add(Box.createVerticalStrut(6));
+        body.add(Box.createVerticalStrut(8));
 
         progressBar = new JProgressBar(0, 30);
         progressBar.setValue(30);
         progressBar.setForeground(Theme.PURPLE);
-        progressBar.setPreferredSize(new Dimension(360, 6));
-        progressBar.setMaximumSize(new Dimension(Integer.MAX_VALUE, 6));
+        progressBar.setBackground(new Color(0xE2, 0xE8, 0xF0));
+        progressBar.setPreferredSize(new Dimension(380, 8));
+        progressBar.setMaximumSize(new Dimension(Integer.MAX_VALUE, 8));
         progressBar.setBorder(null);
         body.add(progressBar);
 
@@ -144,16 +165,18 @@ public class InviteDialog extends JDialog {
         // 3. FOOTER (Accept / Decline buttons)
         JPanel footer = new JPanel(new GridLayout(1, 2, 14, 0));
         footer.setBackground(Theme.WHITE);
-        footer.setBorder(new EmptyBorder(10, 28, 22, 28));
+        footer.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createMatteBorder(1, 0, 0, 0, Theme.BORDER_LIGHT),
+                new EmptyBorder(14, 24, 16, 24)));
 
-        ModernButton btnDecline = new ModernButton("Từ chối", ModernButton.Style.DANGER);
+        ModernButton btnDecline = new ModernButton("Từ Chối", ModernButton.Style.DANGER);
         btnDecline.setFont(Theme.BODY_BOLD);
-        btnDecline.setPreferredSize(new Dimension(160, 44));
+        btnDecline.setPreferredSize(new Dimension(170, 44));
         btnDecline.addActionListener(e -> decide(false));
 
-        ModernButton btnAccept = new ModernButton("Chấp nhận", ModernButton.Style.SUCCESS);
+        ModernButton btnAccept = new ModernButton("Chấp Nhận", ModernButton.Style.EMERALD);
         btnAccept.setFont(Theme.BODY_BOLD);
-        btnAccept.setPreferredSize(new Dimension(160, 44));
+        btnAccept.setPreferredSize(new Dimension(170, 44));
         btnAccept.addActionListener(e -> decide(true));
 
         footer.add(btnDecline);
@@ -181,16 +204,23 @@ public class InviteDialog extends JDialog {
         countdownTimer.start();
     }
 
-    private void addDetailRow(JPanel p, String label, String value, Color valColor) {
-        JLabel l = new JLabel(label);
-        l.setFont(Theme.BODY);
-        l.setForeground(Theme.MUTED_GRAY);
-        p.add(l);
+    private void addDetailCell(JPanel p, String label, String value, Color valColor) {
+        JPanel cell = new JPanel();
+        cell.setLayout(new BoxLayout(cell, BoxLayout.Y_AXIS));
+        cell.setOpaque(false);
 
-        JLabel v = new JLabel(value);
+        JLabel l = new JLabel(label);
+        l.setFont(Theme.SMALL_BOLD);
+        l.setForeground(Theme.MUTED_GRAY);
+        cell.add(l);
+        cell.add(Box.createVerticalStrut(2));
+
+        JLabel v = new JLabel(value != null ? value : "-");
         v.setFont(Theme.BODY_BOLD);
         v.setForeground(valColor);
-        p.add(v);
+        cell.add(v);
+
+        p.add(cell);
     }
 
     private void decide(boolean accept) {
