@@ -11,20 +11,12 @@ import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 
 /**
- * DragDropPanel — Panel chuyên biệt cho câu hỏi dạng DRAG_AND_DROP.
- *
- * Tính năng chính:
- * 1. Câu hỏi dạng text với các chỗ trống dạng ____, độ dài vừa đủ để chứa đáp án dài nhất.
- * 2. Các đáp án đặt ở khu vực bên dưới câu hỏi (vị trí tương đương 4 lựa chọn A-B-C-D).
- * 3. Mỗi đáp án là chip hình chữ nhật bo tròn góc nổi khối 3D (hiệu ứng bóng đổ, viền bevel, highlight).
- * 4. Kéo chuột để gắn đáp án vào ô trống:
- *    - Khi gắn vào ô: CHỈ hiện text, mất khung hình chữ nhật phía sau (không nền khung).
- *    - Khi kéo chip ra khỏi ô trống: chip quay về khu vực đáp án ban đầu.
- *    - Khi kéo chip mới lên ô đã có chip: chip mới thay thế, chip cũ quay về khu vực ban đầu.
- * 5. Hỗ trợ thao tác click nhanh:
- *    - Click vào chip dưới pool -> tự động bay vào ô trống đầu tiên chưa điền.
- *    - Click vào ô trống đã điền -> gỡ text ra, trả chip về pool.
- * 6. Kiểm tra vị trí chính xác của từng chỗ trống, hỗ trợ đáp án thừa (distractor).
+ * DragDropPanel — Panel chuyên biệt cho câu hỏi dạng DRAG_AND_DROP:
+ * - Câu hỏi kèm các ô trống (BlankSlot) phong cách glassmorphic, có viền nét đứt và hiệu ứng phát sáng khi kéo qua.
+ * - Các chip đáp án (AnswerChip) hình chữ nhật bo tròn nổi khối 3D phong cách Kahoot, có tay cầm kéo thả (drag handle)
+ *   và hiệu ứng hover nổi nhẹ.
+ * - Hiệu ứng nảy đàn hồi (elastic bounce) và phản hồi xúc giác trực quan khi thả chip thành công vào ô trống.
+ * - Hỗ trợ cả kéo thả lẫn nhấp nhanh (click to slot, click to return).
  */
 public class DragDropPanel extends JPanel {
 
@@ -67,8 +59,8 @@ public class DragDropPanel extends JPanel {
         }
 
         FontMetrics fm = getFontMetrics(Theme.BODY_BOLD);
-        int slotWidth = Math.max(88, fm.stringWidth(longestStr) + 28);
-        int slotHeight = Math.max(38, fm.getHeight() + 12);
+        int slotWidth = Math.max(96, fm.stringWidth(longestStr) + 32);
+        int slotHeight = Math.max(42, fm.getHeight() + 16);
 
         // ========================================================
         // 2. KHỞI TẠO CÁC Ô TRỐNG (BlankSlots)
@@ -93,7 +85,6 @@ public class DragDropPanel extends JPanel {
 
         // Kiểm tra xem câu hỏi có chứa ký tự chỗ trống "____" không
         if (text != null && text.matches(".*_{2,}.*")) {
-            // Tách câu thành các phân đoạn theo chỗ trống ____, sau đó tách từng từ để tự động xuống dòng mượt mà
             String[] parts = text.split("_{2,}", -1);
             int slotIdx = 0;
             for (int i = 0; i < parts.length; i++) {
@@ -113,7 +104,6 @@ public class DragDropPanel extends JPanel {
                 }
             }
         } else {
-            // Nếu câu hỏi không chứa "____", hiển thị text câu hỏi ở trên và các ô trống ở dưới
             JPanel compound = new JPanel(new BorderLayout(0, 10));
             compound.setOpaque(false);
 
@@ -146,13 +136,30 @@ public class DragDropPanel extends JPanel {
         // ========================================================
         // 4. TẠO KHU VỰC ĐÁP ÁN (Bottom Chip Pool)
         // ========================================================
-        chipPoolPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 14, 12));
+        chipPoolPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 16, 14)) {
+            @Override
+            protected void paintComponent(Graphics g) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                Theme.setupAntiAliasing(g2);
+                int w = getWidth();
+                int h = getHeight();
+
+                // Nền card kính mờ tối màu
+                g2.setColor(new Color(0x0F, 0x17, 0x2A, 190));
+                g2.fill(new RoundRectangle2D.Float(2, 2, w - 4, h - 4, 16, 16));
+
+                // Viền tinh tế
+                g2.setColor(new Color(255, 255, 255, 25));
+                g2.setStroke(new BasicStroke(1.2f));
+                g2.draw(new RoundRectangle2D.Float(2, 2, w - 4, h - 4, 16, 16));
+
+                g2.dispose();
+                super.paintComponent(g);
+            }
+        };
         chipPoolPanel.setOpaque(false);
         chipPoolPanel.setPreferredSize(new Dimension(800, 160));
-        chipPoolPanel.setBorder(BorderFactory.createCompoundBorder(
-            BorderFactory.createMatteBorder(1, 0, 0, 0, new Color(255, 255, 255, 25)),
-            new EmptyBorder(12, 16, 12, 16)
-        ));
+        chipPoolPanel.setBorder(new EmptyBorder(12, 16, 12, 16));
 
         // Tập hợp tất cả các chip (đáp án đúng + đáp án thừa)
         Set<String> allAnswers = new LinkedHashSet<>();
@@ -165,7 +172,6 @@ public class DragDropPanel extends JPanel {
             }
         }
 
-        // Shuffle thứ tự các chip đáp án để tăng tính thử thách
         List<String> shuffled = new ArrayList<>(allAnswers);
         Collections.shuffle(shuffled);
 
@@ -178,7 +184,6 @@ public class DragDropPanel extends JPanel {
         // Đăng ký drop target cho chip pool để chip quay về khi kéo thả ra ngoài
         new DropTarget(chipPoolPanel, DnDConstants.ACTION_MOVE, new PoolDropHandler());
 
-        // Lắp ráp mặc định nếu panel được sử dụng độc lập
         add(sentencePanel, BorderLayout.CENTER);
         add(chipPoolPanel, BorderLayout.SOUTH);
     }
@@ -208,6 +213,17 @@ public class DragDropPanel extends JPanel {
         for (Map.Entry<String, String> entry : question.fillMap().entrySet()) {
             String userAns = userMap.get(entry.getKey());
             if (userAns == null || !userAns.trim().equalsIgnoreCase(entry.getValue().trim())) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /** Trả về true nếu người chơi đã điền đầy đủ tất cả các ô trống */
+    public boolean isAllFilled() {
+        if (slotMap == null || slotMap.isEmpty()) return false;
+        for (BlankSlot slot : slotMap.values()) {
+            if (slot.getFilledText() == null || slot.getFilledText().isBlank()) {
                 return false;
             }
         }
@@ -272,15 +288,12 @@ public class DragDropPanel extends JPanel {
             setPreferredSize(new Dimension(slotWidth, slotHeight));
             setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
 
-            // Đăng ký nhận drop kéo thả
             new DropTarget(this, DnDConstants.ACTION_MOVE, new SlotDropHandler(this));
 
-            // Đăng ký kéo từ slot (để dời hoặc gỡ chip ra)
             DragSource.getDefaultDragSource().createDefaultDragGestureRecognizer(
                 this, DnDConstants.ACTION_MOVE, new SlotDragGestureListener(this)
             );
 
-            // Click trực tiếp vào ô đã điền -> gỡ đáp án trả về pool
             addMouseListener(new MouseAdapter() {
                 @Override
                 public void mouseEntered(MouseEvent e) {
@@ -296,7 +309,7 @@ public class DragDropPanel extends JPanel {
 
                 @Override
                 public void mouseClicked(MouseEvent e) {
-                    if (filledText != null) {
+                    if (filledText != null && isEnabled()) {
                         String old = clear();
                         returnChipToPool(old);
                         SoundManager.playPop();
@@ -366,43 +379,81 @@ public class DragDropPanel extends JPanel {
             }
 
             if (filledText != null) {
-                if (dragOver || snapScale > 1.03f) {
-                    g2.setColor(new Color(0x38, 0xBD, 0xF8, 45));
-                    g2.fill(new RoundRectangle2D.Float(2, 2, w - 4, h - 4, 8, 8));
-                }
+                // ĐÃ ĐIỀN: Hiển thị như một thẻ pill màu xanh nổi bật
+                Color pillBg = (hovering || dragOver) ? new Color(0x1D, 0x4E, 0xD8) : new Color(0x1E, 0x3A, 0x8A);
+                g2.setColor(pillBg);
+                g2.fill(new RoundRectangle2D.Float(2, 2, w - 4, h - 4, 10, 10));
+
+                // Viền phát sáng cyan
+                g2.setColor(new Color(0x38, 0xBD, 0xF8));
+                g2.setStroke(new BasicStroke(1.8f));
+                g2.draw(new RoundRectangle2D.Float(2, 2, w - 4, h - 4, 10, 10));
 
                 g2.setFont(Theme.BODY_BOLD);
                 FontMetrics fm = g2.getFontMetrics();
-                int tx = (w - fm.stringWidth(filledText)) / 2;
+                int textMaxW = w - 24;
+                String displayStr = filledText;
+                if (fm.stringWidth(displayStr) > textMaxW) {
+                    while (displayStr.length() > 3 && fm.stringWidth(displayStr + "…") > textMaxW) {
+                        displayStr = displayStr.substring(0, displayStr.length() - 1);
+                    }
+                    displayStr += "…";
+                }
+                int tx = (w - fm.stringWidth(displayStr)) / 2;
                 int ty = (h - fm.getHeight()) / 2 + fm.getAscent();
 
-                // Text vàng/cyan nổi bật trên nền tối
-                g2.setColor((hovering || dragOver) ? Theme.YELLOW : new Color(0x67, 0xE8, 0xF9));
-                g2.drawString(filledText, tx, ty);
+                g2.setColor(Color.WHITE);
+                g2.drawString(displayStr, tx, ty);
 
-                // Đường gạch chân tinh tế định vị vị trí chỗ trống
-                g2.setColor((hovering || dragOver) ? Theme.YELLOW : new Color(0x38, 0xBD, 0xF8, 210));
-                g2.setStroke(new BasicStroke(snapScale > 1.02f ? 3.0f : 2.0f));
-                g2.drawLine(4, h - 3, w - 4, h - 3);
+                // Ký hiệu ✕ nhỏ ở góc phải khi hover báo hiệu nhấp để gỡ
+                if (hovering) {
+                    g2.setColor(new Color(255, 255, 255, 180));
+                    g2.setStroke(new BasicStroke(1.8f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+                    int cx = w - 10, cy = 10;
+                    g2.drawLine(cx - 3, cy - 3, cx + 3, cy + 3);
+                    g2.drawLine(cx + 3, cy - 3, cx - 3, cy + 3);
+                }
             } else {
-                // Trạng thái trống: khung viền nét đứt kèm hiệu ứng phát sáng khi kéo qua (dragOver)
-                Color fillBg = dragOver
-                        ? new Color(0x02, 0x84, 0xC7, 160)
-                        : new Color(0x1E, 0x29, 0x3B, hovering ? 200 : 140);
-                g2.setColor(fillBg);
-                g2.fill(new RoundRectangle2D.Float(0, 0, w, h, 8, 8));
+                // CHƯA ĐIỀN: Ô trống nét đứt kính mờ kèm hiệu ứng phát sáng khi kéo qua (dragOver)
+                if (dragOver) {
+                    // Khi kéo qua: bừng sáng màu cyan
+                    g2.setColor(new Color(0x02, 0x84, 0xC7, 210));
+                    g2.fill(new RoundRectangle2D.Float(1, 1, w - 2, h - 2, 10, 10));
 
-                g2.setColor(dragOver ? new Color(0x38, 0xBD, 0xF8) : (hovering ? Theme.BLUE : new Color(255, 255, 255, 70)));
-                g2.setStroke(new BasicStroke(dragOver ? 2.5f : 2f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND, 10, new float[]{6, 4}, 0));
-                g2.draw(new RoundRectangle2D.Float(1, 1, w - 2, h - 2, 8, 8));
+                    // Hào quang
+                    g2.setColor(new Color(0x38, 0xBD, 0xF8, 80));
+                    g2.setStroke(new BasicStroke(4.5f));
+                    g2.draw(new RoundRectangle2D.Float(1, 1, w - 2, h - 2, 10, 10));
 
-                g2.setFont(Theme.BODY);
-                g2.setColor(dragOver ? Theme.WHITE : new Color(255, 255, 255, hovering ? 180 : 90));
-                FontMetrics fm = g2.getFontMetrics();
-                String placeholder = dragOver ? "⬇ Thả" : "____";
-                int tx = (w - fm.stringWidth(placeholder)) / 2;
-                int ty = (h - fm.getHeight()) / 2 + fm.getAscent();
-                g2.drawString(placeholder, tx, ty);
+                    // Viền solid cyan
+                    g2.setColor(new Color(0x38, 0xBD, 0xF8));
+                    g2.setStroke(new BasicStroke(2.4f));
+                    g2.draw(new RoundRectangle2D.Float(1, 1, w - 2, h - 2, 10, 10));
+
+                    g2.setFont(Theme.BODY_BOLD);
+                    g2.setColor(Color.WHITE);
+                    FontMetrics fm = g2.getFontMetrics();
+                    String dropMsg = "THẢ VÀO ĐÂY";
+                    int tx = (w - fm.stringWidth(dropMsg)) / 2;
+                    int ty = (h - fm.getHeight()) / 2 + fm.getAscent();
+                    g2.drawString(dropMsg, tx, ty);
+                } else {
+                    // Mặc định: Nền tối mờ & viền nét đứt
+                    g2.setColor(new Color(0x13, 0x1E, 0x33, hovering ? 210 : 160));
+                    g2.fill(new RoundRectangle2D.Float(1, 1, w - 2, h - 2, 10, 10));
+
+                    g2.setColor(hovering ? new Color(0x38, 0xBD, 0xF8) : new Color(255, 255, 255, 75));
+                    g2.setStroke(new BasicStroke(1.8f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND, 10, new float[]{6, 4}, 0));
+                    g2.draw(new RoundRectangle2D.Float(1.5f, 1.5f, w - 3, h - 3, 10, 10));
+
+                    g2.setFont(Theme.SMALL_BOLD);
+                    g2.setColor(new Color(255, 255, 255, hovering ? 190 : 100));
+                    FontMetrics fm = g2.getFontMetrics();
+                    String placeholder = "____";
+                    int tx = (w - fm.stringWidth(placeholder)) / 2;
+                    int ty = (h - fm.getHeight()) / 2 + fm.getAscent();
+                    g2.drawString(placeholder, tx, ty);
+                }
             }
             g2.dispose();
         }
@@ -421,12 +472,11 @@ public class DragDropPanel extends JPanel {
             this.text = text;
             setOpaque(false);
             FontMetrics fm = getFontMetrics(Theme.BODY_BOLD);
-            int w = Math.max(fm.stringWidth(text) + 36, 84);
-            int h = Math.max(fm.getHeight() + 16, 40);
+            int w = Math.max(fm.stringWidth(text) + 52, 96);
+            int h = 44;
             setPreferredSize(new Dimension(w, h));
             setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
 
-            // Đăng ký nhận diện cử chỉ kéo chuột
             DragSource.getDefaultDragSource().createDefaultDragGestureRecognizer(
                 this, DnDConstants.ACTION_MOVE, new ChipDragGestureListener(this)
             );
@@ -434,8 +484,10 @@ public class DragDropPanel extends JPanel {
             addMouseListener(new MouseAdapter() {
                 @Override
                 public void mouseEntered(MouseEvent e) {
-                    hovering = true;
-                    repaint();
+                    if (isEnabled() && isVisible()) {
+                        hovering = true;
+                        repaint();
+                    }
                 }
 
                 @Override
@@ -447,7 +499,6 @@ public class DragDropPanel extends JPanel {
                 @Override
                 public void mouseClicked(MouseEvent e) {
                     if (!isEnabled() || !isVisible()) return;
-                    // Click nhanh: Tự động đưa chip vào ô trống đầu tiên còn trống
                     for (BlankSlot slot : slotMap.values()) {
                         if (slot.getFilledText() == null) {
                             slot.fill(text);
@@ -488,42 +539,55 @@ public class DragDropPanel extends JPanel {
             int w = getWidth();
             int h = getHeight();
 
-            // YÊU CẦU: "đóng trong khung hình chữ nhật được bo tròn góc, làm nổi khối cho tôi"
-            // 1. Bóng đổ 3D mềm mại phía dưới
-            g2.setColor(new Color(0, 0, 0, 70));
+            int hoverLift = hovering ? -2 : 0;
+
+            // 1. Bóng đổ 3D mềm mại
+            g2.setColor(new Color(0, 0, 0, 50));
             g2.fill(new RoundRectangle2D.Float(2, 4, w - 4, h - 4, 14, 14));
 
             // 2. Chân đế vát bevel 3D tạo chiều sâu
-            Color baseRim = hovering ? new Color(0x1E, 0x40, 0xAF) : new Color(0x1E, 0x3A, 0x8A);
+            Color baseRim = hovering ? new Color(0x1D, 0x4E, 0xD8) : new Color(0x1E, 0x3A, 0x8A);
             g2.setColor(baseRim);
-            g2.fill(new RoundRectangle2D.Float(0, 2, w - 2, h - 3, 14, 14));
+            g2.fill(new RoundRectangle2D.Float(1, 2, w - 2, h - 3, 14, 14));
 
-            // 3. Mặt nút gradient nổi khối màu xanh sang trọng
-            Color topGrad = hovering ? new Color(0x60, 0xA5, 0xFA) : new Color(0x3B, 0x82, 0xF6);
-            Color botGrad = hovering ? new Color(0x3B, 0x82, 0xF6) : new Color(0x25, 0x63, 0xEB);
-            GradientPaint gp = new GradientPaint(0, 0, topGrad, 0, h - 5, botGrad);
+            // 3. Mặt chip gradient xanh hoàng gia nổi khối
+            int faceY = 1 + hoverLift;
+            int faceH = h - 4;
+            Color topGrad = hovering ? new Color(0x3B, 0x82, 0xF6) : new Color(0x25, 0x63, 0xEB);
+            Color botGrad = hovering ? new Color(0x25, 0x63, 0xEB) : new Color(0x1D, 0x4E, 0xD8);
+            GradientPaint gp = new GradientPaint(0, faceY, topGrad, 0, faceY + faceH, botGrad);
             g2.setPaint(gp);
-            g2.fill(new RoundRectangle2D.Float(0, 0, w - 2, h - 5, 14, 14));
+            g2.fill(new RoundRectangle2D.Float(1, faceY, w - 2, faceH, 14, 14));
 
-            // 4. Ánh sáng bóng gương nửa trên (Specular glass reflection)
-            g2.setColor(new Color(255, 255, 255, hovering ? 65 : 45));
-            g2.fill(new RoundRectangle2D.Float(1, 1, w - 4, (h - 6) / 2, 12, 12));
+            // 4. Ánh sáng bóng gương nửa trên (sheen)
+            g2.setColor(new Color(255, 255, 255, hovering ? 60 : 35));
+            g2.fill(new RoundRectangle2D.Float(2, faceY + 1, w - 4, faceH / 2, 12, 12));
 
-            // 5. Viền bo tương phản nổi bật
-            g2.setColor(new Color(0x93, 0xC5, 0xFD, hovering ? 230 : 160));
-            g2.setStroke(new BasicStroke(1.5f));
-            g2.draw(new RoundRectangle2D.Float(0.5f, 0.5f, w - 3, h - 5.5f, 14, 14));
+            // 5. Viền bo tương phản
+            g2.setColor(new Color(0x93, 0xC5, 0xFD, hovering ? 240 : 150));
+            g2.setStroke(new BasicStroke(hovering ? 1.8f : 1.2f));
+            g2.draw(new RoundRectangle2D.Float(1, faceY, w - 2, faceH, 14, 14));
 
-            // 6. Text chữ đậm sắc nét có đổ bóng 1px
+            // 6. Tay cầm kéo thả (Drag Handle: 6 chấm tròn Java2D ⋮⋮ ở bên trái)
+            int gripX = 10;
+            int gripCenterY = faceY + faceH / 2;
+            g2.setColor(new Color(255, 255, 255, hovering ? 190 : 120));
+            for (int col = 0; col < 2; col++) {
+                for (int row = -1; row <= 1; row++) {
+                    g2.fillOval(gripX + col * 4, gripCenterY + row * 5 - 1, 2, 2);
+                }
+            }
+
+            // 7. Văn bản chip đậm nét
             g2.setFont(Theme.BODY_BOLD);
             FontMetrics fm = g2.getFontMetrics();
-            int tx = (w - 2 - fm.stringWidth(text)) / 2;
-            int ty = ((h - 5) - fm.getHeight()) / 2 + fm.getAscent();
+            int tx = 22 + ((w - 22 - fm.stringWidth(text)) / 2);
+            int ty = faceY + (faceH - fm.getHeight()) / 2 + fm.getAscent();
 
-            g2.setColor(new Color(0, 0, 0, 80));
+            g2.setColor(new Color(0, 0, 0, 70));
             g2.drawString(text, tx + 1, ty + 1);
 
-            g2.setColor(Theme.WHITE);
+            g2.setColor(Color.WHITE);
             g2.drawString(text, tx, ty);
 
             g2.dispose();
@@ -552,7 +616,6 @@ public class DragDropPanel extends JPanel {
         String getSlotId() { return slotId; }
     }
 
-    /** Bắt đầu kéo từ chip pool */
     private class ChipDragGestureListener implements DragGestureListener {
         private final AnswerChip chip;
         ChipDragGestureListener(AnswerChip chip) { this.chip = chip; }
@@ -573,7 +636,6 @@ public class DragDropPanel extends JPanel {
         }
     }
 
-    /** Bắt đầu kéo từ ô trống đã điền */
     private class SlotDragGestureListener implements DragGestureListener {
         private final BlankSlot slot;
         SlotDragGestureListener(BlankSlot slot) { this.slot = slot; }
@@ -588,7 +650,6 @@ public class DragDropPanel extends JPanel {
                 @Override
                 public void dragDropEnd(DragSourceDropEvent e) {
                     if (!e.getDropSuccess()) {
-                        // Kéo ra ngoài mà không thả vào ô khác -> trả chip về pool
                         returnChipToPool(text);
                         notifyStateChanged();
                     }
@@ -597,7 +658,6 @@ public class DragDropPanel extends JPanel {
         }
     }
 
-    /** Xử lý thả vào ô trống BlankSlot */
     private class SlotDropHandler extends DropTargetAdapter {
         private final BlankSlot slot;
         SlotDropHandler(BlankSlot slot) { this.slot = slot; }
@@ -620,8 +680,6 @@ public class DragDropPanel extends JPanel {
                 Transferable t = dtde.getTransferable();
                 String text = (String) t.getTransferData(DataFlavor.stringFlavor);
 
-                // YÊU CẦU: "khi kéo 1 chip lên ô mà 1 chip khác đã được đặt, thì chip mới sẽ thay thế chip cũ"
-                // Nếu ô hiện tại đã có chip, đẩy chip cũ quay về pool
                 String oldText = slot.clear();
                 if (oldText != null && !oldText.equals(text)) {
                     returnChipToPool(oldText);
@@ -637,7 +695,6 @@ public class DragDropPanel extends JPanel {
         }
     }
 
-    /** Xử lý thả vào chip pool (trả chip về) */
     private class PoolDropHandler extends DropTargetAdapter {
         @Override
         public void drop(DropTargetDropEvent dtde) {
@@ -655,7 +712,6 @@ public class DragDropPanel extends JPanel {
         }
     }
 
-    /** Làm chip có nội dung text hiển thị lại trong pool */
     public void returnChipToPool(String text) {
         if (text == null) return;
         for (AnswerChip chip : allChips) {

@@ -110,6 +110,9 @@ public final class SoundManager {
             case "score_point", "point" -> playScorePoint();
             case "emote" -> playEmote();
             case "invite", "invite_alert" -> playInviteAlert();
+            case "tactical_attack", "attack" -> playTacticalAttack();
+            case "tactical_defend", "defend" -> playTacticalDefend();
+            case "tactical_star", "star" -> playTacticalStar();
             default -> sfxPool.submit(() -> playFile(soundId));
         }
     }
@@ -248,6 +251,40 @@ public final class SoundManager {
         sfxPool.submit(() -> {
             playTone(600, 40, 0.35 * sfxVolume, ToneShape.SMOOTH);
             playTone(950, 60, 0.4 * sfxVolume, ToneShape.DECAY);
+        });
+    }
+
+    // ==========================================
+    // KỸ NĂNG CHIẾN THUẬT (TACTICAL SFX)
+    // ==========================================
+
+    /** File âm thanh: sound_effect/tactical_attack.wav (hoặc .mp3) - Tiếng kiếm vung/chém */
+    public static void playTacticalAttack() {
+        if (sfxMuted) return;
+        sfxPool.submit(() -> {
+            if (!playFile("tactical_attack.wav") && !playFile("tactical_attack.mp3")) {
+                playTacticalAttackFallback();
+            }
+        });
+    }
+
+    /** File âm thanh: sound_effect/tactical_defend.wav (hoặc .mp3) - Tiếng va đập khiên kim loại */
+    public static void playTacticalDefend() {
+        if (sfxMuted) return;
+        sfxPool.submit(() -> {
+            if (!playFile("tactical_defend.wav") && !playFile("tactical_defend.mp3")) {
+                playTacticalDefendFallback();
+            }
+        });
+    }
+
+    /** File âm thanh: sound_effect/tactical_star.wav (hoặc .mp3) - Tiếng chuông ngôi sao lấp lánh */
+    public static void playTacticalStar() {
+        if (sfxMuted) return;
+        sfxPool.submit(() -> {
+            if (!playFile("tactical_star.wav") && !playFile("tactical_star.mp3")) {
+                playTacticalStarFallback();
+            }
         });
     }
 
@@ -645,6 +682,30 @@ public final class SoundManager {
         playTone(523, 50, 0.4 * sfxVolume, ToneShape.SMOOTH);
         sleep(10);
         playTone(659, 70, 0.45 * sfxVolume, ToneShape.DECAY);
+    }
+
+    private static void playTacticalAttackFallback() {
+        // Tiếng vung kiếm sắc bén (Frequency sweep cao xuống nhanh)
+        playTone(1350, 45, 0.45 * sfxVolume, ToneShape.SMOOTH);
+        sleep(10);
+        playTone(900, 65, 0.4 * sfxVolume, ToneShape.DECAY);
+    }
+
+    private static void playTacticalDefendFallback() {
+        // Tiếng khiên kim loại đanh thép (Âm trầm dội lực)
+        playTone(340, 50, 0.55 * sfxVolume, ToneShape.SMOOTH);
+        sleep(15);
+        playTone(220, 160, 0.5 * sfxVolume, ToneShape.DECAY);
+    }
+
+    private static void playTacticalStarFallback() {
+        // Tiếng chuông ngôi sao ngân vang (Arpeggio lấp lánh)
+        int[] starNotes = {784, 1046, 1318, 1568}; // G5, C6, E6, G6
+        int[] durations = {55, 65, 75, 160};
+        for (int i = 0; i < starNotes.length; i++) {
+            playTone(starNotes[i], durations[i], 0.4 * sfxVolume, ToneShape.SMOOTH);
+            sleep(18);
+        }
     }
 
     private static void sleep(int ms) {

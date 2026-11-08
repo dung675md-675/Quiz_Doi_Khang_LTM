@@ -85,12 +85,12 @@ public class TopicSelector extends JPanel {
 
         btnPrev.addActionListener(e -> {
             SoundManager.playClick();
-            scrollBy(-200);
+            scrollBy(-226);
         });
 
         btnNext.addActionListener(e -> {
             SoundManager.playClick();
-            scrollBy(200);
+            scrollBy(226);
         });
 
         navButtons.add(btnPrev);
@@ -102,8 +102,9 @@ public class TopicSelector extends JPanel {
         // ==========================================
         // 2. DANH SÁCH TOPIC CARDS CUỘN NGANG
         // ==========================================
-        cardsPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 14, 6));
+        cardsPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 14, 8));
         cardsPanel.setOpaque(false);
+        cardsPanel.setBorder(new EmptyBorder(2, 4, 6, 4));
 
         scrollPane = new JScrollPane(cardsPanel);
         scrollPane.setBorder(null);
@@ -111,17 +112,17 @@ public class TopicSelector extends JPanel {
         scrollPane.getViewport().setOpaque(false);
         scrollPane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_NEVER);
         scrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
-        scrollPane.getHorizontalScrollBar().setUnitIncrement(24);
+        scrollPane.getHorizontalScrollBar().setUnitIncrement(28);
 
         // Hỗ trợ cuộn ngang bằng chuột
         scrollPane.addMouseWheelListener(e -> {
-            int units = e.getUnitsToScroll() * 28;
+            int units = e.getUnitsToScroll() * 32;
             scrollBy(units);
         });
 
-        // Thiết lập chiều cao vùng thẻ (~178px đủ cho card 160px + padding thoải mái)
-        scrollPane.setPreferredSize(new Dimension(880, 178));
-        scrollPane.setMinimumSize(new Dimension(600, 178));
+        // Thiết lập chiều cao vùng thẻ (~204px đủ cho card 176px + lift hover + bóng đổ)
+        scrollPane.setPreferredSize(new Dimension(880, 204));
+        scrollPane.setMinimumSize(new Dimension(600, 204));
 
         add(scrollPane, BorderLayout.CENTER);
 

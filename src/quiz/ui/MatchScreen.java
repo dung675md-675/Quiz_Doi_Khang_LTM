@@ -37,7 +37,7 @@ public class MatchScreen extends JPanel {
     private final String level;
     private final String setId;
     private final int totalSeconds;
-    private final int perQuestionSeconds;
+    private int perQuestionSeconds;
     private final List<MatchQuestion> questions;
 
     private final Consumer<int[]> onSubmitListener;
@@ -45,11 +45,24 @@ public class MatchScreen extends JPanel {
     private BiConsumer<Integer, Integer> onAnswerListener;
     private Consumer<Integer> onQuestionChangeListener;
     private Consumer<String> onEmoteListener;
+    private Consumer<String> onTacticalActionListener;
+    private int attackRemaining = 1;
+    private int defendRemaining = 1;
+    private int starRemaining = 1;
+    private String currentTacticalAction = "NONE";
+    private String opponentTacticalAction = "NONE";
+    private final String[] myTacticalHistory = new String[10];
+    private final String[] oppTacticalHistory = new String[10];
+    private final String[] myOutcomeHistory = new String[10];
+    private final String[] oppOutcomeHistory = new String[10];
+    private final int[] myDeltaHistory = new int[10];
+    private final int[] oppDeltaHistory = new int[10];
 
     private int currentQuestionIndex = 0;
     private final int[] selectedAnswers = new int[10];
     private final boolean[] questionFinalized = new boolean[10];
     private final int[] questionTimeLeft = new int[10];
+    private final int[] questionDuration = new int[10];
     private boolean isSubmitted = false;
     private volatile boolean hasLeft = false;
 
@@ -94,11 +107,14 @@ public class MatchScreen extends JPanel {
     private final ModernButton btnFalse;
     private final JPanel fillInPanel;
     private final ModernFillInField txtFillInInput;
+    private final ModernButton btnSubmitFillIn;
     private final JLabel lblFillInCorrectAnswer;
     private final String[] userFillInAnswers = new String[10];
     private final JPanel questionCardCenter;
     private final JPanel dndQuestionContainer;
     private final JPanel bottomOptionsCard;
+    private final TacticalActionBar tacticalActionBar;
+    private final TacticalToastBanner tacticalToastBanner;
     private final JPanel dndPoolContainer;
     private DragDropPanel currentDragDropPanel = null;
     private final DragDropPanel[] dndPanels = new DragDropPanel[10];
@@ -176,15 +192,23 @@ public class MatchScreen extends JPanel {
         this.onLeaveListener = onLeaveListener;
 
         int qCount = (questions != null && !questions.isEmpty()) ? questions.size() : 10;
-        this.perQuestionSeconds = Math.max(5, this.totalSeconds / qCount);
-        this.currentQuestionTimeRemaining = this.perQuestionSeconds;
+        int defaultSec = Math.max(5, this.totalSeconds / qCount);
+        this.perQuestionSeconds = defaultSec;
 
         for (int i = 0; i < 10; i++) {
             selectedAnswers[i] = -1;
             userFillInAnswers[i] = "";
             dndPanels[i] = null;
-            questionTimeLeft[i] = this.perQuestionSeconds;
+            int qSec = defaultSec;
+            if (questions != null && i < questions.size()) {
+                qSec = getTimeLimitSeconds(questions.get(i).type());
+            }
+            questionDuration[i] = qSec;
+            questionTimeLeft[i] = qSec;
         }
+        int initialSec = questionDuration[0] > 0 ? questionDuration[0] : defaultSec;
+        this.perQuestionSeconds = initialSec;
+        this.currentQuestionTimeRemaining = initialSec;
 
         setLayout(new BorderLayout());
         setOpaque(true);
@@ -234,7 +258,10 @@ public class MatchScreen extends JPanel {
             badgeTopic.setToolTipText(topic);
         }
         badgesRow.add(badgeTopic);
-        badgesRow.add(new ModernBadge(level + " - Bộ " + setId, ModernBadge.Type.RANK));
+        String shortSet = level + (setId != null ? " • " + (setId.startsWith("EXAM-") ? setId.substring(5) : setId) : "");
+        ModernBadge badgeSet = new ModernBadge(shortSet, ModernBadge.Type.RANK);
+        badgeSet.setToolTipText("Cấp độ: " + level + " | Mã đề: " + setId);
+        badgesRow.add(badgeSet);
         badgePing = new ModernBadge("Ping: -- ms", ModernBadge.Type.READY);
         badgesRow.add(badgePing);
 
@@ -292,8 +319,8 @@ public class MatchScreen extends JPanel {
             }
         };
         tugOfWarBar.setOpaque(false);
-        tugOfWarBar.setPreferredSize(new Dimension(56, 6));
-        tugOfWarBar.setMaximumSize(new Dimension(56, 6));
+        tugOfWarBar.setPreferredSize(new Dimension(46, 6));
+        tugOfWarBar.setMaximumSize(new Dimension(46, 6));
         tugOfWarBar.setAlignmentX(Component.CENTER_ALIGNMENT);
         tugOfWarBar.setToolTipText("Tương quan điểm số trực tiếp giữa Bạn và Đối thủ");
 
@@ -304,20 +331,24 @@ public class MatchScreen extends JPanel {
         // Emote bubble containers
         myEmoteContainer = new JPanel(new FlowLayout(FlowLayout.CENTER, 0, 0));
         myEmoteContainer.setOpaque(false);
-        myEmoteContainer.setPreferredSize(new Dimension(36, 36));
+        myEmoteContainer.setPreferredSize(new Dimension(28, 28));
 
         opponentEmoteContainer = new JPanel(new FlowLayout(FlowLayout.CENTER, 0, 0));
         opponentEmoteContainer.setOpaque(false);
-        opponentEmoteContainer.setPreferredSize(new Dimension(36, 36));
+        opponentEmoteContainer.setPreferredSize(new Dimension(28, 28));
 
-        JPanel p1Row = new JPanel(new FlowLayout(FlowLayout.CENTER, 3, 0));
+        JPanel p1Row = new JPanel();
+        p1Row.setLayout(new BoxLayout(p1Row, BoxLayout.X_AXIS));
         p1Row.setOpaque(false);
         p1Row.add(myEmoteContainer);
+        p1Row.add(Box.createHorizontalStrut(2));
         p1Row.add(p1);
 
-        JPanel p2Row = new JPanel(new FlowLayout(FlowLayout.CENTER, 3, 0));
+        JPanel p2Row = new JPanel();
+        p2Row.setLayout(new BoxLayout(p2Row, BoxLayout.X_AXIS));
         p2Row.setOpaque(false);
         p2Row.add(p2);
+        p2Row.add(Box.createHorizontalStrut(2));
         p2Row.add(opponentEmoteContainer);
 
         GridBagConstraints gbc = new GridBagConstraints();
@@ -427,7 +458,14 @@ public class MatchScreen extends JPanel {
         rightSection.add(btnSoundSettings);
         topHud.add(rightSection, BorderLayout.EAST);
 
-        add(topHud, BorderLayout.NORTH);
+        tacticalToastBanner = new TacticalToastBanner();
+
+        JPanel topContainer = new JPanel(new BorderLayout());
+        topContainer.setOpaque(false);
+        topContainer.add(topHud, BorderLayout.NORTH);
+        topContainer.add(tacticalToastBanner, BorderLayout.SOUTH);
+
+        add(topContainer, BorderLayout.NORTH);
 
         // ==========================================
         // 2. QUESTION NAVIGATOR STRIP (Top Sub-bar)
@@ -451,7 +489,10 @@ public class MatchScreen extends JPanel {
         lblProgressSummary.setForeground(new Color(0xE2, 0xE8, 0xF0));
         navStrip.add(lblProgressSummary, BorderLayout.WEST);
 
-        JPanel navGrid = new JPanel(new FlowLayout(FlowLayout.CENTER, 6, 0));
+        // GridLayout(1, 10, 4, 0) bao dam 10 nut luon tren 1 hang, khong bao gio bi rot dong
+        JPanel navGrid = new JPanel(new GridLayout(1, 10, 4, 0));
+        navGrid.setPreferredSize(new Dimension(350, 28));
+        navGrid.setMaximumSize(new Dimension(380, 28));
         navGrid.setOpaque(false);
 
         for (int i = 0; i < 10; i++) {
@@ -464,7 +505,7 @@ public class MatchScreen extends JPanel {
                     int w = getWidth();
                     int h = getHeight();
 
-                    boolean isCurrent = (qIndex == currentQuestionIndex);
+                    boolean isCurrent = (qIndex == currentQuestionIndex) && !isSubmitted;
                     boolean isAnswered = (selectedAnswers[qIndex] != -1);
                     boolean isFinal = questionFinalized[qIndex];
                     boolean isHover = getModel().isRollover();
@@ -509,7 +550,8 @@ public class MatchScreen extends JPanel {
                     g2.dispose();
                 }
             };
-            btn.setPreferredSize(new Dimension(36, 30));
+            btn.setPreferredSize(new Dimension(32, 28));
+            btn.setMinimumSize(new Dimension(20, 24));
             btn.setFocusPainted(false);
             btn.setBorderPainted(false);
             btn.setContentAreaFilled(false);
@@ -526,7 +568,10 @@ public class MatchScreen extends JPanel {
             navButtons[i] = btn;
             navGrid.add(btn);
         }
-        navStrip.add(navGrid, BorderLayout.CENTER);
+        JPanel navGridWrapper = new JPanel(new FlowLayout(FlowLayout.CENTER, 0, 0));
+        navGridWrapper.setOpaque(false);
+        navGridWrapper.add(navGrid);
+        navStrip.add(navGridWrapper, BorderLayout.CENTER);
 
         JPanel oppProgPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 3));
         oppProgPanel.setOpaque(false);
@@ -574,7 +619,7 @@ public class MatchScreen extends JPanel {
             }
         };
         opponentProgressStrip.setOpaque(false);
-        opponentProgressStrip.setPreferredSize(new Dimension(145, 22));
+        opponentProgressStrip.setPreferredSize(new Dimension(112, 18));
         opponentProgressStrip.setToolTipText("Tiến độ 10 câu hỏi thời gian thực của đối thủ");
         oppProgPanel.add(opponentProgressStrip);
 
@@ -745,7 +790,7 @@ public class MatchScreen extends JPanel {
         tfPanel.add(btnTrue);
         tfPanel.add(btnFalse);
 
-        // Fill-in text input panel (Center rounded square / card)
+        // Fill-in text input panel (Center rounded square / card với ô nhập & nút gửi nổi bật)
         fillInPanel = new JPanel(new GridBagLayout());
         fillInPanel.setOpaque(false);
         fillInPanel.setPreferredSize(new Dimension(0, 176));
@@ -754,10 +799,35 @@ public class MatchScreen extends JPanel {
         fillInBox.setLayout(new BoxLayout(fillInBox, BoxLayout.Y_AXIS));
         fillInBox.setOpaque(false);
 
-        txtFillInInput = new ModernFillInField("Nhập đáp án (Nhấn Enter để chốt)");
-        txtFillInInput.setPreferredSize(new Dimension(540, 58));
-        txtFillInInput.setMaximumSize(new Dimension(540, 58));
-        txtFillInInput.setAlignmentX(Component.CENTER_ALIGNMENT);
+        // Hàng chứa ô nhập hiện đại & nút gửi đáp án nổi bật
+        JPanel fillInRow = new JPanel(new BorderLayout(10, 0));
+        fillInRow.setPreferredSize(new Dimension(540, 54));
+        fillInRow.setMaximumSize(new Dimension(620, 54));
+        fillInRow.setOpaque(false);
+
+        txtFillInInput = new ModernFillInField("Nhập đáp án (Nhấn Enter hoặc Gửi)...");
+        txtFillInInput.setPreferredSize(new Dimension(460, 56));
+        txtFillInInput.setMaximumSize(new Dimension(460, 56));
+
+        btnSubmitFillIn = new ModernButton("GỬI ĐÁP ÁN", ModernButton.Style.EMERALD);
+        btnSubmitFillIn.setPreferredSize(new Dimension(146, 56));
+        btnSubmitFillIn.setFont(Theme.BODY_BOLD);
+        btnSubmitFillIn.setCornerRadius(16);
+        btnSubmitFillIn.setEnabled(false);
+
+        btnSubmitFillIn.addActionListener(e -> {
+            if (!isRevealing && !isSubmitted) {
+                if (isAnimating && animTimer != null) {
+                    animTimer.stop();
+                    isAnimating = false;
+                    questionCard.setAnimState(1.0f, 0, 1.0f);
+                    txtFillInInput.setAnimScale(1.0f);
+                }
+                SoundManager.playClick();
+                submitFillInFromInput();
+            }
+        });
+
         txtFillInInput.addActionListener(e -> {
             if (!isRevealing && !isSubmitted) {
                 if (isAnimating && animTimer != null) {
@@ -770,14 +840,20 @@ public class MatchScreen extends JPanel {
                 submitFillInFromInput();
             }
         });
+
         txtFillInInput.getDocument().addDocumentListener(new javax.swing.event.DocumentListener() {
             private void update() {
                 if (currentQuestionIndex >= 0 && currentQuestionIndex < 10) {
-                    userFillInAnswers[currentQuestionIndex] = txtFillInInput.getText();
-                    if (!txtFillInInput.getText().trim().isEmpty()) {
+                    String typed = txtFillInInput.getText();
+                    userFillInAnswers[currentQuestionIndex] = typed;
+                    boolean hasText = !typed.trim().isEmpty();
+                    if (hasText) {
                         selectedAnswers[currentQuestionIndex] = 1;
                     } else {
                         selectedAnswers[currentQuestionIndex] = -1;
+                    }
+                    if (!isSubmitted && !questionFinalized[currentQuestionIndex]) {
+                        btnSubmitFillIn.setEnabled(hasText);
                     }
                     updateNavState();
                 }
@@ -787,15 +863,18 @@ public class MatchScreen extends JPanel {
             public void changedUpdate(javax.swing.event.DocumentEvent e) { update(); }
         });
 
+        fillInRow.add(txtFillInInput, BorderLayout.CENTER);
+        fillInRow.add(btnSubmitFillIn, BorderLayout.EAST);
+
         lblFillInCorrectAnswer = new JLabel("", SwingConstants.CENTER);
         lblFillInCorrectAnswer.setFont(Theme.BODY_BOLD);
         lblFillInCorrectAnswer.setForeground(new Color(0x86, 0xEF, 0xAC));
         lblFillInCorrectAnswer.setAlignmentX(Component.CENTER_ALIGNMENT);
-        lblFillInCorrectAnswer.setBorder(new EmptyBorder(8, 0, 0, 0));
+        lblFillInCorrectAnswer.setBorder(new EmptyBorder(10, 0, 0, 0));
         lblFillInCorrectAnswer.setVisible(false);
 
         fillInBox.add(Box.createVerticalGlue());
-        fillInBox.add(txtFillInInput);
+        fillInBox.add(fillInRow);
         fillInBox.add(lblFillInCorrectAnswer);
         fillInBox.add(Box.createVerticalGlue());
 
@@ -813,10 +892,18 @@ public class MatchScreen extends JPanel {
         dndPoolContainer.setOpaque(false);
         bottomOptionsCard.add(dndPoolContainer, "DND_POOL");
 
-        JPanel questionArea = new JPanel(new BorderLayout(0, 14));
+        tacticalActionBar = new TacticalActionBar();
+        tacticalActionBar.setOnActionListener(this::sendTacticalAction);
+
+        JPanel bottomStack = new JPanel(new BorderLayout(0, 10));
+        bottomStack.setOpaque(false);
+        bottomStack.add(tacticalActionBar, BorderLayout.NORTH);
+        bottomStack.add(bottomOptionsCard, BorderLayout.CENTER);
+
+        JPanel questionArea = new JPanel(new BorderLayout(0, 12));
         questionArea.setOpaque(false);
         questionArea.add(questionCard, BorderLayout.CENTER);
-        questionArea.add(bottomOptionsCard, BorderLayout.SOUTH);
+        questionArea.add(bottomStack, BorderLayout.SOUTH);
 
         centerWrapper.add(waitingBanner, BorderLayout.NORTH);
         centerWrapper.add(questionArea, BorderLayout.CENTER);
@@ -1134,6 +1221,9 @@ public class MatchScreen extends JPanel {
         if (tugOfWarBar != null) {
             tugOfWarBar.repaint();
         }
+        if (tacticalActionBar != null) {
+            tacticalActionBar.setPoints(getEffectivePoints());
+        }
     }
 
     public void setMyScore(int score) {
@@ -1146,6 +1236,9 @@ public class MatchScreen extends JPanel {
         }
         if (tugOfWarBar != null) {
             tugOfWarBar.repaint();
+        }
+        if (tacticalActionBar != null) {
+            tacticalActionBar.setPoints(getEffectivePoints());
         }
     }
 
@@ -1165,6 +1258,18 @@ public class MatchScreen extends JPanel {
 
     public int getOpponentScore() {
         return opponentScore;
+    }
+
+    public int getMyPoints() {
+        return myPoints;
+    }
+
+    public int getOpponentPoints() {
+        return opponentPoints;
+    }
+
+    public int getEffectivePoints() {
+        return Math.max(myPoints, (myScore >= 50 ? myScore : 0));
     }
 
     public void setOnAnswerListener(BiConsumer<Integer, Integer> listener) {
@@ -1192,15 +1297,16 @@ public class MatchScreen extends JPanel {
     }
 
     private JPanel createPlayerBadge(String name, boolean isMe, ScoreBadge badge) {
-        JPanel p = new JPanel(new FlowLayout(FlowLayout.CENTER, 6, 2)) {
+        // Su dung BorderLayout de dam bao Avatar, Ten va ScoreBadge luon tren 1 hang ngang, khong bao gio bi rot dong hoac bien dang
+        JPanel p = new JPanel(new BorderLayout(5, 0)) {
             @Override
             protected void paintComponent(Graphics g) {
                 Graphics2D g2 = (Graphics2D) g.create();
                 Theme.setupAntiAliasing(g2);
                 int w = getWidth();
                 int h = getHeight();
-                Color bg = isMe ? new Color(0x1E, 0x29, 0x3B, 175) : new Color(0x23, 0x1D, 0x3C, 175);
-                Color border = isMe ? new Color(0x38, 0xBD, 0xF8, 95) : new Color(0xE8, 0x79, 0xF9, 95);
+                Color bg = isMe ? new Color(0x1E, 0x29, 0x3B, 200) : new Color(0x23, 0x1D, 0x3C, 200);
+                Color border = isMe ? new Color(0x38, 0xBD, 0xF8, 120) : new Color(0xE8, 0x79, 0xF9, 120);
                 g2.setColor(bg);
                 g2.fill(new RoundRectangle2D.Float(0, 0, w, h, 16, 16));
                 g2.setColor(border);
@@ -1210,7 +1316,9 @@ public class MatchScreen extends JPanel {
             }
         };
         p.setOpaque(false);
-        p.setBorder(new EmptyBorder(1, 6, 1, 6));
+        p.setBorder(new EmptyBorder(2, 6, 2, 6));
+        p.setPreferredSize(new Dimension(190, 36));
+        p.setMinimumSize(new Dimension(140, 36));
 
         final String avatarId = isMe ? this.myAvatarId : this.opponentAvatarId;
 
@@ -1230,28 +1338,30 @@ public class MatchScreen extends JPanel {
                 g2.dispose();
             }
         };
-        avatar.setPreferredSize(new Dimension(34, 34));
+        avatar.setPreferredSize(new Dimension(30, 30));
+        avatar.setMinimumSize(new Dimension(30, 30));
         avatar.setOpaque(false);
 
         String rawName = (name != null) ? name : "Người chơi";
         String displayName = rawName;
-        if (displayName.length() > 15) {
-            displayName = displayName.substring(0, 14) + "...";
+        if (displayName.length() > 9) {
+            displayName = displayName.substring(0, 8) + "…";
         }
         String labelText = displayName + (isMe ? " (Bạn)" : "");
-        JLabel lblName = new JLabel(labelText);
+        JLabel lblName = new JLabel(labelText, SwingConstants.CENTER);
         lblName.setToolTipText(rawName + (isMe ? " (Bạn)" : ""));
         lblName.setFont(Theme.BODY_BOLD);
         lblName.setForeground(Theme.WHITE);
+        lblName.setBorder(new EmptyBorder(0, 3, 0, 3));
 
         if (isMe) {
-            p.add(avatar);
-            p.add(lblName);
-            p.add(badge);
+            p.add(avatar, BorderLayout.WEST);
+            p.add(lblName, BorderLayout.CENTER);
+            p.add(badge, BorderLayout.EAST);
         } else {
-            p.add(badge);
-            p.add(lblName);
-            p.add(avatar);
+            p.add(badge, BorderLayout.WEST);
+            p.add(lblName, BorderLayout.CENTER);
+            p.add(avatar, BorderLayout.EAST);
         }
         return p;
     }
@@ -1314,8 +1424,20 @@ public class MatchScreen extends JPanel {
                 SoundManager.playCountdown(currentQuestionIndex);
             }
 
+            // Tự động chốt đáp án trước khi hết giờ nếu người chơi đã điền/kéo thả đầy đủ mà chưa ấn nộp
+            if (currentQuestionTimeRemaining <= 1 && !questionFinalized[currentQuestionIndex]) {
+                syncCurrentAnswerInput();
+                if (selectedAnswers[currentQuestionIndex] != -1) {
+                    finishCurrentQuestion();
+                }
+            }
+
             if (currentQuestionTimeRemaining <= 0) {
                 stopCountdownTimer();
+                if (!questionFinalized[currentQuestionIndex]) {
+                    syncCurrentAnswerInput();
+                    finishCurrentQuestion();
+                }
                 revealAnswerAndAdvance();
             }
         });
@@ -1329,15 +1451,17 @@ public class MatchScreen extends JPanel {
     }
 
     private void updateTimerDisplay() {
+        int maxSec = (currentQuestionIndex >= 0 && currentQuestionIndex < questionDuration.length && questionDuration[currentQuestionIndex] > 0)
+                ? questionDuration[currentQuestionIndex] : perQuestionSeconds;
         lblTimer.setText(formatTime(currentQuestionTimeRemaining));
-        timeProgressBar.setMaximum(perQuestionSeconds);
+        timeProgressBar.setMaximum(maxSec);
         timeProgressBar.setValue(currentQuestionTimeRemaining);
         if (questionTimerBanner != null) {
-            questionTimerBanner.updateTime(currentQuestionTimeRemaining, perQuestionSeconds, false);
+            questionTimerBanner.updateTime(currentQuestionTimeRemaining, maxSec, false);
         }
 
-        int warnThreshold = Math.max(4, perQuestionSeconds / 2);
-        int dangerThreshold = Math.max(3, perQuestionSeconds / 4);
+        int warnThreshold = Math.max(3, maxSec / 2);
+        int dangerThreshold = Math.max(2, maxSec / 4);
         if (currentQuestionTimeRemaining <= dangerThreshold) {
             Color danger = new Color(0xF4, 0x3F, 0x5E);
             lblTimer.setForeground(danger);
@@ -1389,6 +1513,9 @@ public class MatchScreen extends JPanel {
         isRevealing = false;
         isAnimating = true;
         boolean isLockedNow = isSubmitted || questionFinalized[currentQuestionIndex];
+        if (tacticalActionBar != null && isLockedNow) {
+            tacticalActionBar.setQuestionLocked(true);
+        }
 
         MatchQuestion q = questions.get(currentQuestionIndex);
         lblQuestionIndex.setText("CÂU HỎI " + (currentQuestionIndex + 1) + " / " + questions.size());
@@ -1435,14 +1562,17 @@ public class MatchScreen extends JPanel {
         } else if (q.isFillIn()) {
             lblQuestionTypeBadge.setText("ĐIỀN TỪ");
             lblMultiSelectNotice.setVisible(false);
-            lblHint.setText("Nhập câu trả lời từ bàn phím và nhấn Enter hoặc Câu tiếp");
+            lblHint.setText("Nhập câu trả lời rồi nhấn GỬI ĐÁP ÁN hoặc Enter");
             currentDragDropPanel = null;
             txtQuestion.setText(q.text());
 
             txtFillInInput.resetReveal();
             txtFillInInput.setAnimScale(1.0f);
             txtFillInInput.setEnabled(!isLockedNow);
-            txtFillInInput.setText(userFillInAnswers[currentQuestionIndex] != null ? userFillInAnswers[currentQuestionIndex] : "");
+            String savedFill = userFillInAnswers[currentQuestionIndex] != null ? userFillInAnswers[currentQuestionIndex] : "";
+            txtFillInInput.setText(savedFill);
+            btnSubmitFillIn.setText(isLockedNow ? "ĐÃ GỬI" : "GỬI ĐÁP ÁN");
+            btnSubmitFillIn.setEnabled(!isLockedNow && !savedFill.trim().isEmpty());
             lblFillInCorrectAnswer.setVisible(false);
             lblFillInCorrectAnswer.setText("");
 
@@ -1464,6 +1594,8 @@ public class MatchScreen extends JPanel {
             int selected = selectedAnswers[currentQuestionIndex];
             btnTrue.setSelectedState(selected == 0);
             btnFalse.setSelectedState(selected == 1);
+            btnTrue.setDimmed(selected == 1);
+            btnFalse.setDimmed(selected == 0);
             btnTrue.setEnabled(!isLockedNow);
             btnFalse.setEnabled(!isLockedNow);
             btnTrue.resetReveal();
@@ -1478,7 +1610,7 @@ public class MatchScreen extends JPanel {
         } else if (q.isMultipleSelect()) {
             lblQuestionTypeBadge.setText("NHIỀU ĐÁP ÁN");
             lblMultiSelectNotice.setVisible(true);
-            lblHint.setText("Chọn tất cả các đáp án đúng rồi nhấn Câu tiếp");
+            lblHint.setText("Chọn tất cả các đáp án đúng rồi nhấn Xác Nhận Đáp Án");
             currentDragDropPanel = null;
             txtQuestion.setText(q.text());
 
@@ -1491,15 +1623,28 @@ public class MatchScreen extends JPanel {
             String[] choices = q.choices();
             String[] prefixes = { "A", "B", "C", "D" };
             int mask = selectedAnswers[currentQuestionIndex];
+            int countSel = (mask <= 0) ? 0 : Integer.bitCount(mask);
 
             for (int i = 0; i < 4; i++) {
                 answerButtons[i].setText(i < choices.length ? choices[i] : "—");
                 answerButtons[i].setPrefixBadge(prefixes[i]);
+                answerButtons[i].setMultiSelectMode(true);
+                answerButtons[i].setDimmed(false);
                 answerButtons[i].setSelectedState(mask != -1 && ((mask & (1 << i)) != 0));
                 answerButtons[i].setEnabled(!isLockedNow);
                 answerButtons[i].resetReveal();
                 answerButtons[i].setAnimScale(1.0f);
                 answerButtons[i].setAnimState(0.0f, 18);
+            }
+
+            if (!isLockedNow) {
+                if (countSel > 0) {
+                    btnNext.setText("Xác Nhận Đáp Án (" + countSel + ")");
+                } else {
+                    btnNext.setText("Câu Tiếp (Bỏ Qua)");
+                }
+            } else {
+                btnNext.setText("Đã Chốt (Chờ...)");
             }
 
             ((CardLayout) questionCardCenter.getLayout()).show(questionCardCenter, "NORMAL");
@@ -1524,7 +1669,10 @@ public class MatchScreen extends JPanel {
             for (int i = 0; i < 4; i++) {
                 answerButtons[i].setText(i < choices.length ? choices[i] : "—");
                 answerButtons[i].setPrefixBadge(prefixes[i]);
-                answerButtons[i].setSelectedState(selected == i);
+                answerButtons[i].setMultiSelectMode(false);
+                boolean isThisSel = (selected == i);
+                answerButtons[i].setSelectedState(isThisSel);
+                answerButtons[i].setDimmed(selected != -1 && !isThisSel);
                 answerButtons[i].setEnabled(!isLockedNow);
                 answerButtons[i].resetReveal();
                 answerButtons[i].setAnimScale(1.0f);
@@ -1541,18 +1689,20 @@ public class MatchScreen extends JPanel {
         // Dịch chuyển nhẹ nhàng trong phạm vi card
         final int centerOffsetY = 10;
 
+        int curMax = (currentQuestionIndex >= 0 && currentQuestionIndex < questionDuration.length && questionDuration[currentQuestionIndex] > 0)
+                ? questionDuration[currentQuestionIndex] : perQuestionSeconds;
         // Giữ nguyên thời gian còn lại của câu hỏi này (không reset khi chuyển qua lại giữa các câu)
         if (currentQuestionIndex >= 0 && currentQuestionIndex < questionTimeLeft.length) {
             currentQuestionTimeRemaining = questionTimeLeft[currentQuestionIndex];
         } else {
-            currentQuestionTimeRemaining = perQuestionSeconds;
+            currentQuestionTimeRemaining = curMax;
         }
         if (questionFinalized[currentQuestionIndex]) {
             lblTimer.setText("ĐÃ CHỐT");
             lblTimer.setForeground(Theme.GREEN);
             timeProgressBar.setValue(0);
             if (questionTimerBanner != null) {
-                questionTimerBanner.updateTime(0, perQuestionSeconds, true);
+                questionTimerBanner.updateTime(0, curMax, true);
             }
         } else {
             updateTimerDisplay();
@@ -1654,8 +1804,10 @@ public class MatchScreen extends JPanel {
                 lblTimer.setText("ĐÃ CHỐT");
                 lblTimer.setForeground(Theme.GREEN);
                 timeProgressBar.setValue(0);
+                int curMax = (currentQuestionIndex >= 0 && currentQuestionIndex < questionDuration.length && questionDuration[currentQuestionIndex] > 0)
+                        ? questionDuration[currentQuestionIndex] : perQuestionSeconds;
                 if (questionTimerBanner != null) {
-                    questionTimerBanner.updateTime(0, perQuestionSeconds, true);
+                    questionTimerBanner.updateTime(0, curMax, true);
                 }
             } else if (!isSubmitted) {
                 // Khởi động bộ đếm ngược thời gian câu hỏi
@@ -1670,13 +1822,26 @@ public class MatchScreen extends JPanel {
 
     private void updateNavState() {
         int answeredCount = 0;
+        int finalizedCount = 0;
         for (int i = 0; i < 10; i++) {
             if (selectedAnswers[i] != -1) {
                 answeredCount++;
             }
-            navButtons[i].repaint();
+            if (questionFinalized[i]) {
+                finalizedCount++;
+            }
+            if (navButtons[i] != null) {
+                navButtons[i].repaint();
+            }
         }
-        lblProgressSummary.setText("Đã làm: " + answeredCount + "/10 câu");
+        if (lblProgressSummary != null) {
+            if (isSubmitted || finalizedCount >= 10) {
+                lblProgressSummary.setText("Đã hoàn thành: 10/10 câu");
+            } else {
+                int count = Math.max(answeredCount, finalizedCount);
+                lblProgressSummary.setText("Đã làm: " + count + "/10 câu");
+            }
+        }
         int totalQ = (questions != null && !questions.isEmpty()) ? questions.size() : 10;
         if (btnNext != null && !isRevealing && !questionFinalized[currentQuestionIndex]) {
             btnNext.setText(currentQuestionIndex >= totalQ - 1 ? "Hoàn thành" : "Chốt & Câu tiếp");
@@ -1716,37 +1881,36 @@ public class MatchScreen extends JPanel {
             for (int i = 0; i < 4; i++) {
                 answerButtons[i].setSelectedState((curMask & (1 << i)) != 0);
             }
-        } else if (q != null && q.isTrueFalse()) {
-            if (selectedAnswers[currentQuestionIndex] == choiceIndex) {
-                selectedAnswers[currentQuestionIndex] = -1;
+            int countSel = Integer.bitCount(curMask);
+            if (countSel > 0) {
+                btnNext.setText("Xác Nhận Đáp Án (" + countSel + ")");
+                lblHint.setText("Đã chọn " + countSel + " đáp án • Nhấn [Xác Nhận Đáp Án] để gửi");
             } else {
-                selectedAnswers[currentQuestionIndex] = choiceIndex;
+                btnNext.setText("Câu Tiếp (Bỏ Qua)");
+                lblHint.setText("Chọn tất cả các đáp án đúng rồi nhấn [Xác Nhận Đáp Án]");
             }
+        } else if (q != null && q.isTrueFalse()) {
+            selectedAnswers[currentQuestionIndex] = choiceIndex;
             if (choiceIndex == 0) btnTrue.triggerBounce();
             else if (choiceIndex == 1) btnFalse.triggerBounce();
-            btnTrue.setSelectedState(selectedAnswers[currentQuestionIndex] == 0);
-            btnFalse.setSelectedState(selectedAnswers[currentQuestionIndex] == 1);
+
+            btnTrue.setSelectedState(choiceIndex == 0);
+            btnTrue.setDimmed(choiceIndex != 0);
+            btnFalse.setSelectedState(choiceIndex == 1);
+            btnFalse.setDimmed(choiceIndex != 1);
+
+            finishCurrentQuestion();
         } else {
-            if (selectedAnswers[currentQuestionIndex] == choiceIndex) {
-                selectedAnswers[currentQuestionIndex] = -1;
-            } else {
-                selectedAnswers[currentQuestionIndex] = choiceIndex;
-            }
+            selectedAnswers[currentQuestionIndex] = choiceIndex;
             if (choiceIndex >= 0 && choiceIndex < 4) {
                 answerButtons[choiceIndex].triggerBounce();
             }
             for (int i = 0; i < 4; i++) {
-                answerButtons[i].setSelectedState(selectedAnswers[currentQuestionIndex] == i);
+                boolean isSel = (i == choiceIndex);
+                answerButtons[i].setSelectedState(isSel);
+                answerButtons[i].setDimmed(!isSel);
             }
-        }
-        if (q != null && !q.isMultipleSelect() && selectedAnswers[currentQuestionIndex] != -1) {
             finishCurrentQuestion();
-            for (int i = 0; i < 4; i++) answerButtons[i].setEnabled(false);
-            btnTrue.setEnabled(false);
-            btnFalse.setEnabled(false);
-            btnNext.setText("Đã chốt (Chờ...)");
-            btnNext.setEnabled(false);
-            lblHint.setText("Đã chốt đáp án! Đang chờ đối thủ / mở kết quả...");
         }
         updateNavState();
         // Không cập nhật hay gửi điểm ở đây để người chơi không thể thử từng đáp án!
@@ -1782,6 +1946,10 @@ public class MatchScreen extends JPanel {
     }
 
     private void submitFillInFromInput() {
+        if (btnSubmitFillIn != null) {
+            btnSubmitFillIn.setEnabled(false);
+            btnSubmitFillIn.setText("ĐÃ GỬI");
+        }
         if (serverDrivenRhythm) {
             finishCurrentQuestion();
             txtFillInInput.setEnabled(false);
@@ -1805,6 +1973,32 @@ public class MatchScreen extends JPanel {
                     onAnswerListener.accept(currentQuestionIndex, choice);
                 }
             }
+
+            // Khóa toàn bộ các nút đáp án & ô nhập để tránh gửi lại
+            for (int i = 0; i < 4; i++) {
+                if (answerButtons[i] != null) answerButtons[i].setEnabled(false);
+            }
+            if (btnTrue != null) btnTrue.setEnabled(false);
+            if (btnFalse != null) btnFalse.setEnabled(false);
+            if (txtFillInInput != null) txtFillInInput.setEnabled(false);
+            if (btnSubmitFillIn != null) {
+                btnSubmitFillIn.setEnabled(false);
+                btnSubmitFillIn.setText("ĐÃ GỬI");
+            }
+            if (currentDragDropPanel != null) {
+                currentDragDropPanel.setInteractive(false);
+            }
+            if (tacticalActionBar != null) {
+                tacticalActionBar.setQuestionLocked(true);
+            }
+            if (btnNext != null) {
+                btnNext.setText("Đã chốt (Chờ...)");
+                btnNext.setEnabled(false);
+            }
+            if (lblHint != null) {
+                lblHint.setText("Đã chốt đáp án! Đang chờ đối thủ / mở kết quả...");
+            }
+
             if (serverDrivenRhythm) {
                 stopCountdownTimer();
                 SoundManager.stopCountdown();
@@ -1973,10 +2167,14 @@ public class MatchScreen extends JPanel {
 
                 if (isThisCorrect) {
                     answerButtons[c].setRevealColors(correctBg, whiteText);
+                    answerButtons[c].setDimmed(false);
                     scalingButtons.add(answerButtons[c]);
                 } else if (isThisSelected) {
                     answerButtons[c].setRevealColors(wrongBg, whiteText);
+                    answerButtons[c].setDimmed(false);
                     scalingButtons.add(answerButtons[c]);
+                } else {
+                    answerButtons[c].setDimmed(true);
                 }
             }
 
@@ -2032,10 +2230,21 @@ public class MatchScreen extends JPanel {
             correctBtn = (correctChoice == 0) ? btnTrue : ((correctChoice == 1) ? btnFalse : null);
             userBtn = (userChoice == 0) ? btnTrue : ((userChoice == 1) ? btnFalse : null);
             parentContainer = tfPanel;
+            if (correctBtn != null) correctBtn.setDimmed(false);
+            if (userBtn != null) userBtn.setDimmed(false);
+            if (correctChoice == 0 && userChoice != 1) btnFalse.setDimmed(true);
+            else if (correctChoice == 1 && userChoice != 0) btnTrue.setDimmed(true);
         } else {
             correctBtn = (correctChoice >= 0 && correctChoice < 4) ? answerButtons[correctChoice] : null;
             userBtn = (userChoice >= 0 && userChoice < 4) ? answerButtons[userChoice] : null;
             parentContainer = answersGrid;
+            for (int i = 0; i < 4; i++) {
+                if (i == correctChoice || i == userChoice) {
+                    answerButtons[i].setDimmed(false);
+                } else {
+                    answerButtons[i].setDimmed(true);
+                }
+            }
         }
 
         boolean isCorrect = (userChoice != -1 && userChoice == correctChoice);
@@ -2232,7 +2441,11 @@ public class MatchScreen extends JPanel {
         if (hasLeft) return;
         syncCurrentAnswerInput();
         isSubmitted = true;
+        for (int i = 0; i < 10; i++) {
+            questionFinalized[i] = true;
+        }
         stopTimer();
+        updateNavState();
         waitingBanner.setVisible(true);
         waitingBanner.setBackground(new Color(0x16, 0xA3, 0x4A, 220));
         lblWaitingStatus.setText("TRẬN ĐẤU ĐÃ KẾT THÚC!");
@@ -2245,15 +2458,11 @@ public class MatchScreen extends JPanel {
         stopCountdownTimer();
         SoundManager.stopCountdown();
 
-        int choice = JOptionPane.showConfirmDialog(
-                this,
-                "Bạn có chắc chắn muốn rời trận đấu?\n"
-                        + "Thoát giữa trận sẽ bị xử THUA và bị trừ điểm xếp hạng!",
-                "Cảnh Báo Thoát Trận",
-                JOptionPane.YES_NO_OPTION,
-                JOptionPane.WARNING_MESSAGE);
+        Window owner = SwingUtilities.getWindowAncestor(this);
+        LeaveConfirmDialog dlg = new LeaveConfirmDialog(owner);
+        dlg.setVisible(true);
 
-        if (choice == JOptionPane.YES_OPTION) {
+        if (dlg.isConfirmed()) {
             cleanupAndStop();
             if (onLeaveListener != null) {
                 onLeaveListener.run();
@@ -2277,6 +2486,12 @@ public class MatchScreen extends JPanel {
         if (rhythmOverlayPanel != null) {
             rhythmOverlayPanel.cleanup();
         }
+        if (tacticalToastBanner != null) {
+            tacticalToastBanner.hideToast();
+        }
+        if (tacticalActionBar != null) {
+            tacticalActionBar.setQuestionLocked(true);
+        }
 
         if (activeSubmitDialog != null && activeSubmitDialog.isVisible()) {
             activeSubmitDialog.dispose();
@@ -2297,6 +2512,7 @@ public class MatchScreen extends JPanel {
         if (btnTrue != null) btnTrue.setEnabled(false);
         if (btnFalse != null) btnFalse.setEnabled(false);
         if (txtFillInInput != null) txtFillInInput.setEnabled(false);
+        if (btnSubmitFillIn != null) btnSubmitFillIn.setEnabled(false);
         if (currentDragDropPanel != null) currentDragDropPanel.setInteractive(false);
         if (btnSubmit != null) btnSubmit.setEnabled(false);
         if (btnNext != null) btnNext.setEnabled(false);
@@ -2358,6 +2574,95 @@ public class MatchScreen extends JPanel {
         showBubble(opponentEmoteContainer, emote, false);
     }
 
+    public void setOnTacticalActionListener(Consumer<String> listener) {
+        this.onTacticalActionListener = listener;
+    }
+
+    public void sendTacticalAction(String action) {
+        if (onTacticalActionListener != null) {
+            onTacticalActionListener.accept(action);
+        }
+    }
+
+    public void handleOpponentTactical(String action) {
+        this.opponentTacticalAction = (action != null) ? action : "NONE";
+        String act = this.opponentTacticalAction.toUpperCase();
+
+        if (tacticalToastBanner != null) {
+            tacticalToastBanner.showOpponentAction(opponentName, act);
+        }
+
+        switch (act) {
+            case "ATTACK" -> {
+                if (tacticalActionBar != null) {
+                    tacticalActionBar.setDefendPromptBlinking(true);
+                }
+                SoundManager.playTacticalAttack();
+            }
+            case "DEFEND" -> {
+                if (tacticalActionBar != null) {
+                    tacticalActionBar.stopDefendBlink();
+                }
+                SoundManager.playTacticalDefend();
+            }
+            case "STAR" -> {
+                if (tacticalActionBar != null) {
+                    tacticalActionBar.stopDefendBlink();
+                }
+                SoundManager.playTacticalStar();
+            }
+            case "CANCEL", "NONE" -> {
+                if (tacticalActionBar != null) {
+                    tacticalActionBar.stopDefendBlink();
+                }
+                if (tacticalToastBanner != null) {
+                    tacticalToastBanner.hideToast();
+                }
+            }
+        }
+    }
+
+    public void handleTacticalConfirm(String action, int atkLeft, int defLeft, int starLeft) {
+        this.currentTacticalAction = (action != null) ? action : "NONE";
+        this.attackRemaining = atkLeft;
+        this.defendRemaining = defLeft;
+        this.starRemaining = starLeft;
+        if (tacticalActionBar != null) {
+            tacticalActionBar.updateState(getEffectivePoints(), atkLeft, defLeft, starLeft, currentTacticalAction);
+        }
+    }
+
+    public void handleTacticalStatus(int atkLeft, int defLeft, int starLeft, String myCur, String oppCur) {
+        this.attackRemaining = atkLeft;
+        this.defendRemaining = defLeft;
+        this.starRemaining = starLeft;
+        this.currentTacticalAction = (myCur != null) ? myCur : "NONE";
+        this.opponentTacticalAction = (oppCur != null) ? oppCur : "NONE";
+        if (tacticalActionBar != null) {
+            tacticalActionBar.updateState(getEffectivePoints(), atkLeft, defLeft, starLeft, currentTacticalAction);
+        }
+    }
+
+    public TacticalActionBar getTacticalActionBar() {
+        return tacticalActionBar;
+    }
+
+    public TacticalToastBanner getTacticalToastBanner() {
+        return tacticalToastBanner;
+    }
+
+    public int getAttackRemaining() { return attackRemaining; }
+    public int getDefendRemaining() { return defendRemaining; }
+    public int getStarRemaining() { return starRemaining; }
+    public String getCurrentTacticalAction() { return currentTacticalAction; }
+    public String getOpponentTacticalAction() { return opponentTacticalAction; }
+    public String[] getMyTacticalHistory() { return myTacticalHistory.clone(); }
+    public String[] getOppTacticalHistory() { return oppTacticalHistory.clone(); }
+    public String[] getMyOutcomeHistory() { return myOutcomeHistory.clone(); }
+    public String[] getOppOutcomeHistory() { return oppOutcomeHistory.clone(); }
+    public int[] getMyDeltaHistory() { return myDeltaHistory.clone(); }
+    public int[] getOppDeltaHistory() { return oppDeltaHistory.clone(); }
+
     private void showBubble(JPanel container, String emoji, boolean isMe) {
         if (container == null) return;
         if (isMe && currentMyBubble != null) { currentMyBubble.dismiss(); }
@@ -2392,6 +2697,11 @@ public class MatchScreen extends JPanel {
 
     public String[] getUserFillInAnswers() {
         return userFillInAnswers.clone();
+    }
+
+    public static int getTimeLimitSeconds(String type) {
+        if (type == null || type.isBlank()) return 10;
+        return quiz.Server.getTimeLimitSeconds(type);
     }
 
     // ==========================================
@@ -2476,7 +2786,8 @@ public class MatchScreen extends JPanel {
         ScoreBadge(boolean isMe) {
             this.isMe = isMe;
             setOpaque(false);
-            setPreferredSize(new Dimension(132, 28));
+            setPreferredSize(new Dimension(94, 26));
+            setMinimumSize(new Dimension(72, 24));
         }
 
         public void setScore(int newScore) {
@@ -2558,7 +2869,12 @@ public class MatchScreen extends JPanel {
             g2.setStroke(new BasicStroke(1.5f));
             g2.draw(new RoundRectangle2D.Float(1, 1, w - 2, h - 2, 14, 14));
 
-            String scoreText = points + " đ (" + score + " đúng)";
+            String scoreText;
+            if (w < 86) {
+                scoreText = points + "đ (" + score + ")";
+            } else {
+                scoreText = points + "đ (" + score + " đúng)";
+            }
             g2.setFont(Theme.SMALL_BOLD);
             FontMetrics fm = g2.getFontMetrics();
 
@@ -2733,28 +3049,38 @@ public class MatchScreen extends JPanel {
             }
 
             // 1. Vẽ nền ô vuông bo góc
+            // 1. Vẽ bóng đổ nhẹ phía dưới
+            g2.setColor(new Color(0, 0, 0, 45));
+            g2.fill(new RoundRectangle2D.Float(2, 4, w - 4, h - 4, 18, 18));
+
+            // 2. Xác định màu nền & viền theo trạng thái
             Color bg;
             Color border;
+            boolean hasText = !getText().trim().isEmpty();
+
             if (revealBg != null) {
                 bg = revealBg;
                 border = (revealBorder != null) ? revealBorder : Theme.WHITE;
             } else if (isFocusOwner()) {
-                bg = new Color(0x1F, 0x2E, 0x4D); // Navy highlight
+                bg = new Color(0x1E, 0x2E, 0x4D); // Navy highlight
                 border = new Color(0x38, 0xBD, 0xF8); // Bright Cyan
+            } else if (hasText) {
+                bg = new Color(0x18, 0x24, 0x3D, 240);
+                border = new Color(0x60, 0xA5, 0xFA, 200); // Viền xanh sáng báo trạng thái đã nhập
             } else {
-                bg = new Color(0x18, 0x22, 0x38, 220); // Deep card navy
+                bg = new Color(0x13, 0x1E, 0x33, 220); // Deep card navy
                 border = Theme.BORDER_DARK;
             }
 
             g2.setColor(bg);
             g2.fill(new RoundRectangle2D.Float(2, 2, w - 4, h - 4, 18, 18));
 
-            // 2. Vẽ nội dung văn bản và con trỏ chuột
+            // 3. Vẽ nội dung văn bản và con trỏ chuột
             super.paintComponent(g2);
 
-            // 3. Hiển thị chữ "Nhập đáp án" mờ khi chưa focus và chưa có chữ
-            if (getText().isEmpty() && !isFocusOwner()) {
-                g2.setColor(new Color(0x94, 0xA3, 0xB8, 150));
+            // 4. Hiển thị chữ placeholder mờ khi chưa focus và chưa có chữ
+            if (!hasText && !isFocusOwner()) {
+                g2.setColor(new Color(0x94, 0xA3, 0xB8, 140));
                 g2.setFont(Theme.TITLE.deriveFont(Font.ITALIC));
                 FontMetrics fm = g2.getFontMetrics();
                 int tx = (w - fm.stringWidth(placeholder)) / 2;
@@ -2762,10 +3088,26 @@ public class MatchScreen extends JPanel {
                 g2.drawString(placeholder, tx, ty);
             }
 
-            // 4. Vẽ viền bo góc
-            g2.setColor(border);
-            g2.setStroke(new BasicStroke(isFocusOwner() || revealBg != null ? 2.5f : 1.5f));
-            g2.draw(new RoundRectangle2D.Float(2, 2, w - 4, h - 4, 18, 18));
+            // 5. Vẽ viền bo góc & hào quang khi focus hoặc reveal
+            if (revealBg != null) {
+                g2.setColor(new Color(border.getRed(), border.getGreen(), border.getBlue(), 70));
+                g2.setStroke(new BasicStroke(4.8f));
+                g2.draw(new RoundRectangle2D.Float(2, 2, w - 4, h - 4, 18, 18));
+                g2.setColor(border);
+                g2.setStroke(new BasicStroke(2.6f));
+                g2.draw(new RoundRectangle2D.Float(2, 2, w - 4, h - 4, 18, 18));
+            } else if (isFocusOwner()) {
+                g2.setColor(new Color(0x38, 0xBD, 0xF8, 65));
+                g2.setStroke(new BasicStroke(4.5f));
+                g2.draw(new RoundRectangle2D.Float(2, 2, w - 4, h - 4, 18, 18));
+                g2.setColor(border);
+                g2.setStroke(new BasicStroke(2.4f));
+                g2.draw(new RoundRectangle2D.Float(2, 2, w - 4, h - 4, 18, 18));
+            } else {
+                g2.setColor(border);
+                g2.setStroke(new BasicStroke(hasText ? 1.8f : 1.2f));
+                g2.draw(new RoundRectangle2D.Float(2, 2, w - 4, h - 4, 18, 18));
+            }
 
             g2.dispose();
         }
@@ -2885,7 +3227,8 @@ public class MatchScreen extends JPanel {
                 case "QUESTION_ACTIVE" -> {
                     int qIdx = 0;
                     try { qIdx = Integer.parseInt(Wire.field(a, 3)); } catch (Exception ignored) {}
-                    int sec = perQuestionSeconds;
+                    int sec = (qIdx >= 0 && qIdx < questionDuration.length && questionDuration[qIdx] > 0)
+                            ? questionDuration[qIdx] : perQuestionSeconds;
                     try { sec = Integer.parseInt(Wire.field(a, 4)); } catch (Exception ignored) {}
                     startQuestionActivePhase(qIdx, sec);
                 }
@@ -2902,7 +3245,15 @@ public class MatchScreen extends JPanel {
                     try { oppStrk = Integer.parseInt(Wire.field(a, 9)); } catch (Exception ignored) {}
                     try { myAns = Integer.parseInt(Wire.field(a, 10)); } catch (Exception ignored) {}
                     try { oppAns = Integer.parseInt(Wire.field(a, 11)); } catch (Exception ignored) {}
-                    showQuestionRevealPhase(qIdx, correctAns, exp, myPts, oppPts, myStrk, oppStrk, myAns, oppAns);
+                    String mySkill = a.length > 12 ? Wire.field(a, 12) : "NONE";
+                    String oppSkill = a.length > 13 ? Wire.field(a, 13) : "NONE";
+                    String myOutcome = a.length > 14 ? Wire.field(a, 14) : "NONE";
+                    String oppOutcome = a.length > 15 ? Wire.field(a, 15) : "NONE";
+                    int myDelta = 0, oppDelta = 0;
+                    try { if (a.length > 16) myDelta = Integer.parseInt(Wire.field(a, 16)); } catch (Exception ignored) {}
+                    try { if (a.length > 17) oppDelta = Integer.parseInt(Wire.field(a, 17)); } catch (Exception ignored) {}
+                    showQuestionRevealPhase(qIdx, correctAns, exp, myPts, oppPts, myStrk, oppStrk, myAns, oppAns,
+                                           mySkill, oppSkill, myOutcome, oppOutcome, myDelta, oppDelta);
                 }
             }
         });
@@ -2990,10 +3341,21 @@ public class MatchScreen extends JPanel {
             questionFinalized[qIdx] = false;
             selectedAnswers[qIdx] = -1;
         }
-        if (qIdx >= 0 && qIdx < questionTimeLeft.length) {
-            questionTimeLeft[qIdx] = Math.max(5, durationSec);
+        int validSec = Math.max(1, durationSec);
+        if (qIdx >= 0 && qIdx < questionDuration.length) {
+            questionDuration[qIdx] = validSec;
+            questionTimeLeft[qIdx] = validSec;
         }
-        this.currentQuestionTimeRemaining = Math.max(5, durationSec);
+        this.perQuestionSeconds = validSec;
+        this.currentQuestionTimeRemaining = validSec;
+        this.currentTacticalAction = "NONE";
+        this.opponentTacticalAction = "NONE";
+        if (tacticalToastBanner != null) {
+            tacticalToastBanner.hideToast();
+        }
+        if (tacticalActionBar != null) {
+            tacticalActionBar.onNewQuestion(getEffectivePoints());
+        }
 
         if (qIdx >= 0 && questions != null && qIdx < questions.size()) {
             currentQuestionIndex = qIdx;
@@ -3003,9 +3365,42 @@ public class MatchScreen extends JPanel {
 
     public void showQuestionRevealPhase(int qIdx, int correctAns, String exp,
                                         int myPts, int oppPts, int myStrk, int oppStrk,
+                                        int myAns, int oppAns,
+                                        String mySkill, String oppSkill,
+                                        String myOutcome, String oppOutcome,
+                                        int myDelta, int oppDelta) {
+        if (qIdx >= 0 && qIdx < 10) {
+            myTacticalHistory[qIdx] = (mySkill != null) ? mySkill : "NONE";
+            oppTacticalHistory[qIdx] = (oppSkill != null) ? oppSkill : "NONE";
+            myOutcomeHistory[qIdx] = (myOutcome != null) ? myOutcome : "NONE";
+            oppOutcomeHistory[qIdx] = (oppOutcome != null) ? oppOutcome : "NONE";
+            myDeltaHistory[qIdx] = myDelta;
+            oppDeltaHistory[qIdx] = oppDelta;
+        }
+        showQuestionRevealPhase(qIdx, correctAns, exp, myPts, oppPts, myStrk, oppStrk, myAns, oppAns);
+        if (tacticalToastBanner != null) {
+            tacticalToastBanner.showCombatOutcome(mySkill, oppSkill, myOutcome, oppOutcome, myDelta, oppDelta, opponentName);
+            if ("STEAL_SUCCESS".equals(myOutcome)) {
+                SoundManager.playTacticalAttack();
+            } else if ("BLOCK_SUCCESS".equals(myOutcome) || "COUNTER_SUCCESS".equals(myOutcome)) {
+                SoundManager.playTacticalDefend();
+            } else if ("STAR_SUCCESS".equals(myOutcome)) {
+                SoundManager.playTacticalStar();
+            }
+        }
+    }
+
+    public void showQuestionRevealPhase(int qIdx, int correctAns, String exp,
+                                        int myPts, int oppPts, int myStrk, int oppStrk,
                                         int myAns, int oppAns) {
         if (hasLeft) return;
         this.serverDrivenRhythm = true;
+        if (tacticalToastBanner != null) {
+            tacticalToastBanner.hideToast();
+        }
+        if (tacticalActionBar != null) {
+            tacticalActionBar.setQuestionLocked(true);
+        }
         stopCountdownTimer();
         SoundManager.stopCountdown();
         if (animTimer != null && animTimer.isRunning()) {
@@ -3028,6 +3423,7 @@ public class MatchScreen extends JPanel {
             }
             questionFinalized[qIdx] = true;
         }
+        updateNavState();
 
         // 1. Highlight visual colors on buttons
         MatchQuestion q = (questions != null && qIdx < questions.size()) ? questions.get(qIdx) : null;
@@ -3041,10 +3437,22 @@ public class MatchScreen extends JPanel {
             if (q.isTrueFalse()) {
                 if (correctAns == 0) {
                     btnTrue.setRevealColors(correctBg, whiteText);
-                    if (actualMyAns == 1) btnFalse.setRevealColors(wrongBg, whiteText);
+                    btnTrue.setDimmed(false);
+                    if (actualMyAns == 1) {
+                        btnFalse.setRevealColors(wrongBg, whiteText);
+                        btnFalse.setDimmed(false);
+                    } else {
+                        btnFalse.setDimmed(true);
+                    }
                 } else if (correctAns == 1) {
                     btnFalse.setRevealColors(correctBg, whiteText);
-                    if (actualMyAns == 0) btnTrue.setRevealColors(wrongBg, whiteText);
+                    btnFalse.setDimmed(false);
+                    if (actualMyAns == 0) {
+                        btnTrue.setRevealColors(wrongBg, whiteText);
+                        btnTrue.setDimmed(false);
+                    } else {
+                        btnTrue.setDimmed(true);
+                    }
                 }
             } else if (q.isMultipleSelect()) {
                 for (int c = 0; c < 4; c++) {
@@ -3052,8 +3460,12 @@ public class MatchScreen extends JPanel {
                     boolean isThisSelected = (actualMyAns != -1) && ((actualMyAns & (1 << c)) != 0);
                     if (isThisCorrect) {
                         answerButtons[c].setRevealColors(correctBg, whiteText);
+                        answerButtons[c].setDimmed(false);
                     } else if (isThisSelected) {
                         answerButtons[c].setRevealColors(wrongBg, whiteText);
+                        answerButtons[c].setDimmed(false);
+                    } else {
+                        answerButtons[c].setDimmed(true);
                     }
                 }
             } else if (q.isFillIn()) {
@@ -3066,11 +3478,16 @@ public class MatchScreen extends JPanel {
             } else if (q.isDragAndDrop()) {
                 // Drag & drop handled
             } else {
-                if (correctAns >= 0 && correctAns < 4) {
-                    answerButtons[correctAns].setRevealColors(correctBg, whiteText);
-                }
-                if (actualMyAns >= 0 && actualMyAns < 4 && actualMyAns != correctAns) {
-                    answerButtons[actualMyAns].setRevealColors(wrongBg, whiteText);
+                for (int c = 0; c < 4; c++) {
+                    if (c == correctAns) {
+                        answerButtons[c].setRevealColors(correctBg, whiteText);
+                        answerButtons[c].setDimmed(false);
+                    } else if (c == actualMyAns) {
+                        answerButtons[c].setRevealColors(wrongBg, whiteText);
+                        answerButtons[c].setDimmed(false);
+                    } else {
+                        answerButtons[c].setDimmed(true);
+                    }
                 }
             }
 

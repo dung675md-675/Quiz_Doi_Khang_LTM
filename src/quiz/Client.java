@@ -56,7 +56,7 @@ public final class Client {
   });
   frame.setLayout(new BorderLayout());
   frame.setSize(1080, 760);
-  frame.setMinimumSize(new Dimension(900, 640));
+  frame.setMinimumSize(new Dimension(760, 580));
   frame.setLocationRelativeTo(null);
   frame.getContentPane().setBackground(Theme.OFF_WHITE);
 
@@ -88,12 +88,12 @@ public final class Client {
     send("USER_LIST");
    }
    @Override
-   public void onAddUser(String username, String password, int score, String avatarId, String fullName, String email, String bio) {
-    send("ADD_USER", username, password, String.valueOf(score), avatarId, fullName, email, bio);
+   public void onAddUser(String username, String password, int score, String avatarId, String fullName, String email, String bio, String role) {
+    send("ADD_USER", username, password, String.valueOf(score), avatarId, fullName, email, bio, role);
    }
    @Override
-   public void onUpdateUser(String username, String newPassword, int score, String avatarId, String fullName, String email, String bio) {
-    send("UPDATE_USER", username, newPassword, String.valueOf(score), avatarId, fullName, email, bio);
+   public void onUpdateUser(String username, String newPassword, int score, String avatarId, String fullName, String email, String bio, String role) {
+    send("UPDATE_USER", username, newPassword, String.valueOf(score), avatarId, fullName, email, bio, role);
    }
    @Override
    public void onDeleteUser(String targetUsername) {
@@ -422,6 +422,11 @@ public final class Client {
     ToastManager.warning(frame, msg.isBlank()?"Tài khoản đã bị xóa.":msg);
     doLogout();
    }
+   case "ACCOUNT_LOCKED"->{
+    String msg=Wire.field(a,1);
+    ToastManager.error(frame, msg.isBlank()?"Tài khoản của bạn đã bị khóa bởi Quản trị viên.":msg);
+    doLogout();
+   }
    case "DECLINED"->{
     if(waitingDialog!=null){waitingDialog.closeDialog();waitingDialog=null;}
     if(currentInviteDialog!=null){currentInviteDialog.dispose();currentInviteDialog=null;}
@@ -440,6 +445,30 @@ public final class Client {
    case "EMOTE"->{
     String from=Wire.field(a,1);String emote=Wire.field(a,2);
     if(currentMatchScreen!=null){currentMatchScreen.showOpponentEmote(from, emote);}
+   }
+   case "OPPONENT_TACTICAL"->{
+    if(userLeftMatch || currentMatchScreen==null) return;
+    String action=Wire.field(a,1);
+    currentMatchScreen.handleOpponentTactical(action);
+   }
+   case "TACTICAL_CONFIRM"->{
+    if(userLeftMatch || currentMatchScreen==null) return;
+    String action=Wire.field(a,1);
+    int atk=1, def=1, star=1;
+    try{atk=Integer.parseInt(Wire.field(a,2));}catch(Exception ignored){}
+    try{def=Integer.parseInt(Wire.field(a,3));}catch(Exception ignored){}
+    try{star=Integer.parseInt(Wire.field(a,4));}catch(Exception ignored){}
+    currentMatchScreen.handleTacticalConfirm(action, atk, def, star);
+   }
+   case "TACTICAL_STATUS"->{
+    if(userLeftMatch || currentMatchScreen==null) return;
+    int atk=1, def=1, star=1;
+    try{atk=Integer.parseInt(Wire.field(a,1));}catch(Exception ignored){}
+    try{def=Integer.parseInt(Wire.field(a,2));}catch(Exception ignored){}
+    try{star=Integer.parseInt(Wire.field(a,3));}catch(Exception ignored){}
+    String myCur=Wire.field(a,4);
+    String oppCur=Wire.field(a,5);
+    currentMatchScreen.handleTacticalStatus(atk, def, star, myCur, oppCur);
    }
    case "MATCH_PHASE"->{
     if(userLeftMatch || currentMatchScreen==null) return;
@@ -576,7 +605,11 @@ public final class Client {
     }
     if(currentResultDialog!=null){currentResultDialog.dispose();}
     String oppAvatar=(currentMatchScreen!=null&&currentMatchScreen.getOpponentAvatarId()!=null)?currentMatchScreen.getOpponentAvatarId():getAvatarFor(currentOpponent);
-    currentResultDialog=new ResultDialog(frame,name,winner,leftInfo,rightInfo,()->send("REMATCH","YES"),()->{send("REMATCH","NO");showLobby();},currentQuestions,currentSubmittedAnswers,correctAnswers,myAvatarId,oppAvatar,fillInInputs);
+    String[] myOutcomes=(currentMatchScreen!=null)?currentMatchScreen.getMyOutcomeHistory():null;
+    String[] oppOutcomes=(currentMatchScreen!=null)?currentMatchScreen.getOppOutcomeHistory():null;
+    int[] myDeltas=(currentMatchScreen!=null)?currentMatchScreen.getMyDeltaHistory():null;
+    int[] oppDeltas=(currentMatchScreen!=null)?currentMatchScreen.getOppDeltaHistory():null;
+    currentResultDialog=new ResultDialog(frame,name,winner,leftInfo,rightInfo,()->send("REMATCH","YES"),()->{send("REMATCH","NO");showLobby();},currentQuestions,currentSubmittedAnswers,correctAnswers,myAvatarId,oppAvatar,fillInInputs,myOutcomes,oppOutcomes,myDeltas,oppDeltas);
     currentResultDialog.setVisible(true);
    }
    case "CLOSED"->{
@@ -632,6 +665,7 @@ public final class Client {
   });
   currentMatchScreen.setOnReadyListener(()->send("READY",matchId));
   currentMatchScreen.setOnSkipRevealListener(qIdx->send("SKIP_REVEAL",matchId,String.valueOf(qIdx)));
+  currentMatchScreen.setOnTacticalActionListener(action->send("TACTICAL_ACTION",matchId,action));
   frame.getContentPane().removeAll();frame.getContentPane().setLayout(new BorderLayout());frame.getContentPane().add(currentMatchScreen,BorderLayout.CENTER);refresh();
  }
 

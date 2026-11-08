@@ -33,7 +33,7 @@ public class LevelSelector extends JPanel {
     public void setLevel(String level) {
         selectedLevel = level;
         btnEasy.setStyle(level.equals("Dễ") ? ModernButton.Style.SUCCESS : ModernButton.Style.OUTLINE_GRAY);
-        btnMedium.setStyle(level.equals("Trung bình") ? ModernButton.Style.ANSWER_C : ModernButton.Style.OUTLINE_GRAY);
+        btnMedium.setStyle(level.equals("Trung bình") ? ModernButton.Style.ORANGE : ModernButton.Style.OUTLINE_GRAY);
         btnHard.setStyle(level.equals("Khó") ? ModernButton.Style.DANGER : ModernButton.Style.OUTLINE_GRAY);
         
         btnEasy.setSelectedState(level.equals("Dễ"));

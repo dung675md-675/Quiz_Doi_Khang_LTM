@@ -25,3 +25,4 @@ temp_req.txt
 Thumbs.db
 
 data/client_durations.properties
+bin/

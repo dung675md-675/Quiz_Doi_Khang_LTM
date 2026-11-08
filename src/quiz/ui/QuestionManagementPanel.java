@@ -1,30 +1,27 @@
 package quiz.ui;
 
 import java.awt.*;
-import java.awt.event.KeyAdapter;
-import java.awt.event.KeyEvent;
-import java.awt.event.MouseAdapter;
-import java.awt.event.MouseEvent;
+import java.awt.event.*;
+import java.awt.geom.Path2D;
+import java.awt.geom.RoundRectangle2D;
 import java.util.*;
 import java.util.List;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 import javax.swing.border.LineBorder;
+import javax.swing.event.DocumentEvent;
+import javax.swing.event.DocumentListener;
 import javax.swing.table.DefaultTableCellRenderer;
 import javax.swing.table.DefaultTableModel;
 import quiz.Bank;
 import quiz.Model;
 
 /**
- * QuestionManagementPanel — Tab Quản Lý Ngân Hàng Câu Hỏi dành riêng cho Admin.
- * Hỗ trợ tìm kiếm, lọc theo Chủ đề / Mức độ / Loại câu hỏi, thống kê số câu hợp lệ
- * và Thêm / Sửa / Xóa câu hỏi trực tiếp trên Server (lưu bền vững vào data/questions.txt).
- *
- * Cải tiến Admin thêm câu hỏi:
- * - Chỉ hiển thị 5 loại câu hỏi thực tế được game hỗ trợ (MULTIPLE_CHOICE, TRUE_FALSE, MULTIPLE_SELECT, FILL_IN, DRAG_AND_DROP).
- * - Biểu mẫu nhập liệu thay đổi động (dynamic form) phù hợp với loại câu hỏi được chọn.
- * - Khung hướng dẫn & quy tắc trực quan kèm ví dụ minh họa và placeholder thực tế.
- * - Kiểm tra dữ liệu nhiều lớp (Client-side & Bank.validateForAdmin) trước khi lưu.
+ * QuestionManagementPanel — Giao diện Quản Lý Ngân Hàng Câu Hỏi cao cấp dành cho Admin:
+ * - Dashboard thống kê: Tổng số câu, Phân bố độ khó (Dễ/Vừa/Khó), và Cảnh báo thiếu câu theo chủ đề (< 10 câu).
+ * - Bảng quản lý câu hỏi Zebra Style, hiệu ứng hover từng dòng, capsule badge màu sắc phân loại.
+ * - Thanh tìm kiếm tích hợp kính lúp Java2D và bộ lọc thông minh (Chủ đề, Mức độ, Loại câu hỏi).
+ * - Live Preview 2 cột: Biên soạn câu hỏi bên trái, Khung xem trước thời gian thực chuẩn MatchScreen bên phải.
  */
 public class QuestionManagementPanel extends JPanel {
 
@@ -67,9 +64,6 @@ public class QuestionManagementPanel extends JPanel {
         }
     }
 
-    /**
-     * 5 loại câu hỏi thực sự được hệ thống đối kháng hỗ trợ và sử dụng trong trận đấu.
-     */
     public enum SupportedType {
         MULTIPLE_CHOICE(Model.QuestionType.MULTIPLE_CHOICE, "Trắc nghiệm 4 đáp án (A, B, C, D)"),
         TRUE_FALSE(Model.QuestionType.TRUE_FALSE, "Đúng / Sai (2 lựa chọn)"),
@@ -117,63 +111,112 @@ public class QuestionManagementPanel extends JPanel {
         }
     }
 
+    // --- UI Controls ---
     private final DefaultTableModel tableModel;
     private final JTable table;
-    private final ModernTextField txtSearch;
+    private final JTextField txtSearch;
     private final JComboBox<String> cboTopicFilter;
     private final JComboBox<String> cboLevelFilter;
     private final JComboBox<String> cboTypeFilter;
     private final JLabel lblSummary;
+
+    // --- Dashboard KPI Labels ---
+    private final JLabel lblTotalCountVal = new JLabel("0");
+    private final JLabel lblEasyCountVal = new JLabel("0 (0%)");
+    private final JLabel lblMediumCountVal = new JLabel("0 (0%)");
+    private final JLabel lblHardCountVal = new JLabel("0 (0%)");
+    private final JPanel pnlTopicAlerts = new JPanel();
+
     private final List<QuestionRecord> allQuestions = new ArrayList<>();
     private final List<QuestionRecord> filteredQuestions = new ArrayList<>();
+    private int hoveredRow = -1;
     private QuestionActionListener actionListener;
 
     public QuestionManagementPanel() {
         setLayout(new BorderLayout(0, 12));
         setOpaque(false);
-        setBorder(new EmptyBorder(14, 24, 14, 24));
+        setBorder(new EmptyBorder(14, 20, 16, 20));
 
-        // 1. TOP TOOLBAR CARD
-        ModernCard topCard = new ModernCard(new BorderLayout(12, 8));
-        topCard.setCardPadding(14, 18, 14, 18);
-        topCard.setCardBackground(Theme.WHITE);
-        topCard.setBorderColor(Theme.BORDER_LIGHT);
+        // ==========================================
+        // 1. TOP CONTAINER: HEADER + KPI + ALERTS + TOOLBAR
+        // ==========================================
+        JPanel topContainer = new JPanel();
+        topContainer.setLayout(new BoxLayout(topContainer, BoxLayout.Y_AXIS));
+        topContainer.setOpaque(false);
 
-        JPanel titleRow = new JPanel(new BorderLayout(12, 0));
-        titleRow.setOpaque(false);
+        // Header Title
+        JPanel headerTitle = new JPanel(new BorderLayout());
+        headerTitle.setOpaque(false);
 
-        JPanel leftTitle = new JPanel();
-        leftTitle.setLayout(new BoxLayout(leftTitle, BoxLayout.Y_AXIS));
-        leftTitle.setOpaque(false);
-        JLabel lblTitle = new JLabel("QUẢN LÝ NGÂN HÀNG CÂU HỎI (ADMIN)");
-        lblTitle.setFont(Theme.SUBTITLE);
-        lblTitle.setForeground(Theme.DARK_TEXT);
-        lblSummary = new JLabel("Tổng số: 0 câu hỏi");
-        lblSummary.setFont(Theme.SMALL);
-        lblSummary.setForeground(Theme.MUTED_GRAY);
-        leftTitle.add(lblTitle);
-        leftTitle.add(lblSummary);
-        titleRow.add(leftTitle, BorderLayout.WEST);
+        JLabel title = new JLabel("QUẢN LÝ NGÂN HÀNG CÂU HỎI");
+        title.setFont(Theme.TITLE);
+        title.setForeground(Theme.BLUE);
 
-        JPanel actionBtns = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 0));
-        actionBtns.setOpaque(false);
+        JLabel subtitle = new JLabel("Biên soạn câu hỏi đối kháng, kiểm soát độ phủ chủ đề và chuẩn bị ngân hàng đề thi");
+        subtitle.setFont(Theme.SMALL);
+        subtitle.setForeground(Theme.MUTED_GRAY);
 
-        ModernButton btnAdd = new ModernButton("+ Thêm Câu Hỏi Mới", ModernButton.Style.SUCCESS);
+        headerTitle.add(title, BorderLayout.NORTH);
+        headerTitle.add(subtitle, BorderLayout.SOUTH);
+        topContainer.add(headerTitle);
+        topContainer.add(Box.createVerticalStrut(10));
+
+        // 4 KPI Cards với Icon Vector nghệ thuật
+        JPanel kpiRow = new JPanel(new GridLayout(1, 4, 12, 0));
+        kpiRow.setOpaque(false);
+
+        kpiRow.add(createKpiCard("TỔNG SỐ CÂU HỎI", "Ngân hàng đề thi", lblTotalCountVal,
+                new Color(0xEE, 0xF2, 0xFF), new Color(0xDB, 0xEA, 0xFE), new Color(0xBF, 0xDB, 0xFE), new Color(0x1D, 0x4E, 0xD8), 0));
+        kpiRow.add(createKpiCard("MỨC ĐỘ DỄ", "Cơ bản & Nhận biết", lblEasyCountVal,
+                new Color(0xEC, 0xFD, 0xF5), new Color(0xD1, 0xFA, 0xE5), new Color(0xA7, 0xF3, 0xD0), new Color(0x04, 0x78, 0x57), 1));
+        kpiRow.add(createKpiCard("MỨC ĐỘ VỪA", "Thông hiểu & Vận dụng", lblMediumCountVal,
+                new Color(0xFF, 0xFB, 0xEB), new Color(0xFE, 0xF3, 0xC7), new Color(0xFD, 0xE6, 0x8A), new Color(0xB4, 0x53, 0x09), 2));
+        kpiRow.add(createKpiCard("MỨC ĐỘ KHÓ", "Thử thách đỉnh cao", lblHardCountVal,
+                new Color(0xFE, 0xF2, 0xF2), new Color(0xFE, 0xE2, 0xE2), new Color(0xFE, 0xCA, 0xCA), new Color(0xDC, 0x26, 0x26), 3));
+
+        topContainer.add(kpiRow);
+        topContainer.add(Box.createVerticalStrut(10));
+
+        // Topic Health Alert Bar
+        pnlTopicAlerts.setLayout(new BorderLayout());
+        pnlTopicAlerts.setOpaque(false);
+        topContainer.add(pnlTopicAlerts);
+        topContainer.add(Box.createVerticalStrut(10));
+
+        // Unified Toolbar Card (Actions + Search + Filters)
+        ModernCard toolbarCard = new ModernCard(new BorderLayout(10, 10));
+        toolbarCard.setCardPadding(12, 16, 12, 16);
+        toolbarCard.setCardBackground(Theme.WHITE);
+        toolbarCard.setBorderColor(Theme.BORDER_LIGHT);
+
+        // Actions Row (Top)
+        JPanel actionsRow = new JPanel(new BorderLayout(10, 0));
+        actionsRow.setOpaque(false);
+
+        lblSummary = new JLabel("Hiển thị: 0 câu hỏi");
+        lblSummary.setFont(Theme.BODY_BOLD);
+        lblSummary.setForeground(Theme.DARK_TEXT);
+        actionsRow.add(lblSummary, BorderLayout.WEST);
+
+        JPanel btnGroup = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 0));
+        btnGroup.setOpaque(false);
+
+        ModernButton btnAdd = new ModernButton("+ Thêm Câu Hỏi Mới", ModernButton.Style.EMERALD);
         btnAdd.setPreferredSize(new Dimension(175, 36));
         btnAdd.addActionListener(e -> {
             SoundManager.playClick();
-            showQuestionDialog(null);
+            showLiveQuestionDialog(null);
         });
 
         ModernButton btnEdit = new ModernButton("Sửa", ModernButton.Style.PRIMARY);
-        btnEdit.setPreferredSize(new Dimension(85, 36));
+        btnEdit.setPreferredSize(new Dimension(80, 36));
         btnEdit.addActionListener(e -> {
             SoundManager.playClick();
             editSelected();
         });
 
         ModernButton btnDelete = new ModernButton("Xóa", ModernButton.Style.DANGER);
-        btnDelete.setPreferredSize(new Dimension(85, 36));
+        btnDelete.setPreferredSize(new Dimension(80, 36));
         btnDelete.addActionListener(e -> {
             SoundManager.playClick();
             deleteSelected();
@@ -186,69 +229,93 @@ public class QuestionManagementPanel extends JPanel {
             if (actionListener != null) actionListener.onRefresh();
         });
 
-        actionBtns.add(btnAdd);
-        actionBtns.add(btnEdit);
-        actionBtns.add(btnDelete);
-        actionBtns.add(btnRefresh);
-        titleRow.add(actionBtns, BorderLayout.EAST);
-        topCard.add(titleRow, BorderLayout.NORTH);
+        btnGroup.add(btnAdd);
+        btnGroup.add(btnEdit);
+        btnGroup.add(btnDelete);
+        btnGroup.add(btnRefresh);
+        actionsRow.add(btnGroup, BorderLayout.EAST);
+        toolbarCard.add(actionsRow, BorderLayout.NORTH);
 
-        // FILTER ROW
+        // Filter & Search Row (Bottom)
         JPanel filterRow = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
         filterRow.setOpaque(false);
 
-        txtSearch = new ModernTextField("Tìm theo nội dung hoặc mã câu hỏi...", 20);
-        txtSearch.setPreferredSize(new Dimension(240, 36));
-        txtSearch.addKeyListener(new KeyAdapter() {
+        // Custom Search Box with integrated Java2D Magnifying Glass icon
+        JPanel searchBox = new JPanel(new BorderLayout(8, 0)) {
             @Override
-            public void keyReleased(KeyEvent e) {
-                applyFilter();
+            protected void paintComponent(Graphics g) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                Theme.setupAntiAliasing(g2);
+                int w = getWidth();
+                int h = getHeight();
+                g2.setColor(new Color(0xF8, 0xFA, 0xFC));
+                g2.fillRoundRect(0, 0, w, h, 12, 12);
+                g2.setColor(new Color(0xCB, 0xD5, 0xE1));
+                g2.setStroke(new BasicStroke(1.0f));
+                g2.drawRoundRect(0, 0, w - 1, h - 1, 12, 12);
+
+                // Magnifying glass icon on left
+                g2.setColor(new Color(0x64, 0x74, 0x8B));
+                g2.setStroke(new BasicStroke(1.6f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+                int cx = 16;
+                int cy = h / 2 - 2;
+                g2.drawOval(cx - 5, cy - 5, 10, 10);
+                g2.drawLine(cx + 3, cy + 3, cx + 7, cy + 7);
+                g2.dispose();
+                super.paintComponent(g);
             }
+        };
+        searchBox.setOpaque(false);
+        searchBox.setPreferredSize(new Dimension(280, 34));
+        searchBox.setBorder(new EmptyBorder(0, 28, 0, 8));
+
+        txtSearch = new JTextField();
+        txtSearch.setFont(Theme.BODY);
+        txtSearch.setBorder(null);
+        txtSearch.setOpaque(false);
+        txtSearch.putClientProperty("JTextField.placeholderText", "Tìm theo nội dung, mã câu...");
+        txtSearch.getDocument().addDocumentListener(new DocumentListener() {
+            @Override public void insertUpdate(DocumentEvent e) { applyFilter(); }
+            @Override public void removeUpdate(DocumentEvent e) { applyFilter(); }
+            @Override public void changedUpdate(DocumentEvent e) { applyFilter(); }
         });
+        searchBox.add(txtSearch, BorderLayout.CENTER);
 
         List<String> topicOptions = new ArrayList<>();
         topicOptions.add("Tất cả chủ đề");
         topicOptions.addAll(Bank.STANDARD_TOPICS);
-        cboTopicFilter = new JComboBox<>(topicOptions.toArray(new String[0]));
-        cboTopicFilter.setFont(Theme.BODY);
-        cboTopicFilter.setPreferredSize(new Dimension(200, 36));
+        cboTopicFilter = createStyledComboBox(topicOptions.toArray(new String[0]), 200);
         cboTopicFilter.addActionListener(e -> applyFilter());
 
-        cboLevelFilter = new JComboBox<>(new String[]{"Tất cả mức độ", "Dễ", "Trung bình", "Khó"});
-        cboLevelFilter.setFont(Theme.BODY);
-        cboLevelFilter.setPreferredSize(new Dimension(135, 36));
+        cboLevelFilter = createStyledComboBox(new String[]{"Tất cả mức độ", "Dễ", "Trung bình", "Khó"}, 135);
         cboLevelFilter.addActionListener(e -> applyFilter());
 
-        cboTypeFilter = new JComboBox<>(new String[]{
+        cboTypeFilter = createStyledComboBox(new String[]{
                 "Tất cả loại",
                 "Trắc nghiệm 4 đáp án",
                 "Đúng / Sai",
                 "Chọn nhiều đáp án",
                 "Điền từ vào chỗ trống",
                 "Kéo thả đáp án"
-        });
-        cboTypeFilter.setFont(Theme.BODY);
-        cboTypeFilter.setPreferredSize(new Dimension(175, 36));
+        }, 180);
         cboTypeFilter.addActionListener(e -> applyFilter());
 
-        filterRow.add(txtSearch);
-        filterRow.add(new JLabel("Chủ đề:"));
+        filterRow.add(searchBox);
+        filterRow.add(createFilterLabel("Chủ đề:"));
         filterRow.add(cboTopicFilter);
-        filterRow.add(new JLabel("Mức độ:"));
+        filterRow.add(createFilterLabel("Mức độ:"));
         filterRow.add(cboLevelFilter);
-        filterRow.add(new JLabel("Loại:"));
+        filterRow.add(createFilterLabel("Loại:"));
         filterRow.add(cboTypeFilter);
-        topCard.add(filterRow, BorderLayout.SOUTH);
+        toolbarCard.add(filterRow, BorderLayout.SOUTH);
 
-        add(topCard, BorderLayout.NORTH);
+        topContainer.add(toolbarCard);
+        add(topContainer, BorderLayout.NORTH);
 
-        // 2. TABLE CARD
-        ModernCard tableCard = new ModernCard(new BorderLayout());
-        tableCard.setCardPadding(10, 14, 10, 14);
-        tableCard.setCardBackground(Theme.WHITE);
-        tableCard.setBorderColor(Theme.BORDER_LIGHT);
-
-        String[] cols = {"Mã", "Chủ đề", "Mức độ", "Loại câu hỏi", "Nội dung câu hỏi", "Đáp án / Lựa chọn"};
+        // ==========================================
+        // 2. DATA TABLE WITH ZEBRA & CAPSULE BADGES
+        // ==========================================
+        String[] cols = {"Mã ID", "Chủ đề", "Mức độ", "Loại câu hỏi", "Nội dung câu hỏi", "Đáp án đúng"};
         tableModel = new DefaultTableModel(cols, 0) {
             @Override
             public boolean isCellEditable(int row, int col) {
@@ -257,32 +324,48 @@ public class QuestionManagementPanel extends JPanel {
         };
 
         table = new JTable(tableModel);
-        table.setRowHeight(36);
+        table.setRowHeight(44);
         table.setFont(Theme.BODY);
-        table.getTableHeader().setFont(Theme.BODY_BOLD);
-        table.getTableHeader().setBackground(new Color(0xF1, 0xF5, 0xF9));
-        table.getTableHeader().setForeground(Theme.DARK_TEXT);
+        table.setShowGrid(false);
+        table.setIntercellSpacing(new Dimension(0, 0));
+        table.setFillsViewportHeight(true);
         table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        table.setGridColor(Theme.BORDER_LIGHT);
-        table.setShowVerticalLines(false);
+        table.setSelectionBackground(new Color(0xEE, 0xF2, 0xFF));
+        table.setSelectionForeground(Theme.DARK_TEXT);
 
-        table.getColumnModel().getColumn(0).setPreferredWidth(75);
-        table.getColumnModel().getColumn(0).setMaxWidth(95);
+        table.getTableHeader().setFont(Theme.BODY_BOLD);
+        table.getTableHeader().setBackground(new Color(0xF8, 0xFA, 0xFC));
+        table.getTableHeader().setForeground(Theme.DARK_TEXT);
+        table.getTableHeader().setPreferredSize(new Dimension(0, 40));
+        table.getTableHeader().setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, new Color(0xCB, 0xD5, 0xE1)));
+
+        table.getColumnModel().getColumn(0).setPreferredWidth(85);
+        table.getColumnModel().getColumn(0).setMaxWidth(105);
         table.getColumnModel().getColumn(1).setPreferredWidth(160);
-        table.getColumnModel().getColumn(2).setPreferredWidth(85);
-        table.getColumnModel().getColumn(2).setMaxWidth(100);
-        table.getColumnModel().getColumn(3).setPreferredWidth(130);
-        table.getColumnModel().getColumn(3).setMaxWidth(155);
-        table.getColumnModel().getColumn(4).setPreferredWidth(340);
-        table.getColumnModel().getColumn(5).setPreferredWidth(210);
+        table.getColumnModel().getColumn(2).setPreferredWidth(100);
+        table.getColumnModel().getColumn(2).setMaxWidth(115);
+        table.getColumnModel().getColumn(3).setPreferredWidth(140);
+        table.getColumnModel().getColumn(3).setMaxWidth(160);
+        table.getColumnModel().getColumn(4).setPreferredWidth(360);
+        table.getColumnModel().getColumn(5).setPreferredWidth(180);
 
-        DefaultTableCellRenderer centerRenderer = new DefaultTableCellRenderer();
-        centerRenderer.setHorizontalAlignment(SwingConstants.CENTER);
-        table.getColumnModel().getColumn(0).setCellRenderer(centerRenderer);
-        table.getColumnModel().getColumn(2).setCellRenderer(centerRenderer);
-        table.getColumnModel().getColumn(3).setCellRenderer(centerRenderer);
-
+        // Row rollover tracking
+        table.addMouseMotionListener(new MouseMotionAdapter() {
+            @Override
+            public void mouseMoved(MouseEvent e) {
+                int r = table.rowAtPoint(e.getPoint());
+                if (r != hoveredRow) {
+                    hoveredRow = r;
+                    table.repaint();
+                }
+            }
+        });
         table.addMouseListener(new MouseAdapter() {
+            @Override
+            public void mouseExited(MouseEvent e) {
+                hoveredRow = -1;
+                table.repaint();
+            }
             @Override
             public void mouseClicked(MouseEvent e) {
                 if (e.getClickCount() == 2) {
@@ -291,11 +374,172 @@ public class QuestionManagementPanel extends JPanel {
             }
         });
 
+        // Table Cell Renderer: Zebra, Hover, Badges
+        DefaultTableCellRenderer modernRenderer = new DefaultTableCellRenderer() {
+            @Override
+            public Component getTableCellRendererComponent(JTable t, Object val, boolean sel, boolean foc, int row, int col) {
+                Component c = super.getTableCellRendererComponent(t, val, sel, foc, row, col);
+                String strVal = (val != null) ? val.toString() : "";
+
+                if (sel) {
+                    c.setBackground(t.getSelectionBackground());
+                } else if (row == hoveredRow) {
+                    c.setBackground(new Color(0xF1, 0xF5, 0xF9));
+                } else {
+                    c.setBackground(row % 2 == 0 ? Theme.WHITE : new Color(0xF8, 0xFA, 0xFC));
+                }
+
+                setFont((col == 0 || col == 2 || col == 3) ? Theme.SMALL_BOLD : Theme.BODY);
+                setHorizontalAlignment((col == 0 || col == 2 || col == 3) ? SwingConstants.CENTER : SwingConstants.LEFT);
+                setBorder(new EmptyBorder(0, 12, 0, 12));
+
+                if (col == 0) {
+                    setForeground(new Color(0x47, 0x55, 0x69));
+                } else if (col == 2) {
+                    // Level badge
+                    if ("Dễ".equalsIgnoreCase(strVal)) setForeground(new Color(0x05, 0x96, 0x69));
+                    else if ("Trung bình".equalsIgnoreCase(strVal)) setForeground(new Color(0xD9, 0x77, 0x06));
+                    else setForeground(new Color(0xDC, 0x26, 0x26));
+                } else if (col == 3) {
+                    // Type badge
+                    if (strVal.contains("Trắc nghiệm")) setForeground(new Color(0x25, 0x63, 0xEB));
+                    else if (strVal.contains("Đúng / Sai")) setForeground(new Color(0x7C, 0x3A, 0xED));
+                    else if (strVal.contains("Chọn nhiều")) setForeground(new Color(0xD9, 0x77, 0x06));
+                    else if (strVal.contains("Điền từ")) setForeground(new Color(0x05, 0x96, 0x69));
+                    else setForeground(new Color(0xEA, 0x58, 0x0C));
+                } else if (col == 5) {
+                    setForeground(new Color(0x05, 0x96, 0x69));
+                    setFont(Theme.BODY_BOLD);
+                } else {
+                    setForeground(Theme.DARK_TEXT);
+                }
+                return c;
+            }
+        };
+
+        for (int c = 0; c < cols.length; c++) {
+            table.getColumnModel().getColumn(c).setCellRenderer(modernRenderer);
+        }
+
         JScrollPane scroll = new JScrollPane(table);
-        scroll.setBorder(BorderFactory.createEmptyBorder());
+        scroll.setBorder(BorderFactory.createLineBorder(Theme.BORDER_LIGHT, 1));
         scroll.getViewport().setBackground(Theme.WHITE);
-        tableCard.add(scroll, BorderLayout.CENTER);
-        add(tableCard, BorderLayout.CENTER);
+        scroll.getVerticalScrollBar().setUI(new ModernScrollBarUI());
+        scroll.getVerticalScrollBar().setUnitIncrement(18);
+        add(scroll, BorderLayout.CENTER);
+    }
+
+    private JPanel createKpiCard(String title, String subtitle, JLabel lblValue,
+                                 Color bgTop, Color bgBottom, Color borderColor, Color primaryColor, int iconType) {
+        JPanel card = new JPanel() {
+            @Override
+            protected void paintComponent(Graphics g) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                Theme.setupAntiAliasing(g2);
+                int w = getWidth();
+                int h = getHeight();
+
+                GradientPaint gp = new GradientPaint(0, 0, bgTop, 0, h, bgBottom);
+                g2.setPaint(gp);
+                g2.fillRoundRect(0, 0, w, h, 14, 14);
+
+                g2.setColor(borderColor);
+                g2.setStroke(new BasicStroke(1.2f));
+                g2.drawRoundRect(0, 0, w - 1, h - 1, 14, 14);
+
+                // Polished Icon Squircle (30x30)
+                int icSize = 30;
+                int icX = w - icSize - 12;
+                int icY = 10;
+
+                g2.setColor(new Color(primaryColor.getRed(), primaryColor.getGreen(), primaryColor.getBlue(), 32));
+                g2.fillRoundRect(icX, icY, icSize, icSize, 8, 8);
+                g2.setColor(new Color(primaryColor.getRed(), primaryColor.getGreen(), primaryColor.getBlue(), 80));
+                g2.setStroke(new BasicStroke(1.0f));
+                g2.drawRoundRect(icX, icY, icSize - 1, icSize - 1, 8, 8);
+
+                g2.setColor(primaryColor);
+                g2.setStroke(new BasicStroke(1.8f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+                int cx = icX + icSize / 2;
+                int cy = icY + icSize / 2;
+
+                if (iconType == 0) {
+                    // Open Book / Quiz catalog
+                    g2.drawRect(cx - 6, cy - 6, 12, 12);
+                    g2.drawLine(cx, cy - 6, cx, cy + 6);
+                    g2.drawLine(cx - 4, cy - 2, cx - 1, cy - 2);
+                    g2.drawLine(cx + 1, cy - 2, cx + 4, cy - 2);
+                } else if (iconType == 1) {
+                    // Shield Check (Easy)
+                    Path2D.Float sh = new Path2D.Float();
+                    sh.moveTo(cx - 6, cy - 5);
+                    sh.lineTo(cx + 6, cy - 5);
+                    sh.lineTo(cx + 6, cy);
+                    sh.quadTo(cx, cy + 7, cx - 6, cy);
+                    sh.closePath();
+                    g2.draw(sh);
+                    g2.drawLine(cx - 3, cy, cx - 1, cy + 2);
+                    g2.drawLine(cx - 1, cy + 2, cx + 3, cy - 2);
+                } else if (iconType == 2) {
+                    // Diamond scale (Medium)
+                    Path2D.Float dm = new Path2D.Float();
+                    dm.moveTo(cx, cy - 6);
+                    dm.lineTo(cx + 6, cy);
+                    dm.lineTo(cx, cy + 6);
+                    dm.lineTo(cx - 6, cy);
+                    dm.closePath();
+                    g2.draw(dm);
+                    g2.fillOval(cx - 2, cy - 2, 4, 4);
+                } else {
+                    // Flame challenge (Hard)
+                    int[] xf = {cx, cx + 5, cx + 2, cx + 6, cx - 1, cx - 6, cx - 3};
+                    int[] yf = {cy - 7, cy - 1, cy + 1, cy + 6, cy + 7, cy + 3, cy - 2};
+                    g2.drawPolygon(xf, yf, 7);
+                }
+                g2.dispose();
+                super.paintComponent(g);
+            }
+        };
+        card.setLayout(new BoxLayout(card, BoxLayout.Y_AXIS));
+        card.setOpaque(false);
+        card.setBorder(new EmptyBorder(10, 14, 10, 14));
+        card.setPreferredSize(new Dimension(170, 78));
+
+        JLabel lblTitle = new JLabel(title);
+        lblTitle.setFont(Theme.SMALL_BOLD);
+        lblTitle.setForeground(primaryColor);
+        lblTitle.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        lblValue.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 18));
+        lblValue.setForeground(primaryColor);
+        lblValue.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        JLabel lblSub = new JLabel(subtitle);
+        lblSub.setFont(Theme.SMALL);
+        lblSub.setForeground(new Color(primaryColor.getRed(), primaryColor.getGreen(), primaryColor.getBlue(), 180));
+        lblSub.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        card.add(lblTitle);
+        card.add(Box.createVerticalStrut(2));
+        card.add(lblValue);
+        card.add(Box.createVerticalStrut(2));
+        card.add(lblSub);
+        return card;
+    }
+
+    private static JComboBox<String> createStyledComboBox(String[] items, int width) {
+        JComboBox<String> cb = new JComboBox<>(items);
+        cb.setFont(Theme.BODY);
+        cb.setPreferredSize(new Dimension(width, 34));
+        cb.setBackground(new Color(0xF8, 0xFA, 0xFC));
+        return cb;
+    }
+
+    private static JLabel createFilterLabel(String text) {
+        JLabel l = new JLabel(text);
+        l.setFont(Theme.SMALL_BOLD);
+        l.setForeground(new Color(0x47, 0x55, 0x69));
+        return l;
     }
 
     public void setQuestionActionListener(QuestionActionListener listener) {
@@ -318,10 +562,10 @@ public class QuestionManagementPanel extends JPanel {
                 }
             }
         }
+        updateDashboardStats();
         applyFilter();
     }
 
-    /** Nhận gói QUESTION_LIST: a[0]="QUESTION_LIST", mỗi phần tử a[1..] là 1 câu hỏi (tab-separated). */
     public void updateFromWire(String[] a) {
         StringBuilder sb = new StringBuilder();
         for (int i = 1; a != null && i < a.length; i++) {
@@ -329,6 +573,77 @@ public class QuestionManagementPanel extends JPanel {
             sb.append(a[i]).append('\n');
         }
         updateData(sb.toString());
+    }
+
+    private void updateDashboardStats() {
+        int total = allQuestions.size();
+        int easy = 0;
+        int med = 0;
+        int hard = 0;
+        Map<String, Integer> topicCounts = new LinkedHashMap<>();
+
+        for (String st : Bank.STANDARD_TOPICS) topicCounts.put(st, 0);
+
+        for (QuestionRecord q : allQuestions) {
+            String lvl = q.level != null ? q.level.trim() : "Dễ";
+            if ("Khó".equalsIgnoreCase(lvl)) hard++;
+            else if ("Trung bình".equalsIgnoreCase(lvl)) med++;
+            else easy++;
+
+            String top = q.topic != null && !q.topic.isBlank() ? q.topic.trim() : "Tổng hợp";
+            topicCounts.put(top, topicCounts.getOrDefault(top, 0) + 1);
+        }
+
+        lblTotalCountVal.setText(total + " câu");
+        lblEasyCountVal.setText(easy + " (" + (total > 0 ? (easy * 100 / total) : 0) + "%)");
+        lblMediumCountVal.setText(med + " (" + (total > 0 ? (med * 100 / total) : 0) + "%)");
+        lblHardCountVal.setText(hard + " (" + (total > 0 ? (hard * 100 / total) : 0) + "%)");
+
+        // Topic Health Alert Bar
+        pnlTopicAlerts.removeAll();
+        List<String> lowTopics = new ArrayList<>();
+        for (var entry : topicCounts.entrySet()) {
+            if (entry.getValue() < 10) {
+                lowTopics.add(entry.getKey() + " (" + entry.getValue() + "/10 câu, thiếu " + (10 - entry.getValue()) + ")");
+            }
+        }
+
+        JPanel alertBanner = new JPanel(new BorderLayout(8, 0)) {
+            @Override
+            protected void paintComponent(Graphics g) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                Theme.setupAntiAliasing(g2);
+                int w = getWidth();
+                int h = getHeight();
+                Color bg = lowTopics.isEmpty() ? new Color(0xEC, 0xFD, 0xF5) : new Color(0xFF, 0xFB, 0xEB);
+                Color border = lowTopics.isEmpty() ? new Color(0xA7, 0xF3, 0xD0) : new Color(0xFD, 0xE6, 0x8A);
+                g2.setColor(bg);
+                g2.fillRoundRect(0, 0, w, h, 10, 10);
+                g2.setColor(border);
+                g2.setStroke(new BasicStroke(1.2f));
+                g2.drawRoundRect(0, 0, w - 1, h - 1, 10, 10);
+                g2.dispose();
+                super.paintComponent(g);
+            }
+        };
+        alertBanner.setOpaque(false);
+        alertBanner.setBorder(new EmptyBorder(8, 14, 8, 14));
+
+        if (lowTopics.isEmpty()) {
+            JLabel lblOk = new JLabel("CHUẨN BỊ ĐẦU ĐỦ: Tất cả các chủ đề thi đấu đều đạt từ 10 câu trở lên (Đủ điều kiện tạo trận đấu 1v1).");
+            lblOk.setFont(Theme.SMALL_BOLD);
+            lblOk.setForeground(new Color(0x04, 0x78, 0x57));
+            alertBanner.add(lblOk, BorderLayout.WEST);
+        } else {
+            JLabel lblWarn = new JLabel("CẢNH BÁO THIẾU CÂU HỎI (" + lowTopics.size() + " chủ đề chưa đủ 10 câu): " + String.join(" • ", lowTopics));
+            lblWarn.setFont(Theme.SMALL_BOLD);
+            lblWarn.setForeground(new Color(0xB4, 0x53, 0x09));
+            alertBanner.add(lblWarn, BorderLayout.CENTER);
+        }
+
+        pnlTopicAlerts.add(alertBanner, BorderLayout.CENTER);
+        pnlTopicAlerts.revalidate();
+        pnlTopicAlerts.repaint();
     }
 
     private void applyFilter() {
@@ -367,22 +682,34 @@ public class QuestionManagementPanel extends JPanel {
                     q.level,
                     formatTypeLabel(q.type),
                     q.text,
-                    q.choicesRaw + " [Đ/A: " + q.answerRaw + "]"
+                    formatAnswerPreview(q)
             });
         }
 
-        if (topicSel != null && !topicSel.equals("Tất cả chủ đề")) {
-            int topicCount = 0;
-            for (QuestionRecord q : allQuestions) {
-                if (q.topic.equalsIgnoreCase(topicSel)) topicCount++;
+        lblSummary.setText("Hiển thị: " + filteredQuestions.size() + " / " + allQuestions.size() + " câu hỏi trong ngân hàng đề");
+    }
+
+    private String formatAnswerPreview(QuestionRecord q) {
+        String type = q.type != null ? q.type.toUpperCase() : "MULTIPLE_CHOICE";
+        return switch (type) {
+            case "TRUE_FALSE" -> "0".equals(q.answerRaw) ? "ĐÚNG" : "SAI";
+            case "MULTIPLE_SELECT" -> "Lựa chọn: " + q.answerRaw;
+            case "FILL_IN" -> q.choicesRaw.isBlank() ? "Theo fillMap" : q.choicesRaw;
+            case "DRAG_AND_DROP" -> q.fillMapRaw.isBlank() ? "Ghép theo blanks" : formatFillMapForUser(q.fillMapRaw);
+            default -> {
+                try {
+                    int ans = Integer.parseInt(q.answerRaw.trim());
+                    String[] ch = q.choicesRaw.split(";");
+                    char prefix = (char) ('A' + ans);
+                    if (ans >= 0 && ans < ch.length) {
+                        yield prefix + ". " + ch[ans];
+                    }
+                    yield String.valueOf(prefix);
+                } catch (Exception e) {
+                    yield q.answerRaw;
+                }
             }
-            String warn = topicCount < 10 ? " ([!] Thiếu câu hỏi: cần ít nhất 10 câu để tạo trận!)" : " ([OK] Đủ điều kiện tạo trận)";
-            lblSummary.setText("Hiển thị: " + filteredQuestions.size() + " câu | Chủ đề '" + topicSel + "': " + topicCount + " câu" + warn);
-            lblSummary.setForeground(topicCount < 10 ? Theme.RED : Theme.GREEN);
-        } else {
-            lblSummary.setText("Hiển thị: " + filteredQuestions.size() + " / " + allQuestions.size() + " câu hỏi trong ngân hàng");
-            lblSummary.setForeground(Theme.MUTED_GRAY);
-        }
+        };
     }
 
     private String formatTypeLabel(String type) {
@@ -396,13 +723,30 @@ public class QuestionManagementPanel extends JPanel {
         };
     }
 
+    private static String formatFillMapForUser(String raw) {
+        if (raw == null || raw.isBlank()) return "";
+        if (raw.contains("=")) {
+            List<String> values = new ArrayList<>();
+            for (String pair : raw.split(";")) {
+                int eq = pair.indexOf('=');
+                if (eq >= 0) {
+                    values.add(pair.substring(eq + 1).trim());
+                } else if (!pair.trim().isEmpty()) {
+                    values.add(pair.trim());
+                }
+            }
+            return String.join("; ", values);
+        }
+        return raw;
+    }
+
     private void editSelected() {
         int row = table.getSelectedRow();
         if (row < 0 || row >= filteredQuestions.size()) {
             JOptionPane.showMessageDialog(this, "Vui lòng chọn 1 câu hỏi trong bảng để sửa!", "Chưa chọn câu hỏi", JOptionPane.INFORMATION_MESSAGE);
             return;
         }
-        showQuestionDialog(filteredQuestions.get(row));
+        showLiveQuestionDialog(filteredQuestions.get(row));
     }
 
     private void deleteSelected() {
@@ -414,7 +758,7 @@ public class QuestionManagementPanel extends JPanel {
         QuestionRecord rec = filteredQuestions.get(row);
         int cf = JOptionPane.showConfirmDialog(
                 this,
-                "Bạn có chắc chắn muốn xóa câu hỏi [" + rec.id + "]?\n\"" + rec.text + "\"",
+                "Bạn có chắc chắn muốn xóa câu hỏi [" + rec.id + "] khỏi ngân hàng đề?\n\"" + rec.text + "\"",
                 "Xác nhận xóa câu hỏi",
                 JOptionPane.YES_NO_OPTION,
                 JOptionPane.WARNING_MESSAGE);
@@ -424,54 +768,69 @@ public class QuestionManagementPanel extends JPanel {
     }
 
     // =========================================================================
-    // HỘP THOẠI THÊM / SỬA CÂU HỎI ĐỘNG (DYNAMIC ADMIN QUESTION DIALOG)
+    // LIVE PREVIEW MODAL — THÊM / SỬA CÂU HỎI 2 CỘT HIỆN ĐẠI (FULL MÀN HÌNH)
     // =========================================================================
-    private void showQuestionDialog(QuestionRecord existing) {
+    private void showLiveQuestionDialog(QuestionRecord existing) {
         Window owner = SwingUtilities.getWindowAncestor(this);
         boolean isEdit = (existing != null);
         JDialog dlg = new JDialog(owner, isEdit ? ("Chỉnh Sửa Câu Hỏi [" + existing.id + "]") : "Thêm Câu Hỏi Mới — Quiz Arena", Dialog.ModalityType.APPLICATION_MODAL);
-        dlg.setSize(740, 720);
-        dlg.setMinimumSize(new Dimension(680, 620));
-        dlg.setLocationRelativeTo(this);
+
+        // Mở FULL MÀN HÌNH ngay lập tức (tính toán chuẩn theo thanh Taskbar của Windows)
+        GraphicsConfiguration gc = (owner != null && owner.getGraphicsConfiguration() != null)
+                ? owner.getGraphicsConfiguration()
+                : GraphicsEnvironment.getLocalGraphicsEnvironment().getDefaultScreenDevice().getDefaultConfiguration();
+        Rectangle maxBounds = GraphicsEnvironment.getLocalGraphicsEnvironment().getMaximumWindowBounds();
+        if (gc != null) {
+            Rectangle screenBounds = gc.getBounds();
+            Insets insets = Toolkit.getDefaultToolkit().getScreenInsets(gc);
+            maxBounds = new Rectangle(
+                    screenBounds.x + insets.left,
+                    screenBounds.y + insets.top,
+                    screenBounds.width - insets.left - insets.right,
+                    screenBounds.height - insets.top - insets.bottom
+            );
+        }
+        dlg.setBounds(maxBounds);
+        dlg.setMinimumSize(new Dimension(980, 640));
+        dlg.setResizable(true);
         dlg.setLayout(new BorderLayout());
 
-        // 1. TOP HEADER BANNER
-        JPanel headerPanel = new JPanel();
-        headerPanel.setLayout(new BoxLayout(headerPanel, BoxLayout.Y_AXIS));
-        headerPanel.setBackground(new Color(0x1F, 0x2A, 0x44)); // Deep Navy
-        headerPanel.setBorder(new EmptyBorder(16, 22, 16, 22));
+        // Header Banner
+        JPanel header = new JPanel(new BorderLayout());
+        header.setBackground(new Color(0x1E, 0x29, 0x3B));
+        header.setBorder(new EmptyBorder(14, 22, 14, 22));
 
-        JLabel lblDlgTitle = new JLabel(isEdit ? ("CHỈNH SỬA CÂU HỎI [" + existing.id + "]") : "THÊM CÂU HỎI MỚI VÀO NGÂN HÀNG ĐỀ");
-        lblDlgTitle.setFont(Theme.SUBTITLE);
-        lblDlgTitle.setForeground(Theme.WHITE);
+        JLabel lblTitle = new JLabel(isEdit ? ("CHỈNH SỬA CÂU HỎI [" + existing.id + "]") : "THÊM CÂU HỎI MỚI VÀO NGÂN HÀNG ĐỀ");
+        lblTitle.setFont(Theme.SUBTITLE);
+        lblTitle.setForeground(Theme.WHITE);
 
-        JLabel lblDlgSubtitle = new JLabel("Chỉ sử dụng 5 loại câu hỏi chuẩn được hệ thống đối kháng hỗ trợ và thi đấu trực tiếp.");
-        lblDlgSubtitle.setFont(Theme.SMALL);
-        lblDlgSubtitle.setForeground(new Color(0x94, 0xA3, 0xB8)); // Slate Light
+        JLabel lblSub = new JLabel("Form biên tập bên trái và Khung Live Preview trực tiếp bên phải mô phỏng giao diện trận đấu");
+        lblSub.setFont(Theme.SMALL);
+        lblSub.setForeground(new Color(0x94, 0xA3, 0xB8));
 
-        headerPanel.add(lblDlgTitle);
-        headerPanel.add(Box.createVerticalStrut(4));
-        headerPanel.add(lblDlgSubtitle);
-        dlg.add(headerPanel, BorderLayout.NORTH);
+        header.add(lblTitle, BorderLayout.NORTH);
+        header.add(lblSub, BorderLayout.SOUTH);
+        dlg.add(header, BorderLayout.NORTH);
 
-        // 2. MAIN SCROLLABLE FORM
-        JPanel formContainer = new JPanel();
-        formContainer.setLayout(new BoxLayout(formContainer, BoxLayout.Y_AXIS));
-        formContainer.setBackground(new Color(0xF8, 0xFA, 0xFC));
-        formContainer.setBorder(new EmptyBorder(18, 22, 18, 22));
+        // Main 2-column Container
+        JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT);
+        splitPane.setResizeWeight(0.46);
+        splitPane.setBorder(null);
+        splitPane.setDividerSize(6);
+        final int initialDivider = (int) (maxBounds.width * 0.46);
+        splitPane.setDividerLocation(initialDivider);
 
-        // Group 1: Thông tin cơ bản (Chủ đề, Mức độ, Loại câu hỏi)
+        // --- CỘT TRÁI: FORM NHẬP LIỆU ---
+        JPanel formPanel = new JPanel();
+        formPanel.setLayout(new BoxLayout(formPanel, BoxLayout.Y_AXIS));
+        formPanel.setBackground(new Color(0xF8, 0xFA, 0xFC));
+        formPanel.setBorder(new EmptyBorder(18, 22, 18, 22));
+
+        // Meta row: Topic, Level, Type sử dụng GridBagLayout chống tràn vỡ giao diện
         JPanel metaCard = new JPanel(new GridBagLayout());
-        metaCard.setBackground(Theme.WHITE);
-        metaCard.setBorder(BorderFactory.createCompoundBorder(
-                new LineBorder(Theme.BORDER_LIGHT, 1, true),
-                new EmptyBorder(14, 16, 14, 16)
-        ));
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(6, 6, 6, 6);
-        gbc.fill = GridBagConstraints.HORIZONTAL;
+        metaCard.setOpaque(false);
+        metaCard.setAlignmentX(Component.LEFT_ALIGNMENT);
 
-        // Danh sách chủ đề (gộp các chủ đề chuẩn và chủ đề đã có)
         Set<String> topicsSet = new LinkedHashSet<>(Bank.STANDARD_TOPICS);
         for (QuestionRecord q : allQuestions) {
             if (q.topic != null && !q.topic.isBlank()) topicsSet.add(q.topic);
@@ -479,425 +838,311 @@ public class QuestionManagementPanel extends JPanel {
         JComboBox<String> cboTopic = new JComboBox<>(topicsSet.toArray(new String[0]));
         cboTopic.setFont(Theme.BODY);
         cboTopic.setEditable(true);
+        cboTopic.setPreferredSize(new Dimension(0, 36));
         if (isEdit) cboTopic.setSelectedItem(existing.topic);
 
         JComboBox<String> cboLevel = new JComboBox<>(new String[]{"Dễ", "Trung bình", "Khó"});
         cboLevel.setFont(Theme.BODY);
+        cboLevel.setPreferredSize(new Dimension(0, 36));
         if (isEdit) cboLevel.setSelectedItem(existing.level);
 
-        // Chỉ hiển thị 5 loại câu hỏi được hệ thống hỗ trợ
         JComboBox<SupportedType> cboType = new JComboBox<>(SupportedType.values());
         cboType.setFont(Theme.BODY_BOLD);
-        if (isEdit) {
-            cboType.setSelectedItem(SupportedType.fromString(existing.type));
-        } else {
-            cboType.setSelectedItem(SupportedType.MULTIPLE_CHOICE);
-        }
+        cboType.setPreferredSize(new Dimension(0, 36));
+        if (isEdit) cboType.setSelectedItem(SupportedType.fromString(existing.type));
 
-        // Dòng 1: Chủ đề & Mức độ
-        gbc.gridx = 0; gbc.gridy = 0; gbc.weightx = 0.14;
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(5, 4, 5, 4);
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+
+        gbc.gridx = 0; gbc.gridy = 0; gbc.weightx = 0.0;
         metaCard.add(createBoldLabel("Chủ đề:"), gbc);
-        gbc.gridx = 1; gbc.gridy = 0; gbc.weightx = 0.46;
+        gbc.gridx = 1; gbc.gridy = 0; gbc.weightx = 1.0;
         metaCard.add(cboTopic, gbc);
 
-        gbc.gridx = 2; gbc.gridy = 0; gbc.weightx = 0.14;
+        gbc.gridx = 0; gbc.gridy = 1; gbc.weightx = 0.0;
         metaCard.add(createBoldLabel("Mức độ:"), gbc);
-        gbc.gridx = 3; gbc.gridy = 0; gbc.weightx = 0.26;
+        gbc.gridx = 1; gbc.gridy = 1; gbc.weightx = 1.0;
         metaCard.add(cboLevel, gbc);
 
-        // Dòng 2: Loại câu hỏi
-        gbc.gridx = 0; gbc.gridy = 1; gbc.weightx = 0.14;
+        gbc.gridx = 0; gbc.gridy = 2; gbc.weightx = 0.0;
         metaCard.add(createBoldLabel("Loại câu hỏi:"), gbc);
-        gbc.gridx = 1; gbc.gridy = 1; gbc.gridwidth = 3; gbc.weightx = 0.86;
+        gbc.gridx = 1; gbc.gridy = 2; gbc.weightx = 1.0;
         metaCard.add(cboType, gbc);
-        gbc.gridwidth = 1; // reset
 
-        formContainer.add(metaCard);
-        formContainer.add(Box.createVerticalStrut(14));
+        formPanel.add(metaCard);
+        formPanel.add(Box.createVerticalStrut(12));
 
-        // Group 2: Khung Hướng dẫn & Quy tắc định dạng (Thay đổi theo loại được chọn)
-        JPanel guideCard = new JPanel(new BorderLayout(8, 6));
-        guideCard.setBackground(new Color(0xF0, 0xF9, 0xFF)); // Soft Sky Light
-        guideCard.setBorder(BorderFactory.createCompoundBorder(
-                new LineBorder(new Color(0xBA, 0xE6, 0xFD), 1, true),
-                new EmptyBorder(10, 14, 10, 14)
-        ));
+        // Question text
+        JLabel lblQ = createBoldLabel("Nội dung câu hỏi:");
+        lblQ.setAlignmentX(Component.LEFT_ALIGNMENT);
+        formPanel.add(lblQ);
+        formPanel.add(Box.createVerticalStrut(4));
 
-        JLabel lblGuideTitle = new JLabel("HƯỚNG DẪN & QUY TẮC ĐỊNH DẠNG");
-        lblGuideTitle.setFont(Theme.SMALL_BOLD);
-        lblGuideTitle.setForeground(new Color(0x03, 0x69, 0xA1)); // Sky Dark
-
-        JTextArea txtGuideInfo = new JTextArea();
-        txtGuideInfo.setEditable(false);
-        txtGuideInfo.setFocusable(false);
-        txtGuideInfo.setLineWrap(true);
-        txtGuideInfo.setWrapStyleWord(true);
-        txtGuideInfo.setFont(Theme.SMALL);
-        txtGuideInfo.setForeground(new Color(0x0F, 0x17, 0x2A));
-        txtGuideInfo.setOpaque(false);
-        txtGuideInfo.setBorder(BorderFactory.createEmptyBorder(4, 0, 0, 0));
-
-        guideCard.add(lblGuideTitle, BorderLayout.NORTH);
-        guideCard.add(txtGuideInfo, BorderLayout.CENTER);
-        formContainer.add(guideCard);
-        formContainer.add(Box.createVerticalStrut(14));
-
-        // Group 3: Nội dung câu hỏi
-        JPanel questionTextCard = new JPanel(new BorderLayout(0, 8));
-        questionTextCard.setBackground(Theme.WHITE);
-        questionTextCard.setBorder(BorderFactory.createCompoundBorder(
-                new LineBorder(Theme.BORDER_LIGHT, 1, true),
-                new EmptyBorder(14, 16, 14, 16)
-        ));
-
-        JPanel qTextHeader = new JPanel(new BorderLayout());
-        qTextHeader.setOpaque(false);
-        JLabel lblQText = createBoldLabel("Nội dung câu hỏi:");
-        qTextHeader.add(lblQText, BorderLayout.WEST);
-
-        // Nút chèn chỗ trống (chỉ dùng cho câu DRAG_AND_DROP)
-        ModernButton btnInsertBlank = new ModernButton("+ Chèn Chỗ Trống '____'", ModernButton.Style.SECONDARY_SKY);
-        btnInsertBlank.setPreferredSize(new Dimension(190, 28));
-        btnInsertBlank.setFont(Theme.SMALL_BOLD);
-        btnInsertBlank.setVisible(false);
-        qTextHeader.add(btnInsertBlank, BorderLayout.EAST);
-        questionTextCard.add(qTextHeader, BorderLayout.NORTH);
-
-        JTextArea txtQuestion = new JTextArea(isEdit ? existing.text : "", 3, 30);
+        JTextArea txtQuestion = new JTextArea(isEdit ? existing.text : "", 3, 20);
         txtQuestion.setLineWrap(true);
         txtQuestion.setWrapStyleWord(true);
         txtQuestion.setFont(Theme.BODY);
-        txtQuestion.setBorder(BorderFactory.createCompoundBorder(
-                new LineBorder(Theme.BORDER_LIGHT, 1),
-                new EmptyBorder(6, 8, 6, 8)
-        ));
-        questionTextCard.add(new JScrollPane(txtQuestion), BorderLayout.CENTER);
+        JScrollPane scrollQ = new JScrollPane(txtQuestion);
+        scrollQ.setPreferredSize(new Dimension(0, 80));
+        scrollQ.setAlignmentX(Component.LEFT_ALIGNMENT);
+        formPanel.add(scrollQ);
+        formPanel.add(Box.createVerticalStrut(10));
 
+        // Dynamic Choices Panel (CardLayout)
+        CardLayout cardLayout = new CardLayout();
+        JPanel pnlCards = new JPanel(cardLayout);
+        pnlCards.setOpaque(false);
+
+        // Card 1: Multiple Choice (4 choices + radio)
+        JPanel cardMC = new JPanel(new GridLayout(4, 1, 0, 6));
+        cardMC.setOpaque(false);
+        JTextField[] tfMC = new JTextField[4];
+        JRadioButton[] rbMC = new JRadioButton[4];
+        ButtonGroup bgMC = new ButtonGroup();
+        String[] exChoices = (isEdit && existing.choicesRaw != null) ? existing.choicesRaw.split(";") : new String[0];
+        int exAns = 0;
+        try { if (isEdit) exAns = Integer.parseInt(existing.answerRaw.trim()); } catch (Exception ignored) {}
+
+        for (int i = 0; i < 4; i++) {
+            JPanel row = new JPanel(new BorderLayout(8, 0));
+            row.setOpaque(false);
+            char pfx = (char) ('A' + i);
+            rbMC[i] = new JRadioButton(pfx + ":");
+            rbMC[i].setFont(Theme.BODY_BOLD);
+            rbMC[i].setOpaque(false);
+            bgMC.add(rbMC[i]);
+            if (i == exAns) rbMC[i].setSelected(true);
+
+            tfMC[i] = new JTextField(i < exChoices.length ? exChoices[i].trim() : "");
+            tfMC[i].setFont(Theme.BODY);
+
+            row.add(rbMC[i], BorderLayout.WEST);
+            row.add(tfMC[i], BorderLayout.CENTER);
+            cardMC.add(row);
+        }
+        pnlCards.add(cardMC, SupportedType.MULTIPLE_CHOICE.name());
+
+        // Card 2: True / False
+        JPanel cardTF = new JPanel(new FlowLayout(FlowLayout.LEFT, 16, 6));
+        cardTF.setOpaque(false);
+        JRadioButton rbTrue = new JRadioButton("ĐÚNG (Chính xác)", isEdit ? "0".equals(existing.answerRaw) : true);
+        JRadioButton rbFalse = new JRadioButton("SAI (Không đúng)", isEdit ? "1".equals(existing.answerRaw) : false);
+        ButtonGroup bgTF = new ButtonGroup();
+        bgTF.add(rbTrue);
+        bgTF.add(rbFalse);
+        rbTrue.setFont(Theme.BODY_BOLD);
+        rbFalse.setFont(Theme.BODY_BOLD);
+        cardTF.add(rbTrue);
+        cardTF.add(rbFalse);
+        pnlCards.add(cardTF, SupportedType.TRUE_FALSE.name());
+
+        // Card 3: Multiple Select
+        JPanel cardMS = new JPanel(new GridLayout(4, 1, 0, 6));
+        cardMS.setOpaque(false);
+        JTextField[] tfMS = new JTextField[4];
+        JCheckBox[] cbMS = new JCheckBox[4];
+        int exMask = 0;
+        try {
+            if (isEdit) {
+                for (String p : existing.answerRaw.split("[,;]")) {
+                    exMask |= (1 << Integer.parseInt(p.trim()));
+                }
+            }
+        } catch (Exception ignored) {}
+
+        for (int i = 0; i < 4; i++) {
+            JPanel row = new JPanel(new BorderLayout(8, 0));
+            row.setOpaque(false);
+            char pfx = (char) ('A' + i);
+            cbMS[i] = new JCheckBox(pfx + ":");
+            cbMS[i].setFont(Theme.BODY_BOLD);
+            cbMS[i].setOpaque(false);
+            if ((exMask & (1 << i)) != 0) cbMS[i].setSelected(true);
+
+            tfMS[i] = new JTextField(i < exChoices.length ? exChoices[i].trim() : "");
+            tfMS[i].setFont(Theme.BODY);
+
+            row.add(cbMS[i], BorderLayout.WEST);
+            row.add(tfMS[i], BorderLayout.CENTER);
+            cardMS.add(row);
+        }
+        pnlCards.add(cardMS, SupportedType.MULTIPLE_SELECT.name());
+
+        // Card 4: Fill In
+        JPanel cardFI = new JPanel(new BorderLayout(0, 6));
+        cardFI.setOpaque(false);
+        JLabel lblFIInfo = new JLabel("Nhập các đáp án đúng được chấp nhận (phân cách bằng dấu chấm phẩy ';'):");
+        lblFIInfo.setFont(Theme.SMALL);
+        JTextField tfFI = new JTextField(isEdit ? existing.choicesRaw : "");
+        tfFI.setFont(Theme.BODY);
+        cardFI.add(lblFIInfo, BorderLayout.NORTH);
+        cardFI.add(tfFI, BorderLayout.CENTER);
+        pnlCards.add(cardFI, SupportedType.FILL_IN.name());
+
+        // Card 5: Drag & Drop (Đơn giản hóa: Không cần gõ b1, b2)
+        JPanel cardDD = new JPanel(new GridLayout(3, 1, 0, 6));
+        cardDD.setOpaque(false);
+        JTextField tfDDPool = new JTextField(isEdit ? existing.choicesRaw : "");
+        JTextField tfDDMap = new JTextField(isEdit ? formatFillMapForUser(existing.fillMapRaw) : "");
+        JButton btnInsertBlank = new JButton("+ Chèn ô trống '____'");
+        btnInsertBlank.setFont(Theme.SMALL_BOLD);
         btnInsertBlank.addActionListener(e -> {
             int pos = txtQuestion.getCaretPosition();
             txtQuestion.insert("____", pos);
             txtQuestion.requestFocusInWindow();
         });
 
-        formContainer.add(questionTextCard);
-        formContainer.add(Box.createVerticalStrut(14));
+        JPanel ddRow1 = new JPanel(new BorderLayout(8, 0));
+        ddRow1.setOpaque(false);
+        ddRow1.add(new JLabel("Từ trong Pool (cách nhau ';'):"), BorderLayout.WEST);
+        ddRow1.add(tfDDPool, BorderLayout.CENTER);
 
-        // Group 4: Cấu hình đáp án động theo CardLayout
-        JPanel dynamicCardWrapper = new JPanel(new BorderLayout(0, 8));
-        dynamicCardWrapper.setBackground(Theme.WHITE);
-        dynamicCardWrapper.setBorder(BorderFactory.createCompoundBorder(
-                new LineBorder(Theme.BORDER_LIGHT, 1, true),
-                new EmptyBorder(14, 16, 14, 16)
-        ));
+        JPanel ddRow2 = new JPanel(new BorderLayout(8, 0));
+        ddRow2.setOpaque(false);
+        ddRow2.add(new JLabel("Đáp án đúng theo thứ tự (cách nhau ';'):"), BorderLayout.WEST);
+        ddRow2.add(tfDDMap, BorderLayout.CENTER);
 
-        JLabel lblAnswerSection = createBoldLabel("Cấu hình đáp án & phương án trả lời:");
-        dynamicCardWrapper.add(lblAnswerSection, BorderLayout.NORTH);
+        cardDD.add(btnInsertBlank);
+        cardDD.add(ddRow1);
+        cardDD.add(ddRow2);
+        pnlCards.add(cardDD, SupportedType.DRAG_AND_DROP.name());
 
-        CardLayout cardLayout = new CardLayout();
-        JPanel pnlCards = new JPanel(cardLayout);
-        pnlCards.setOpaque(false);
+        formPanel.add(createBoldLabel("Cấu hình đáp án & phương án:"));
+        formPanel.add(Box.createVerticalStrut(4));
+        formPanel.add(pnlCards);
+        formPanel.add(Box.createVerticalStrut(10));
 
-        // -------------------------------------------------------------
-        // CARD 1: MULTIPLE_CHOICE (4 đáp án A, B, C, D)
-        // -------------------------------------------------------------
-        JPanel cardMC = new JPanel(new GridLayout(4, 1, 0, 8));
-        cardMC.setOpaque(false);
+        // Explanation text
+        JLabel lblExp = createBoldLabel("Giải thích kiến thức (tùy chọn):");
+        formPanel.add(lblExp);
+        formPanel.add(Box.createVerticalStrut(4));
+        JTextArea txtExp = new JTextArea(isEdit ? existing.explanation : "", 2, 20);
+        txtExp.setFont(Theme.BODY);
+        txtExp.setLineWrap(true);
+        txtExp.setWrapStyleWord(true);
+        JScrollPane scrollExp = new JScrollPane(txtExp);
+        scrollExp.setPreferredSize(new Dimension(0, 55));
+        formPanel.add(scrollExp);
 
-        JTextField txtChoiceA = new JTextField();
-        JTextField txtChoiceB = new JTextField();
-        JTextField txtChoiceC = new JTextField();
-        JTextField txtChoiceD = new JTextField();
-        JRadioButton rbMcA = new JRadioButton("Đáp án đúng");
-        JRadioButton rbMcB = new JRadioButton("Đáp án đúng");
-        JRadioButton rbMcC = new JRadioButton("Đáp án đúng");
-        JRadioButton rbMcD = new JRadioButton("Đáp án đúng");
-        ButtonGroup bgMc = new ButtonGroup();
-        bgMc.add(rbMcA); bgMc.add(rbMcB); bgMc.add(rbMcC); bgMc.add(rbMcD);
-        rbMcA.setSelected(true);
+        JScrollPane leftScroll = new JScrollPane(formPanel);
+        leftScroll.setBorder(null);
+        leftScroll.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+        leftScroll.getVerticalScrollBar().setUI(new ModernScrollBarUI());
+        leftScroll.getVerticalScrollBar().setUnitIncrement(16);
+        leftScroll.setMinimumSize(new Dimension(520, 200));
+        leftScroll.setPreferredSize(new Dimension(initialDivider, 600));
+        splitPane.setLeftComponent(leftScroll);
 
-        cardMC.add(createChoiceRow("A", Theme.RED, txtChoiceA, rbMcA, "Nhập phương án A..."));
-        cardMC.add(createChoiceRow("B", Theme.BLUE, txtChoiceB, rbMcB, "Nhập phương án B..."));
-        cardMC.add(createChoiceRow("C", Theme.YELLOW, txtChoiceC, rbMcC, "Nhập phương án C..."));
-        cardMC.add(createChoiceRow("D", Theme.GREEN, txtChoiceD, rbMcD, "Nhập phương án D..."));
-        pnlCards.add(cardMC, SupportedType.MULTIPLE_CHOICE.name());
+        // --- CỘT PHẢI: KHUNG LIVE PREVIEW TRỰC TIẾP ---
+        LivePreviewPanel previewPanel = new LivePreviewPanel();
+        previewPanel.setMinimumSize(new Dimension(480, 200));
+        splitPane.setRightComponent(previewPanel);
+        dlg.add(splitPane, BorderLayout.CENTER);
 
-        // -------------------------------------------------------------
-        // CARD 2: TRUE_FALSE (Đúng / Sai)
-        // -------------------------------------------------------------
-        JPanel cardTF = new JPanel();
-        cardTF.setLayout(new BoxLayout(cardTF, BoxLayout.Y_AXIS));
-        cardTF.setOpaque(false);
+        // Sync Live Preview function
+        Runnable updatePreview = () -> {
+            String topic = (String) cboTopic.getSelectedItem();
+            String level = (String) cboLevel.getSelectedItem();
+            SupportedType st = (SupportedType) cboType.getSelectedItem();
+            String qText = txtQuestion.getText();
+            String explanation = txtExp.getText();
 
-        JLabel lblTfHint = new JLabel("Lựa chọn nhận định trong câu hỏi trên là Đúng hay Sai:");
-        lblTfHint.setFont(Theme.BODY);
-        lblTfHint.setForeground(Theme.MUTED_GRAY);
+            List<String> choices = new ArrayList<>();
+            String correctAns = "";
 
-        JPanel tfOptions = new JPanel(new FlowLayout(FlowLayout.LEFT, 24, 8));
-        tfOptions.setOpaque(false);
-        JRadioButton rbTfTrue = new JRadioButton("ĐÚNG (Khẳng định trong câu hỏi là chính xác)");
-        JRadioButton rbTfFalse = new JRadioButton("SAI (Khẳng định trong câu hỏi là sai)");
-        rbTfTrue.setFont(Theme.BODY_BOLD);
-        rbTfTrue.setForeground(new Color(0x13, 0x68, 0xCE));
-        rbTfFalse.setFont(Theme.BODY_BOLD);
-        rbTfFalse.setForeground(new Color(0xD9, 0x77, 0x06));
-        ButtonGroup bgTf = new ButtonGroup();
-        bgTf.add(rbTfTrue); bgTf.add(rbTfFalse);
-        rbTfTrue.setSelected(true);
-        tfOptions.add(rbTfTrue);
-        tfOptions.add(rbTfFalse);
-
-        cardTF.add(lblTfHint);
-        cardTF.add(tfOptions);
-        pnlCards.add(cardTF, SupportedType.TRUE_FALSE.name());
-
-        // -------------------------------------------------------------
-        // CARD 3: MULTIPLE_SELECT (Chọn nhiều đáp án)
-        // -------------------------------------------------------------
-        JPanel cardMS = new JPanel(new GridLayout(4, 1, 0, 8));
-        cardMS.setOpaque(false);
-
-        JTextField txtMsA = new JTextField();
-        JTextField txtMsB = new JTextField();
-        JTextField txtMsC = new JTextField();
-        JTextField txtMsD = new JTextField();
-        JCheckBox chkMsA = new JCheckBox("Là đáp án đúng");
-        JCheckBox chkMsB = new JCheckBox("Là đáp án đúng");
-        JCheckBox chkMsC = new JCheckBox("Là đáp án đúng");
-        JCheckBox chkMsD = new JCheckBox("Là đáp án đúng");
-
-        cardMS.add(createCheckboxRow("A", Theme.RED, txtMsA, chkMsA, "Nhập phương án A..."));
-        cardMS.add(createCheckboxRow("B", Theme.BLUE, txtMsB, chkMsB, "Nhập phương án B..."));
-        cardMS.add(createCheckboxRow("C", Theme.YELLOW, txtMsC, chkMsC, "Nhập phương án C..."));
-        cardMS.add(createCheckboxRow("D", Theme.GREEN, txtMsD, chkMsD, "Nhập phương án D..."));
-        pnlCards.add(cardMS, SupportedType.MULTIPLE_SELECT.name());
-
-        // -------------------------------------------------------------
-        // CARD 4: FILL_IN (Điền từ vào chỗ trống)
-        // -------------------------------------------------------------
-        JPanel cardFill = new JPanel();
-        cardFill.setLayout(new BoxLayout(cardFill, BoxLayout.Y_AXIS));
-        cardFill.setOpaque(false);
-
-        JLabel lblFillPrompt = new JLabel("Danh sách các đáp án đúng được chấp nhận (phân tách bởi dấu ';'):");
-        lblFillPrompt.setFont(Theme.BODY_BOLD);
-        lblFillPrompt.setForeground(Theme.DARK_TEXT);
-
-        JTextField txtFillInAnswers = new JTextField();
-        txtFillInAnswers.setFont(Theme.BODY);
-        txtFillInAnswers.setPreferredSize(new Dimension(500, 36));
-
-        JLabel lblFillHint = new JLabel("Hệ thống tự động so khớp không phân biệt hoa thường và không phân biệt dấu tiếng Việt.");
-        lblFillHint.setFont(Theme.SMALL);
-        lblFillHint.setForeground(Theme.MUTED_GRAY);
-
-        cardFill.add(lblFillPrompt);
-        cardFill.add(Box.createVerticalStrut(6));
-        cardFill.add(txtFillInAnswers);
-        cardFill.add(Box.createVerticalStrut(4));
-        cardFill.add(lblFillHint);
-        pnlCards.add(cardFill, SupportedType.FILL_IN.name());
-
-        // -------------------------------------------------------------
-        // CARD 5: DRAG_AND_DROP (Kéo thả từ vào câu)
-        // -------------------------------------------------------------
-        JPanel cardDnD = new JPanel(new GridBagLayout());
-        cardDnD.setOpaque(false);
-        GridBagConstraints dndGbc = new GridBagConstraints();
-        dndGbc.insets = new Insets(5, 4, 5, 4);
-        dndGbc.fill = GridBagConstraints.HORIZONTAL;
-
-        JTextField txtDndSlot1 = new JTextField();
-        JTextField txtDndSlot2 = new JTextField();
-        JTextField txtDndSlot3 = new JTextField();
-        JTextField txtDndDistractors = new JTextField();
-
-        txtDndSlot1.setFont(Theme.BODY);
-        txtDndSlot2.setFont(Theme.BODY);
-        txtDndSlot3.setFont(Theme.BODY);
-        txtDndDistractors.setFont(Theme.BODY);
-
-        int dRow = 0;
-        addDndRow(cardDnD, dndGbc, dRow++, "Đáp án Chỗ trống 1 (____ đầu tiên):", txtDndSlot1, "Ví dụ: Kim tự tháp Giza");
-        addDndRow(cardDnD, dndGbc, dRow++, "Đáp án Chỗ trống 2 (____ thứ hai):", txtDndSlot2, "Ví dụ: Ai Cập");
-        addDndRow(cardDnD, dndGbc, dRow++, "Đáp án Chỗ trống 3 (nếu có):", txtDndSlot3, "Để trống nếu câu chỉ có 1 hoặc 2 chỗ trống");
-        addDndRow(cardDnD, dndGbc, dRow++, "Từ gây nhiễu thêm vào ngân hàng từ (cách nhau ';'):", txtDndDistractors, "Ví dụ: Hy Lạp;Ấn Độ;Ý;Thổ Nhĩ Kỳ");
-
-        pnlCards.add(cardDnD, SupportedType.DRAG_AND_DROP.name());
-        dynamicCardWrapper.add(pnlCards, BorderLayout.CENTER);
-        formContainer.add(dynamicCardWrapper);
-        formContainer.add(Box.createVerticalStrut(14));
-
-        // Group 5: Giải thích chi tiết
-        JPanel expCard = new JPanel(new BorderLayout(0, 6));
-        expCard.setBackground(Theme.WHITE);
-        expCard.setBorder(BorderFactory.createCompoundBorder(
-                new LineBorder(Theme.BORDER_LIGHT, 1, true),
-                new EmptyBorder(14, 16, 14, 16)
-        ));
-        JLabel lblExp = createBoldLabel("Giải thích chi tiết / Kiến thức mở rộng (tùy chọn):");
-        JTextField txtExplanation = new JTextField(isEdit ? existing.explanation : "");
-        txtExplanation.setFont(Theme.BODY);
-        txtExplanation.setPreferredSize(new Dimension(500, 36));
-        expCard.add(lblExp, BorderLayout.NORTH);
-        expCard.add(txtExplanation, BorderLayout.CENTER);
-        formContainer.add(expCard);
-
-        JScrollPane formScroll = new JScrollPane(formContainer);
-        formScroll.setBorder(BorderFactory.createEmptyBorder());
-        formScroll.getVerticalScrollBar().setUnitIncrement(16);
-        dlg.add(formScroll, BorderLayout.CENTER);
-
-        // 3. LOGIC CẬP NHẬT GIAO DIỆN KHI THAY ĐỔI LOẠI CÂU HỎI
-        Runnable updateTypeUI = () -> {
-            SupportedType selType = (SupportedType) cboType.getSelectedItem();
-            if (selType == null) selType = SupportedType.MULTIPLE_CHOICE;
-            cardLayout.show(pnlCards, selType.name());
-
-            // Ẩn/hiện nút chèn chỗ trống
-            btnInsertBlank.setVisible(selType == SupportedType.DRAG_AND_DROP);
-
-            // Cập nhật hướng dẫn & ví dụ mẫu
-            switch (selType) {
-                case MULTIPLE_CHOICE -> {
-                    txtGuideInfo.setText(
-                            "• Cách thức hiển thị: Người chơi chọn 1 trong 4 đáp án A, B, C, D trên giao diện trận đấu.\n" +
-                            "• Quy tắc nhập: Nhập đầy đủ nội dung cho cả 4 lựa chọn A, B, C, D và chọn nút tròn tương ứng với đáp án đúng duy nhất.\n" +
-                            "• Ví dụ: Câu hỏi: 'Thủ đô của Việt Nam là gì?' -> A: Hà Nội (chọn là đáp án đúng), B: TP Hồ Chí Minh, C: Đà Nẵng, D: Hải Phòng.");
+            if (st == SupportedType.MULTIPLE_CHOICE) {
+                for (int i = 0; i < 4; i++) {
+                    choices.add(tfMC[i].getText());
+                    if (rbMC[i].isSelected()) correctAns = String.valueOf(i);
                 }
-                case TRUE_FALSE -> {
-                    txtGuideInfo.setText(
-                            "• Cách thức hiển thị: Người chơi bấm 1 trong 2 nút: ĐÚNG (màu xanh) hoặc SAI (màu vàng).\n" +
-                            "• Quy tắc nhập: Nhập một nhận định/mệnh đề vào ô câu hỏi, sau đó chọn xem nhận định đó là ĐÚNG hay SAI. Hệ thống sẽ tự động gán 2 lựa chọn 'Đúng' và 'Sai'.\n" +
-                            "• Ví dụ: 'Mặt Trời mọc ở hướng Đông và lặn ở hướng Tây.' -> Chọn: ĐÚNG.");
+            } else if (st == SupportedType.TRUE_FALSE) {
+                choices.add("Đúng");
+                choices.add("Sai");
+                correctAns = rbTrue.isSelected() ? "0" : "1";
+            } else if (st == SupportedType.MULTIPLE_SELECT) {
+                List<String> correctIdxs = new ArrayList<>();
+                for (int i = 0; i < 4; i++) {
+                    choices.add(tfMS[i].getText());
+                    if (cbMS[i].isSelected()) correctIdxs.add(String.valueOf(i));
                 }
-                case MULTIPLE_SELECT -> {
-                    txtGuideInfo.setText(
-                            "• Cách thức hiển thị: Người chơi có thể tích chọn nhiều đáp án cùng lúc trong trận đấu.\n" +
-                            "• Quy tắc nhập: Nhập đầy đủ 4 lựa chọn A, B, C, D và tích chọn các ô vuông đáp án đúng (từ 1 đến 4 đáp án). Người chơi phải chọn đúng và đủ tất cả các đáp án đúng để ghi điểm.\n" +
-                            "• Ví dụ: 'Những thành phố nào trực thuộc trung ương của Việt Nam?' -> Tích chọn A: Hà Nội, B: Đà Nẵng, C: Hải Phòng.");
+                correctAns = String.join(",", correctIdxs);
+            } else if (st == SupportedType.FILL_IN) {
+                correctAns = tfFI.getText();
+            } else if (st == SupportedType.DRAG_AND_DROP) {
+                String pool = tfDDPool.getText();
+                for (String p : pool.split(";")) {
+                    if (!p.trim().isEmpty()) choices.add(p.trim());
                 }
-                case FILL_IN -> {
-                    txtGuideInfo.setText(
-                            "• Cách thức hiển thị: Người chơi tự nhập câu trả lời từ bàn phím vào ô nhập liệu.\n" +
-                            "• Quy tắc nhập: Nhập các cách viết đáp án đúng được chấp nhận, phân tách bởi dấu chấm phẩy (;). Hệ thống tự động so khớp không phân biệt chữ hoa/thường và không phân biệt dấu tiếng Việt.\n" +
-                            "• Ví dụ: 'Dòng sông nào dài nhất thế giới?' -> Đáp án: Sông Nin;Sông Nile;Nin;Nile");
-                }
-                case DRAG_AND_DROP -> {
-                    txtGuideInfo.setText(
-                            "• Cách thức hiển thị: Người chơi kéo các thẻ từ ngân hàng bên dưới để ghép vào các chỗ trống trong câu.\n" +
-                            "• Quy tắc nhập: Trong câu hỏi, đặt ký hiệu '____' (4 dấu gạch dưới) tại các vị trí cần điền. Nhập đáp án đúng tương ứng cho từng ô và thêm các từ gây nhiễu để tăng tính đối kháng.\n" +
-                            "• Ví dụ: 'Kim tự tháp Giza nằm ở ____, còn đền Taj Mahal nằm ở ____.' -> Ô 1: Ai Cập, Ô 2: Ấn Độ, Từ gây nhiễu: Hy Lạp;Ý;Thổ Nhĩ Kỳ.");
-                }
+                correctAns = tfDDMap.getText();
             }
-            formContainer.revalidate();
-            formContainer.repaint();
+
+            previewPanel.renderPreview(topic, level, st, qText, choices, correctAns, explanation);
         };
 
-        cboType.addActionListener(e -> updateTypeUI.run());
+        // Wire Document & Item Listeners
+        DocumentListener docSync = new DocumentListener() {
+            @Override public void insertUpdate(DocumentEvent e) { updatePreview.run(); }
+            @Override public void removeUpdate(DocumentEvent e) { updatePreview.run(); }
+            @Override public void changedUpdate(DocumentEvent e) { updatePreview.run(); }
+        };
 
-        // Đổ dữ liệu có sẵn nếu đang ở chế độ Sửa (Edit)
-        if (isEdit) {
-            SupportedType currentType = SupportedType.fromString(existing.type);
-            cboType.setSelectedItem(currentType);
-            String[] choices = existing.choicesRaw != null ? existing.choicesRaw.split(";", -1) : new String[0];
+        txtQuestion.getDocument().addDocumentListener(docSync);
+        txtExp.getDocument().addDocumentListener(docSync);
+        tfFI.getDocument().addDocumentListener(docSync);
+        tfDDPool.getDocument().addDocumentListener(docSync);
+        tfDDMap.getDocument().addDocumentListener(docSync);
 
-            switch (currentType) {
-                case MULTIPLE_CHOICE -> {
-                    if (choices.length > 0) txtChoiceA.setText(choices[0].trim());
-                    if (choices.length > 1) txtChoiceB.setText(choices[1].trim());
-                    if (choices.length > 2) txtChoiceC.setText(choices[2].trim());
-                    if (choices.length > 3) txtChoiceD.setText(choices[3].trim());
-                    int ansIdx = 0;
-                    try { ansIdx = Integer.parseInt(existing.answerRaw.trim()); } catch (Exception ignored) {}
-                    switch (ansIdx) {
-                        case 1 -> rbMcB.setSelected(true);
-                        case 2 -> rbMcC.setSelected(true);
-                        case 3 -> rbMcD.setSelected(true);
-                        default -> rbMcA.setSelected(true);
-                    }
-                }
-                case TRUE_FALSE -> {
-                    if ("1".equals(existing.answerRaw.trim())) {
-                        rbTfFalse.setSelected(true);
-                    } else {
-                        rbTfTrue.setSelected(true);
-                    }
-                }
-                case MULTIPLE_SELECT -> {
-                    if (choices.length > 0) txtMsA.setText(choices[0].trim());
-                    if (choices.length > 1) txtMsB.setText(choices[1].trim());
-                    if (choices.length > 2) txtMsC.setText(choices[2].trim());
-                    if (choices.length > 3) txtMsD.setText(choices[3].trim());
-
-                    String ansStr = existing.answerRaw != null ? existing.answerRaw : "";
-                    Set<Integer> checkedIndices = new HashSet<>();
-                    for (String part : ansStr.split("[,;]")) {
-                        try { checkedIndices.add(Integer.parseInt(part.trim())); } catch (Exception ignored) {}
-                    }
-                    chkMsA.setSelected(checkedIndices.contains(0));
-                    chkMsB.setSelected(checkedIndices.contains(1));
-                    chkMsC.setSelected(checkedIndices.contains(2));
-                    chkMsD.setSelected(checkedIndices.contains(3));
-                }
-                case FILL_IN -> {
-                    txtFillInAnswers.setText(existing.choicesRaw != null ? existing.choicesRaw : "");
-                }
-                case DRAG_AND_DROP -> {
-                    Map<String, String> fm = new LinkedHashMap<>();
-                    if (existing.fillMapRaw != null && !existing.fillMapRaw.isBlank()) {
-                        for (String pair : existing.fillMapRaw.split(";")) {
-                            String[] kv = pair.split("=", 2);
-                            if (kv.length == 2) fm.put(kv[0].trim(), kv[1].trim());
-                        }
-                    }
-                    if (fm.containsKey("b1")) txtDndSlot1.setText(fm.get("b1"));
-                    if (fm.containsKey("b2")) txtDndSlot2.setText(fm.get("b2"));
-                    if (fm.containsKey("b3")) txtDndSlot3.setText(fm.get("b3"));
-
-                    List<String> distractors = new ArrayList<>();
-                    if (choices != null) {
-                        for (String c : choices) {
-                            String trimmed = c.trim();
-                            if (!trimmed.isEmpty() && !fm.containsValue(trimmed)) {
-                                distractors.add(trimmed);
-                            }
-                        }
-                    }
-                    txtDndDistractors.setText(String.join(";", distractors));
-                }
-            }
+        for (int i = 0; i < 4; i++) {
+            tfMC[i].getDocument().addDocumentListener(docSync);
+            tfMS[i].getDocument().addDocumentListener(docSync);
+            rbMC[i].addActionListener(e -> updatePreview.run());
+            cbMS[i].addActionListener(e -> updatePreview.run());
         }
-        updateTypeUI.run();
+        rbTrue.addActionListener(e -> updatePreview.run());
+        rbFalse.addActionListener(e -> updatePreview.run());
 
-        // 4. FOOTER BUTTONS
-        JPanel footer = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 12));
-        footer.setBackground(new Color(0xF8, 0xFA, 0xFC));
+        cboTopic.addActionListener(e -> updatePreview.run());
+        cboLevel.addActionListener(e -> updatePreview.run());
+        cboType.addActionListener(e -> {
+            SupportedType st = (SupportedType) cboType.getSelectedItem();
+            if (st != null) {
+                cardLayout.show(pnlCards, st.name());
+                updatePreview.run();
+            }
+        });
+
+        SupportedType initialType = (SupportedType) cboType.getSelectedItem();
+        if (initialType != null) {
+            cardLayout.show(pnlCards, initialType.name());
+        }
+        updatePreview.run();
+
+        // Footer Bar
+        JPanel footer = new JPanel(new FlowLayout(FlowLayout.RIGHT, 12, 12));
+        footer.setBackground(Theme.WHITE);
         footer.setBorder(BorderFactory.createMatteBorder(1, 0, 0, 0, Theme.BORDER_LIGHT));
 
-        ModernButton btnCancel = new ModernButton("Hủy", ModernButton.Style.SECONDARY);
-        btnCancel.setPreferredSize(new Dimension(100, 38));
+        ModernButton btnCancel = new ModernButton("Hủy Bỏ", ModernButton.Style.OUTLINE_GRAY);
+        btnCancel.setPreferredSize(new Dimension(100, 36));
         btnCancel.addActionListener(e -> dlg.dispose());
 
-        ModernButton btnSave = new ModernButton(isEdit ? "Cập Nhật Câu Hỏi" : "Lưu Câu Hỏi Mới", ModernButton.Style.PRIMARY);
-        btnSave.setPreferredSize(new Dimension(160, 38));
-
+        ModernButton btnSave = new ModernButton(isEdit ? "Cập Nhật Câu Hỏi" : "Lưu Câu Hỏi Mới", ModernButton.Style.EMERALD);
+        btnSave.setPreferredSize(new Dimension(170, 36));
         btnSave.addActionListener(e -> {
-            String topic = cboTopic.getSelectedItem() != null ? cboTopic.getSelectedItem().toString().trim() : "";
-            String level = (String) cboLevel.getSelectedItem();
-            SupportedType selType = (SupportedType) cboType.getSelectedItem();
+            SoundManager.playClick();
+            String topic = ((String) cboTopic.getSelectedItem()).trim();
+            String level = ((String) cboLevel.getSelectedItem()).trim();
+            SupportedType st = (SupportedType) cboType.getSelectedItem();
             String qText = txtQuestion.getText().trim();
-            String exp = txtExplanation.getText().trim();
+            String exp = txtExp.getText().trim();
 
             if (topic.isEmpty()) {
-                showValidationError(dlg, "Vui lòng chọn hoặc nhập Chủ đề cho câu hỏi!", cboTopic);
-                return;
-            }
-            if (level == null || level.isBlank()) {
-                showValidationError(dlg, "Vui lòng chọn Mức độ (Dễ, Trung bình, Khó)!", cboLevel);
+                JOptionPane.showMessageDialog(dlg, "Vui lòng chọn hoặc nhập Chủ đề câu hỏi!", "Thiếu thông tin", JOptionPane.WARNING_MESSAGE);
                 return;
             }
             if (qText.isEmpty()) {
-                showValidationError(dlg, "Vui lòng nhập Nội dung câu hỏi!", txtQuestion);
+                JOptionPane.showMessageDialog(dlg, "Vui lòng nhập Nội dung câu hỏi!", "Thiếu thông tin", JOptionPane.WARNING_MESSAGE);
                 return;
             }
 
@@ -906,151 +1151,89 @@ public class QuestionManagementPanel extends JPanel {
             String blanksRaw = "";
             String fillMapRaw = "";
 
-            switch (selType) {
-                case MULTIPLE_CHOICE -> {
-                    String ca = txtChoiceA.getText().trim();
-                    String cb = txtChoiceB.getText().trim();
-                    String cc = txtChoiceC.getText().trim();
-                    String cd = txtChoiceD.getText().trim();
-
-                    if (ca.isEmpty()) { showValidationError(dlg, "Vui lòng nhập nội dung cho Phương án A!", txtChoiceA); return; }
-                    if (cb.isEmpty()) { showValidationError(dlg, "Vui lòng nhập nội dung cho Phương án B!", txtChoiceB); return; }
-                    if (cc.isEmpty()) { showValidationError(dlg, "Vui lòng nhập nội dung cho Phương án C!", txtChoiceC); return; }
-                    if (cd.isEmpty()) { showValidationError(dlg, "Vui lòng nhập nội dung cho Phương án D!", txtChoiceD); return; }
-
-                    choicesRaw = ca + ";" + cb + ";" + cc + ";" + cd;
-                    int ansIdx = rbMcA.isSelected() ? 0 : (rbMcB.isSelected() ? 1 : (rbMcC.isSelected() ? 2 : 3));
-                    answerRaw = String.valueOf(ansIdx);
+            if (st == SupportedType.MULTIPLE_CHOICE) {
+                List<String> chs = new ArrayList<>();
+                int ansIdx = 0;
+                for (int i = 0; i < 4; i++) {
+                    String t = tfMC[i].getText().trim();
+                    if (t.isEmpty()) {
+                        JOptionPane.showMessageDialog(dlg, "Vui lòng nhập đầy đủ 4 phương án A, B, C, D!", "Thiếu thông tin", JOptionPane.WARNING_MESSAGE);
+                        return;
+                    }
+                    chs.add(t);
+                    if (rbMC[i].isSelected()) ansIdx = i;
                 }
-                case TRUE_FALSE -> {
-                    choicesRaw = "Đúng;Sai";
-                    answerRaw = rbTfTrue.isSelected() ? "0" : "1";
+                choicesRaw = String.join(";", chs);
+                answerRaw = String.valueOf(ansIdx);
+            } else if (st == SupportedType.TRUE_FALSE) {
+                choicesRaw = "Đúng;Sai";
+                answerRaw = rbTrue.isSelected() ? "0" : "1";
+            } else if (st == SupportedType.MULTIPLE_SELECT) {
+                List<String> chs = new ArrayList<>();
+                List<String> correctIdxs = new ArrayList<>();
+                for (int i = 0; i < 4; i++) {
+                    String t = tfMS[i].getText().trim();
+                    if (t.isEmpty()) {
+                        JOptionPane.showMessageDialog(dlg, "Vui lòng nhập đầy đủ 4 phương án A, B, C, D!", "Thiếu thông tin", JOptionPane.WARNING_MESSAGE);
+                        return;
+                    }
+                    chs.add(t);
+                    if (cbMS[i].isSelected()) correctIdxs.add(String.valueOf(i));
                 }
-                case MULTIPLE_SELECT -> {
-                    String ca = txtMsA.getText().trim();
-                    String cb = txtMsB.getText().trim();
-                    String cc = txtMsC.getText().trim();
-                    String cd = txtMsD.getText().trim();
-
-                    if (ca.isEmpty()) { showValidationError(dlg, "Vui lòng nhập nội dung cho Phương án A!", txtMsA); return; }
-                    if (cb.isEmpty()) { showValidationError(dlg, "Vui lòng nhập nội dung cho Phương án B!", txtMsB); return; }
-                    if (cc.isEmpty()) { showValidationError(dlg, "Vui lòng nhập nội dung cho Phương án C!", txtMsC); return; }
-                    if (cd.isEmpty()) { showValidationError(dlg, "Vui lòng nhập nội dung cho Phương án D!", txtMsD); return; }
-
-                    choicesRaw = ca + ";" + cb + ";" + cc + ";" + cd;
-                    List<String> checked = new ArrayList<>();
-                    if (chkMsA.isSelected()) checked.add("0");
-                    if (chkMsB.isSelected()) checked.add("1");
-                    if (chkMsC.isSelected()) checked.add("2");
-                    if (chkMsD.isSelected()) checked.add("3");
-
-                    if (checked.isEmpty()) {
-                        showValidationError(dlg, "Vui lòng tích chọn ít nhất 1 đáp án đúng cho câu hỏi chọn nhiều!", chkMsA);
-                        return;
-                    }
-                    answerRaw = String.join(",", checked);
+                if (correctIdxs.isEmpty()) {
+                    JOptionPane.showMessageDialog(dlg, "Vui lòng tick chọn ít nhất 1 đáp án đúng!", "Chưa chọn đáp án đúng", JOptionPane.WARNING_MESSAGE);
+                    return;
                 }
-                case FILL_IN -> {
-                    String rawAns = txtFillInAnswers.getText().trim();
-                    if (rawAns.isEmpty()) {
-                        showValidationError(dlg, "Vui lòng nhập ít nhất 1 đáp án đúng được chấp nhận!", txtFillInAnswers);
-                        return;
-                    }
-                    List<String> cleanAnswers = new ArrayList<>();
-                    for (String part : rawAns.split("[,;]")) {
-                        String trimmed = part.trim();
-                        if (!trimmed.isEmpty()) cleanAnswers.add(trimmed);
-                    }
-                    if (cleanAnswers.isEmpty()) {
-                        showValidationError(dlg, "Vui lòng nhập danh sách đáp án đúng hợp lệ!", txtFillInAnswers);
-                        return;
-                    }
-                    choicesRaw = String.join(";", cleanAnswers);
-                    answerRaw = "1";
+                choicesRaw = String.join(";", chs);
+                answerRaw = String.join(",", correctIdxs);
+            } else if (st == SupportedType.FILL_IN) {
+                choicesRaw = tfFI.getText().trim();
+                if (choicesRaw.isEmpty()) {
+                    JOptionPane.showMessageDialog(dlg, "Vui lòng nhập ít nhất 1 từ đáp án chấp nhận!", "Thiếu đáp án", JOptionPane.WARNING_MESSAGE);
+                    return;
                 }
-                case DRAG_AND_DROP -> {
-                    if (!qText.matches(".*_{2,}.*")) {
-                        showValidationError(dlg, "Nội dung câu hỏi kéo thả phải chứa ít nhất một vị trí chỗ trống dạng '____'!\n(Bấm nút '+ Chèn Chỗ Trống' ở phía trên để chèn nhanh)", txtQuestion);
-                        return;
-                    }
-                    int blankCount = qText.split("_{2,}", -1).length - 1;
-                    String s1 = txtDndSlot1.getText().trim();
-                    String s2 = txtDndSlot2.getText().trim();
-                    String s3 = txtDndSlot3.getText().trim();
-
-                    if (s1.isEmpty()) {
-                        showValidationError(dlg, "Vui lòng nhập đáp án đúng cho Chỗ trống 1!", txtDndSlot1);
-                        return;
-                    }
-                    if (blankCount >= 2 && s2.isEmpty()) {
-                        showValidationError(dlg, "Câu hỏi có từ 2 chỗ trống trở lên, vui lòng nhập đáp án đúng cho Chỗ trống 2!", txtDndSlot2);
-                        return;
-                    }
-                    if (blankCount >= 3 && s3.isEmpty()) {
-                        showValidationError(dlg, "Câu hỏi có 3 chỗ trống, vui lòng nhập đáp án đúng cho Chỗ trống 3!", txtDndSlot3);
-                        return;
-                    }
-
-                    List<String> blanksList = new ArrayList<>();
-                    List<String> fillPairs = new ArrayList<>();
-                    List<String> allChoices = new ArrayList<>();
-
-                    blanksList.add("b1");
-                    fillPairs.add("b1=" + s1);
-                    allChoices.add(s1);
-
-                    if (!s2.isEmpty()) {
-                        blanksList.add("b2");
-                        fillPairs.add("b2=" + s2);
-                        allChoices.add(s2);
-                    }
-                    if (!s3.isEmpty()) {
-                        blanksList.add("b3");
-                        fillPairs.add("b3=" + s3);
-                        allChoices.add(s3);
-                    }
-
-                    String dist = txtDndDistractors.getText().trim();
-                    if (!dist.isEmpty()) {
-                        for (String d : dist.split("[,;]")) {
-                            String trimmed = d.trim();
-                            if (!trimmed.isEmpty() && !allChoices.contains(trimmed)) {
-                                allChoices.add(trimmed);
-                            }
-                        }
-                    }
-
-                    if (allChoices.size() < 2) {
-                        showValidationError(dlg, "Ngân hàng thẻ từ kéo thả cần ít nhất 2 lựa chọn!\nHãy thêm từ gây nhiễu vào ô tương ứng bên dưới.", txtDndDistractors);
-                        return;
-                    }
-
-                    blanksRaw = String.join(";", blanksList);
-                    fillMapRaw = String.join(";", fillPairs);
-                    choicesRaw = String.join(";", allChoices);
-                    answerRaw = "1";
+                answerRaw = "1";
+            } else if (st == SupportedType.DRAG_AND_DROP) {
+                choicesRaw = tfDDPool.getText().trim();
+                String rawAns = tfDDMap.getText().trim();
+                if (choicesRaw.isEmpty()) {
+                    JOptionPane.showMessageDialog(dlg, "Vui lòng nhập các từ trong Pool!", "Thiếu thông tin", JOptionPane.WARNING_MESSAGE);
+                    return;
                 }
+                if (rawAns.isEmpty()) {
+                    JOptionPane.showMessageDialog(dlg, "Vui lòng nhập các đáp án đúng cho ô trống!", "Thiếu thông tin", JOptionPane.WARNING_MESSAGE);
+                    return;
+                }
+                String[] parts = rawAns.split(";");
+                List<String> pairs = new ArrayList<>();
+                List<String> bList = new ArrayList<>();
+                for (int i = 0; i < parts.length; i++) {
+                    String p = parts[i].trim();
+                    if (p.isEmpty()) continue;
+                    if (p.contains("=")) {
+                        pairs.add(p);
+                        int eq = p.indexOf('=');
+                        bList.add(p.substring(0, eq).trim());
+                    } else {
+                        String bKey = "b" + (i + 1);
+                        pairs.add(bKey + "=" + p);
+                        bList.add(bKey);
+                    }
+                }
+                fillMapRaw = String.join(";", pairs);
+                blanksRaw = String.join(";", bList);
+                answerRaw = "1";
             }
 
-            // Kiểm tra tính hợp lệ chặt chẽ với Bank.validateForAdmin trước khi gửi đi
-            String typeName = selType.getModelType().name();
-            String[] fields = new String[]{
-                    isEdit ? existing.id : "TEMP",
-                    topic, level, typeName, qText, choicesRaw, answerRaw, exp, blanksRaw, fillMapRaw
-            };
-            Model.Question parsedQ = Bank.parseFields(fields);
-            String bankErr = Bank.validateForAdmin(parsedQ);
-            if (bankErr != null) {
-                showValidationError(dlg, "Dữ liệu câu hỏi chưa hợp lệ: " + bankErr, null);
-                return;
-            }
-
-            // Gửi dữ liệu về Server thông qua actionListener
-            if (actionListener != null) {
-                if (isEdit) {
-                    actionListener.onUpdateQuestion(existing.id, topic, level, typeName, qText, choicesRaw, answerRaw, exp, blanksRaw, fillMapRaw);
-                } else {
-                    actionListener.onAddQuestion(topic, level, typeName, qText, choicesRaw, answerRaw, exp, blanksRaw, fillMapRaw);
+            if (isEdit) {
+                if (actionListener != null) {
+                    actionListener.onUpdateQuestion(existing.id, topic, level, st.getModelType().name(),
+                            qText, choicesRaw, answerRaw, exp, blanksRaw, fillMapRaw);
+                }
+            } else {
+                if (actionListener != null) {
+                    actionListener.onAddQuestion(topic, level, st.getModelType().name(),
+                            qText, choicesRaw, answerRaw, exp, blanksRaw, fillMapRaw);
                 }
             }
             dlg.dispose();
@@ -1059,89 +1242,259 @@ public class QuestionManagementPanel extends JPanel {
         footer.add(btnCancel);
         footer.add(btnSave);
         dlg.add(footer, BorderLayout.SOUTH);
+
+        dlg.addComponentListener(new java.awt.event.ComponentAdapter() {
+            @Override
+            public void componentShown(java.awt.event.ComponentEvent e) {
+                int div = (int) (dlg.getWidth() * 0.46);
+                splitPane.setDividerLocation(Math.max(520, div));
+            }
+            @Override
+            public void componentResized(java.awt.event.ComponentEvent e) {
+                int div = (int) (dlg.getWidth() * 0.46);
+                splitPane.setDividerLocation(Math.max(520, div));
+            }
+        });
+
+        SwingUtilities.invokeLater(() -> splitPane.setDividerLocation(initialDivider));
         dlg.setVisible(true);
     }
 
-    // =========================================================================
-    // UI HELPER METHODS FOR DYNAMIC FORM
-    // =========================================================================
-    private JLabel createBoldLabel(String text) {
-        JLabel lbl = new JLabel(text);
-        lbl.setFont(Theme.BODY_BOLD);
-        lbl.setForeground(Theme.DARK_TEXT);
-        return lbl;
-    }
+    /**
+     * LivePreviewPanel — Bảng hiển thị Live Preview mô phỏng giao diện MatchScreen.
+     */
+    private static class LivePreviewPanel extends JPanel {
+        private String topic = "Chủ đề";
+        private String level = "Dễ";
+        private SupportedType type = SupportedType.MULTIPLE_CHOICE;
+        private String questionText = "";
+        private List<String> choices = new ArrayList<>();
+        private String correctAns = "";
+        private String explanation = "";
 
-    private JPanel createChoiceRow(String badgeText, Color badgeBg, JTextField textField, JRadioButton radioButton, String placeholder) {
-        JPanel p = new JPanel(new BorderLayout(8, 0));
-        p.setOpaque(false);
-
-        JLabel lblBadge = new JLabel(badgeText, SwingConstants.CENTER);
-        lblBadge.setOpaque(true);
-        lblBadge.setBackground(badgeBg);
-        lblBadge.setForeground(Theme.WHITE);
-        lblBadge.setFont(Theme.BODY_BOLD);
-        lblBadge.setPreferredSize(new Dimension(30, 30));
-        p.add(lblBadge, BorderLayout.WEST);
-
-        textField.setFont(Theme.BODY);
-        textField.setPreferredSize(new Dimension(340, 32));
-        p.add(textField, BorderLayout.CENTER);
-
-        radioButton.setFont(Theme.BODY);
-        radioButton.setOpaque(false);
-        radioButton.setPreferredSize(new Dimension(115, 32));
-        p.add(radioButton, BorderLayout.EAST);
-
-        return p;
-    }
-
-    private JPanel createCheckboxRow(String badgeText, Color badgeBg, JTextField textField, JCheckBox checkBox, String placeholder) {
-        JPanel p = new JPanel(new BorderLayout(8, 0));
-        p.setOpaque(false);
-
-        JLabel lblBadge = new JLabel(badgeText, SwingConstants.CENTER);
-        lblBadge.setOpaque(true);
-        lblBadge.setBackground(badgeBg);
-        lblBadge.setForeground(Theme.WHITE);
-        lblBadge.setFont(Theme.BODY_BOLD);
-        lblBadge.setPreferredSize(new Dimension(30, 30));
-        p.add(lblBadge, BorderLayout.WEST);
-
-        textField.setFont(Theme.BODY);
-        textField.setPreferredSize(new Dimension(340, 32));
-        p.add(textField, BorderLayout.CENTER);
-
-        checkBox.setFont(Theme.BODY);
-        checkBox.setOpaque(false);
-        checkBox.setPreferredSize(new Dimension(135, 32));
-        p.add(checkBox, BorderLayout.EAST);
-
-        return p;
-    }
-
-    private void addDndRow(JPanel panel, GridBagConstraints gbc, int row, String label, JTextField textField, String hint) {
-        gbc.gridx = 0; gbc.gridy = row; gbc.weightx = 0.42;
-        JLabel lbl = new JLabel(label);
-        lbl.setFont(Theme.BODY_BOLD);
-        lbl.setForeground(Theme.DARK_TEXT);
-        panel.add(lbl, gbc);
-
-        gbc.gridx = 1; gbc.gridy = row; gbc.weightx = 0.58;
-        textField.setPreferredSize(new Dimension(320, 32));
-        textField.setToolTipText(hint);
-        panel.add(textField, gbc);
-    }
-
-    private void showValidationError(Component parent, String message, Component focusTarget) {
-        JOptionPane.showMessageDialog(
-                parent,
-                message,
-                "Thông Tin Chưa Hợp Lệ",
-                JOptionPane.WARNING_MESSAGE
-        );
-        if (focusTarget != null) {
-            focusTarget.requestFocusInWindow();
+        public LivePreviewPanel() {
+            setOpaque(false);
+            setLayout(new BorderLayout());
+            setBorder(new EmptyBorder(16, 16, 16, 16));
         }
+
+        public void renderPreview(String topic, String level, SupportedType type,
+                                  String qText, List<String> choices, String correctAns, String exp) {
+            this.topic = (topic != null && !topic.isBlank()) ? topic : "Chủ đề mẫu";
+            this.level = (level != null && !level.isBlank()) ? level : "Dễ";
+            this.type = type != null ? type : SupportedType.MULTIPLE_CHOICE;
+            this.questionText = (qText != null && !qText.isBlank()) ? qText : "Nội dung câu hỏi hiển thị tại đây...";
+            this.choices = choices != null ? new ArrayList<>(choices) : new ArrayList<>();
+            this.correctAns = correctAns != null ? correctAns : "";
+            this.explanation = exp != null ? exp : "";
+
+            removeAll();
+
+            JPanel card = new JPanel() {
+                @Override
+                protected void paintComponent(Graphics g) {
+                    Graphics2D g2 = (Graphics2D) g.create();
+                    Theme.setupAntiAliasing(g2);
+                    int w = getWidth();
+                    int h = getHeight();
+
+                    g2.setColor(new Color(0x18, 0x22, 0x34));
+                    g2.fillRoundRect(0, 0, w, h, 16, 16);
+                    g2.setColor(new Color(0x38, 0xBD, 0xF8));
+                    g2.setStroke(new BasicStroke(1.2f));
+                    g2.drawRoundRect(0, 0, w - 1, h - 1, 16, 16);
+                    g2.dispose();
+                    super.paintComponent(g);
+                }
+            };
+            card.setLayout(new BoxLayout(card, BoxLayout.Y_AXIS));
+            card.setOpaque(false);
+            card.setBorder(new EmptyBorder(16, 20, 16, 20));
+
+            // Top Header: Tag Bar
+            JPanel topTagBar = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 0));
+            topTagBar.setOpaque(false);
+            topTagBar.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+            JLabel tagPreview = new JLabel("[XEM TRƯỚC TRẬN ĐẤU]");
+            tagPreview.setFont(Theme.SMALL_BOLD);
+            tagPreview.setForeground(new Color(0x38, 0xBD, 0xF8));
+
+            JLabel tagTopic = new JLabel(topic + " • " + level + " • " + type.getDisplayName());
+            tagTopic.setFont(Theme.SMALL);
+            tagTopic.setForeground(new Color(0xE2, 0xE8, 0xF0));
+
+            topTagBar.add(tagPreview);
+            topTagBar.add(tagTopic);
+            card.add(topTagBar);
+            card.add(Box.createVerticalStrut(14));
+
+            // Question Text Label
+            JLabel lblQ = new JLabel("<html><body style='width: 620px; font-family: Segoe UI, sans-serif; font-size: 16px; font-weight: bold; color: #FFFFFF; line-height: 1.45;'>"
+                    + questionText + "</body></html>");
+            lblQ.setAlignmentX(Component.LEFT_ALIGNMENT);
+            card.add(lblQ);
+            card.add(Box.createVerticalStrut(18));
+
+            // Choices Area
+            JPanel choicesBox = new JPanel();
+            choicesBox.setOpaque(false);
+            choicesBox.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+            if (type == SupportedType.MULTIPLE_CHOICE) {
+                choicesBox.setLayout(new GridLayout(2, 2, 12, 12));
+                choicesBox.setMaximumSize(new Dimension(Integer.MAX_VALUE, 130));
+                int correctIdx = 0;
+                try { correctIdx = Integer.parseInt(correctAns.trim()); } catch (Exception ignored) {}
+
+                for (int i = 0; i < 4; i++) {
+                    String text = (i < choices.size() && !choices.get(i).isBlank()) ? choices.get(i) : ("Đáp án " + (char) ('A' + i));
+                    boolean isCorrect = (i == correctIdx);
+                    choicesBox.add(createPreviewChoicePill((char) ('A' + i), text, isCorrect));
+                }
+            } else if (type == SupportedType.TRUE_FALSE) {
+                choicesBox.setLayout(new GridLayout(1, 2, 12, 0));
+                choicesBox.setMaximumSize(new Dimension(Integer.MAX_VALUE, 50));
+                boolean trueIsCorrect = "0".equals(correctAns);
+                choicesBox.add(createPreviewChoicePill('1', "ĐÚNG", trueIsCorrect));
+                choicesBox.add(createPreviewChoicePill('0', "SAI", !trueIsCorrect));
+            } else if (type == SupportedType.MULTIPLE_SELECT) {
+                choicesBox.setLayout(new GridLayout(2, 2, 12, 12));
+                choicesBox.setMaximumSize(new Dimension(Integer.MAX_VALUE, 130));
+                Set<Integer> cSet = new HashSet<>();
+                for (String p : correctAns.split("[,;]")) {
+                    try { cSet.add(Integer.parseInt(p.trim())); } catch (Exception ignored) {}
+                }
+                for (int i = 0; i < 4; i++) {
+                    String text = (i < choices.size() && !choices.get(i).isBlank()) ? choices.get(i) : ("Lựa chọn " + (char) ('A' + i));
+                    boolean isCorrect = cSet.contains(i);
+                    choicesBox.add(createPreviewChoicePill((char) ('A' + i), text, isCorrect));
+                }
+            } else if (type == SupportedType.FILL_IN) {
+                choicesBox.setLayout(new BoxLayout(choicesBox, BoxLayout.Y_AXIS));
+                JLabel lblInputSim = new JLabel("Ô nhập người chơi: [ Gõ câu trả lời vào đây... ]");
+                lblInputSim.setFont(Theme.BODY);
+                lblInputSim.setForeground(new Color(0x94, 0xA3, 0xB8));
+
+                JLabel lblAnsAccept = new JLabel("Đáp án đúng được chấp nhận: " + (correctAns.isBlank() ? "Chưa cấu hình" : correctAns));
+                lblAnsAccept.setFont(Theme.BODY_BOLD);
+                lblAnsAccept.setForeground(new Color(0x10, 0xB9, 0x81));
+
+                choicesBox.add(lblInputSim);
+                choicesBox.add(Box.createVerticalStrut(6));
+                choicesBox.add(lblAnsAccept);
+            } else {
+                // DRAG_AND_DROP
+                choicesBox.setLayout(new BoxLayout(choicesBox, BoxLayout.Y_AXIS));
+                JLabel lblDropSlots = new JLabel("Khung câu hỏi với ô thả: [ ? ]");
+                lblDropSlots.setFont(Theme.BODY);
+                lblDropSlots.setForeground(new Color(0x94, 0xA3, 0xB8));
+
+                JPanel tokensPool = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 4));
+                tokensPool.setOpaque(false);
+                for (String w : choices) {
+                    JLabel tok = new JLabel(" " + w + " ");
+                    tok.setFont(Theme.SMALL_BOLD);
+                    tok.setOpaque(true);
+                    tok.setBackground(new Color(0x33, 0x41, 0x55));
+                    tok.setForeground(Color.WHITE);
+                    tok.setBorder(new LineBorder(new Color(0x64, 0x74, 0x8B), 1, true));
+                    tokensPool.add(tok);
+                }
+
+                choicesBox.add(lblDropSlots);
+                choicesBox.add(Box.createVerticalStrut(6));
+                choicesBox.add(tokensPool);
+            }
+
+            card.add(choicesBox);
+            card.add(Box.createVerticalStrut(14));
+
+            // Explanation box (giữ chiều cao tự nhiên, không bị kéo dãn)
+            if (!explanation.isBlank()) {
+                JPanel expBox = new JPanel(new BorderLayout(6, 6));
+                expBox.setOpaque(true);
+                expBox.setBackground(new Color(0x0F, 0x1E, 0x36));
+                expBox.setBorder(BorderFactory.createCompoundBorder(
+                        new LineBorder(new Color(0x02, 0x84, 0xC7), 1, true),
+                        new EmptyBorder(10, 14, 10, 14)));
+                JLabel lblExpTitle = new JLabel("Giải thích chi tiết:");
+                lblExpTitle.setFont(Theme.SMALL_BOLD);
+                lblExpTitle.setForeground(new Color(0x38, 0xBD, 0xF8));
+                JLabel lblExpVal = new JLabel("<html><body style='width: 580px; font-family: Segoe UI, sans-serif; font-size: 13px; color: #BAE6FD; line-height: 1.45;'>"
+                        + explanation + "</body></html>");
+                expBox.add(lblExpTitle, BorderLayout.NORTH);
+                expBox.add(lblExpVal, BorderLayout.CENTER);
+                expBox.setAlignmentX(Component.LEFT_ALIGNMENT);
+                expBox.setMaximumSize(new Dimension(Integer.MAX_VALUE, expBox.getPreferredSize().height + 30));
+                card.add(expBox);
+            }
+
+            card.add(Box.createVerticalGlue());
+
+            add(card, BorderLayout.CENTER);
+            revalidate();
+            repaint();
+        }
+
+        private JPanel createPreviewChoicePill(char prefix, String text, boolean isCorrect) {
+            JPanel pill = new JPanel() {
+                @Override
+                protected void paintComponent(Graphics g) {
+                    Graphics2D g2 = (Graphics2D) g.create();
+                    Theme.setupAntiAliasing(g2);
+                    int w = getWidth();
+                    int h = getHeight();
+
+                    Color bg = isCorrect ? new Color(0x06, 0x4E, 0x3B) : new Color(0x1E, 0x29, 0x3B);
+                    Color border = isCorrect ? new Color(0x10, 0xB9, 0x81) : new Color(0x47, 0x55, 0x69);
+
+                    g2.setColor(bg);
+                    g2.fillRoundRect(0, 0, w, h, 10, 10);
+                    g2.setColor(border);
+                    g2.setStroke(new BasicStroke(isCorrect ? 1.6f : 1.0f));
+                    g2.drawRoundRect(0, 0, w - 1, h - 1, 10, 10);
+
+                    // Prefix Badge
+                    g2.setColor(isCorrect ? new Color(0x10, 0xB9, 0x81) : new Color(0x64, 0x74, 0x8B));
+                    g2.fillOval(8, (h - 22) / 2, 22, 22);
+
+                    g2.setColor(Color.WHITE);
+                    g2.setFont(Theme.SMALL_BOLD);
+                    FontMetrics fm = g2.getFontMetrics();
+                    String sPfx = String.valueOf(prefix);
+                    g2.drawString(sPfx, 8 + (22 - fm.stringWidth(sPfx)) / 2, (h - fm.getHeight()) / 2 + fm.getAscent());
+
+                    // Vector Checkmark when correct (Zero unicode emoji / font bug!)
+                    if (isCorrect) {
+                        int rx = w - 24;
+                        int ry = h / 2;
+                        g2.setColor(new Color(0x34, 0xD3, 0x99));
+                        g2.setStroke(new BasicStroke(2.0f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+                        g2.drawLine(rx - 4, ry, rx - 1, ry + 3);
+                        g2.drawLine(rx - 1, ry + 3, rx + 4, ry - 3);
+                    }
+
+                    g2.dispose();
+                    super.paintComponent(g);
+                }
+            };
+            pill.setLayout(new BorderLayout(8, 0));
+            pill.setOpaque(false);
+            pill.setBorder(new EmptyBorder(6, 36, 6, isCorrect ? 28 : 8));
+            pill.setPreferredSize(new Dimension(200, 46));
+
+            JLabel lbl = new JLabel("<html><body style='font-family: Segoe UI, sans-serif; font-size: 13px; color: #F1F5F9; font-weight: 500;'>" + text + "</body></html>");
+            pill.add(lbl, BorderLayout.CENTER);
+
+            return pill;
+        }
+    }
+
+    private static JLabel createBoldLabel(String text) {
+        JLabel l = new JLabel(text);
+        l.setFont(Theme.SMALL_BOLD);
+        l.setForeground(Theme.DARK_TEXT);
+        return l;
     }
 }
