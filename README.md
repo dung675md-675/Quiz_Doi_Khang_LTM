@@ -1,5 +1,23 @@
 # Game trắc nghiệm đối kháng 1v1
 
+## Giao diện navy và lime
+
+Giao diện được chuyển từ bản thiết kế Quiz Arena trước đó lên bản mã nguồn mới nhất của nhóm: nền navy tối, menu dọc, nút xanh lime, banner đấu trường và bộ chọn chủ đề hai hàng. Phần đăng nhập có nền minh họa và form tối; các màn hình bảng xếp hạng, lịch sử và quản trị dùng cùng bảng màu.
+
+Các thao tác và dữ liệu của bản nhóm được giữ lại, gồm kỹ năng chiến thuật, đồng hồ theo loại câu hỏi, bảng xếp hạng theo thời gian, thống kê lịch sử, chi tiết trận và chức năng quản trị. Lần cập nhật này chỉ thay giao diện, không bổ sung chat, phòng đấu bằng mã hay báo lỗi câu hỏi.
+
+Ảnh nằm trong `assets/backgrounds`; thông tin nguồn ảnh ở [ARTWORK.md](assets/backgrounds/ARTWORK.md). Maven đóng gói thư mục này vào classpath. Nút **Hiệu ứng: Bật/Tắt** điều khiển chuyển động nền; có thể đặt `-Dquiz.ui.reduceMotion=true` khi chạy client. Hiệu ứng dừng khi màn hình bị ẩn hoặc cửa sổ thu nhỏ.
+
+Sau khi biên dịch, mở hai terminal tại thư mục có `src`, `lib`, `out` và chạy:
+
+```bash
+java -cp "out;lib/*" quiz.Server 5050 data
+```
+
+```bash
+java -cp "out;lib/*" quiz.Client 127.0.0.1 5050
+```
+
 Project Java 17 độc lập theo đề tài Nhóm 5: TCP Socket, server nhiều luồng, client Swing, tài khoản, sảnh online, lời mời theo chủ đề và mức độ, cùng bộ đề 10 câu cho hai người, tính điểm và thời gian tại server, tái đấu, lịch sử và bảng xếp hạng.
 
 ## Chạy trên Windows 11 và NetBeans

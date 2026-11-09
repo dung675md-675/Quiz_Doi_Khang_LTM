@@ -11,14 +11,15 @@ import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 
 /**
- * SubmitConfirmDialog - Hộp thoại xác nhận nộp bài thi đấu hiện đại, bắt mắt:
- * - Header gradient rực rỡ với icon tròn nổi bật và thông báo trạng thái.
- * - 3 thẻ thống kê chỉ số tươi tắn: Đã làm, Chưa làm, Tiến độ %.
- * - Thanh tiến độ Gradient bo tròn mượt mà.
- * - Lưới ma trận trực quan 10 câu hỏi (Xanh lá: đã làm, Cam: chưa làm).
+ * SubmitConfirmDialog - Hộp thoại xác nhận nộp bài thi đấu phong cách Cyberpunk Dark hiện đại:
+ * - Đồng bộ hoàn toàn với thẩm mỹ Dark Glassmorphism của MatchScreen và ResultDialog.
+ * - Header gradient bóng bẩy với icon Vector Neon phát sáng.
+ * - 3 thẻ thống kê chỉ số: Đã làm, Chưa làm, Tiến độ % dạng thẻ kính thủy tinh tối.
+ * - Thanh tiến độ Gradient Neon bo tròn mượt mà.
+ * - Lưới ma trận trực quan 10 câu hỏi (Xanh ngọc: đã làm, Vàng cam: chưa làm, Cyan: câu hiện tại).
  *   Người chơi có thể bấm trực tiếp vào ô câu hỏi để chuyển đến câu đó ngay!
  * - Hộp lưu ý / mẹo thi đấu nổi bật.
- * - Các nút thao tác màu sắc tươi sáng: Nộp bài ngay (Xanh ngọc) và Tiếp tục làm bài (Xanh da trời).
+ * - Các nút thao tác bắt mắt: "TIẾP TỤC LÀM BÀI" và "NỘP BÀI NGAY".
  */
 public class SubmitConfirmDialog extends JDialog {
 
@@ -52,11 +53,11 @@ public class SubmitConfirmDialog extends JDialog {
         boolean isAllAnswered = (unansweredCount == 0);
         int progressPercent = (totalCount > 0) ? (answeredCount * 100 / totalCount) : 0;
 
-        setSize(530, 620);
+        setSize(540, 640);
         setLocationRelativeTo(owner);
         setResizable(false);
         setLayout(new BorderLayout());
-        getContentPane().setBackground(Theme.WHITE);
+        getContentPane().setBackground(new Color(0x0F, 0x17, 0x2A));
 
         // ==========================================
         // 1. TOP GRADIENT HEADER
@@ -70,27 +71,32 @@ public class SubmitConfirmDialog extends JDialog {
                 int w = getWidth();
                 int h = getHeight();
 
-                // Gradient nền tươi sáng
-                Color startColor = isAllAnswered ? Theme.EMERALD : Theme.AMBER;
-                Color endColor = isAllAnswered ? Theme.EMERALD_DARK : Theme.ORANGE_DARK;
-                GradientPaint gp = new GradientPaint(0, 0, startColor, 0, h, endColor);
+                // Nền gradient tối bóng bẩy
+                GradientPaint gp = new GradientPaint(
+                        0, 0, new Color(0x1E, 0x29, 0x3B),
+                        0, h, new Color(0x0F, 0x17, 0x2A));
                 g2.setPaint(gp);
                 g2.fillRect(0, 0, w, h);
 
-                // Họa tiết vòng tròn trang trí bán trong suốt
-                g2.setColor(new Color(255, 255, 255, 18));
-                g2.fillOval(-20, -30, 120, 120);
-                g2.fillOval(w - 70, h - 50, 110, 110);
-                g2.fillOval(w - 110, -20, 90, 90);
+                // Viền Neon phát sáng ở trên đỉnh
+                Color neonAccent = isAllAnswered ? new Color(0x10, 0xB9, 0x81) : new Color(0xF5, 0x9E, 0x0B);
+                g2.setColor(neonAccent);
+                g2.fillRect(0, 0, w, 3);
+
+                // Họa tiết trang trí vòng tròn bán trong suốt
+                g2.setColor(new Color(255, 255, 255, 6));
+                g2.fillOval(-20, -30, 130, 130);
+                g2.fillOval(w - 80, h - 50, 120, 120);
 
                 g2.dispose();
             }
         };
         headerPanel.setLayout(new BoxLayout(headerPanel, BoxLayout.Y_AXIS));
         headerPanel.setBorder(new EmptyBorder(16, 20, 16, 20));
-        headerPanel.setPreferredSize(new Dimension(530, 135));
+        headerPanel.setPreferredSize(new Dimension(540, 138));
+        headerPanel.setOpaque(false);
 
-        // 1.1 Icon tròn nổi bật ở trên đỉnh
+        // 1.1 Icon tròn vector nổi bật
         JPanel iconBadge = new JPanel() {
             @Override
             protected void paintComponent(Graphics g) {
@@ -98,32 +104,48 @@ public class SubmitConfirmDialog extends JDialog {
                 Theme.setupAntiAliasing(g2);
                 int size = Math.min(getWidth(), getHeight());
 
-                // Vòng phát sáng mờ
-                g2.setColor(new Color(255, 255, 255, 50));
+                Color accentColor = isAllAnswered ? new Color(0x10, 0xB9, 0x81) : new Color(0xF5, 0x9E, 0x0B);
+
+                // Vầng hào quang phát sáng
+                g2.setColor(new Color(accentColor.getRed(), accentColor.getGreen(), accentColor.getBlue(), 35));
                 g2.fillOval(0, 0, size, size);
 
-                // Vòng tròn trắng mờ trong
-                g2.setColor(new Color(255, 255, 255, 220));
-                g2.fillOval(3, 3, size - 6, size - 6);
+                g2.setColor(new Color(accentColor.getRed(), accentColor.getGreen(), accentColor.getBlue(), 70));
+                g2.fillOval(4, 4, size - 8, size - 8);
 
-                // Viền trắng
-                g2.setColor(new Color(255, 255, 255, 255));
-                g2.setStroke(new BasicStroke(2f));
-                g2.drawOval(1, 1, size - 2, size - 2);
+                // Nền tròn tối bên trong
+                g2.setColor(new Color(0x1E, 0x29, 0x3B));
+                g2.fillOval(8, 8, size - 16, size - 16);
+
+                // Viền Neon
+                g2.setColor(accentColor);
+                g2.setStroke(new BasicStroke(1.8f));
+                g2.drawOval(8, 8, size - 16, size - 16);
+
+                // Biểu tượng vector: Tick hoặc Dấu chấm than
+                if (isAllAnswered) {
+                    g2.setColor(new Color(0x34, 0xD3, 0x99));
+                    g2.setStroke(new BasicStroke(3.2f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+                    g2.drawLine(size * 32 / 100, size * 52 / 100, size * 45 / 100, size * 66 / 100);
+                    g2.drawLine(size * 45 / 100, size * 66 / 100, size * 68 / 100, size * 36 / 100);
+                } else {
+                    g2.setColor(new Color(0xFB, 0xBF, 0x24));
+                    g2.setFont(new Font("Segoe UI", Font.BOLD, 24));
+                    FontMetrics fm = g2.getFontMetrics();
+                    String ex = "!";
+                    int tx = (size - fm.stringWidth(ex)) / 2;
+                    int ty = (size - fm.getHeight()) / 2 + fm.getAscent() - 1;
+                    g2.drawString(ex, tx, ty);
+                }
 
                 g2.dispose();
-                super.paintComponent(g);
             }
         };
-        iconBadge.setLayout(new GridBagLayout());
-        iconBadge.setPreferredSize(new Dimension(48, 48));
-        iconBadge.setMaximumSize(new Dimension(48, 48));
+        iconBadge.setPreferredSize(new Dimension(50, 50));
+        iconBadge.setMaximumSize(new Dimension(50, 50));
         iconBadge.setOpaque(false);
         iconBadge.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        JLabel lblIcon = new JLabel(isAllAnswered ? "🚀" : "⚠️");
-        lblIcon.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 24));
-        iconBadge.add(lblIcon);
         headerPanel.add(iconBadge);
         headerPanel.add(Box.createVerticalStrut(8));
 
@@ -132,7 +154,7 @@ public class SubmitConfirmDialog extends JDialog {
                 isAllAnswered ? "XÁC NHẬN NỘP BÀI" : "CHƯA HOÀN THÀNH TẤT CẢ CÂU!",
                 SwingConstants.CENTER);
         lblTitle.setFont(Theme.TITLE);
-        lblTitle.setForeground(Theme.WHITE);
+        lblTitle.setForeground(new Color(0xF8, 0xFA, 0xFC));
         lblTitle.setAlignmentX(Component.CENTER_ALIGNMENT);
         headerPanel.add(lblTitle);
         headerPanel.add(Box.createVerticalStrut(4));
@@ -140,25 +162,25 @@ public class SubmitConfirmDialog extends JDialog {
         // 1.3 Phụ đề header
         JLabel lblSubtitle = new JLabel(
                 isAllAnswered
-                        ? "Bạn đã trả lời đầy đủ toàn bộ câu hỏi. Sẵn sàng chốt điểm!"
+                        ? "Bạn đã trả lời đầy đủ 10/10 câu hỏi. Sẵn sàng chốt điểm số!"
                         : "Bạn vẫn còn " + unansweredCount + " câu hỏi chưa chọn đáp án.",
                 SwingConstants.CENTER);
         lblSubtitle.setFont(Theme.BODY);
-        lblSubtitle.setForeground(isAllAnswered ? new Color(230, 255, 245) : new Color(255, 248, 225));
+        lblSubtitle.setForeground(new Color(0x94, 0xA3, 0xB8));
         lblSubtitle.setAlignmentX(Component.CENTER_ALIGNMENT);
         headerPanel.add(lblSubtitle);
 
         add(headerPanel, BorderLayout.NORTH);
 
         // ==========================================
-        // 2. CENTER BODY PANEL
+        // 2. CENTER BODY PANEL (CYBERPUNK DARK)
         // ==========================================
         JPanel bodyPanel = new JPanel();
         bodyPanel.setLayout(new BoxLayout(bodyPanel, BoxLayout.Y_AXIS));
-        bodyPanel.setBackground(Theme.WHITE);
-        bodyPanel.setBorder(new EmptyBorder(16, 22, 14, 22));
+        bodyPanel.setBackground(new Color(0x0F, 0x17, 0x2A));
+        bodyPanel.setBorder(new EmptyBorder(14, 22, 14, 22));
 
-        // 2.1 3 THẺ CHỈ SỐ THỐNG KÊ (3 QUICK STAT CARDS)
+        // 2.1 3 THẺ CHỈ SỐ THỐNG KÊ (3 STAT CARDS)
         JPanel statsRow = new JPanel(new GridLayout(1, 3, 10, 0));
         statsRow.setOpaque(false);
         statsRow.setMaximumSize(new Dimension(Integer.MAX_VALUE, 76));
@@ -168,16 +190,16 @@ public class SubmitConfirmDialog extends JDialog {
                 "ĐÃ LÀM",
                 answeredCount + "/" + totalCount,
                 "câu hỏi",
-                Theme.EMERALD_LIGHT,
-                new Color(0xA7, 0xF3, 0xD0),
-                new Color(0x04, 0x78, 0x57),
-                new Color(0x05, 0x96, 0x69));
+                new Color(0x06, 0x4E, 0x3B, 140),
+                new Color(0x05, 0x96, 0x69, 180),
+                new Color(0x6E, 0xE7, 0xB7),
+                new Color(0x34, 0xD3, 0x99));
 
         // Card 2: CHƯA LÀM
-        Color unansBg = (unansweredCount > 0) ? Theme.AMBER_LIGHT : new Color(0xF3, 0xF4, 0xF6);
-        Color unansBorder = (unansweredCount > 0) ? new Color(0xFE, 0xD7, 0xAA) : new Color(0xE5, 0xE7, 0xEB);
-        Color unansTitle = (unansweredCount > 0) ? new Color(0xC2, 0x41, 0x0C) : new Color(0x6B, 0x72, 0x80);
-        Color unansVal = (unansweredCount > 0) ? Theme.ORANGE_DARK : Theme.EMERALD;
+        Color unansBg = (unansweredCount > 0) ? new Color(0x45, 0x1A, 0x03, 140) : new Color(0x1E, 0x29, 0x3B, 180);
+        Color unansBorder = (unansweredCount > 0) ? new Color(0xD9, 0x77, 0x06, 180) : new Color(0x33, 0x41, 0x55);
+        Color unansTitle = (unansweredCount > 0) ? new Color(0xFD, 0xBA, 0x74) : new Color(0x94, 0xA3, 0xB8);
+        Color unansVal = (unansweredCount > 0) ? new Color(0xFB, 0xBF, 0x24) : new Color(0x34, 0xD3, 0x99);
         JPanel cardUnanswered = createStatCard(
                 "CHƯA LÀM",
                 unansweredCount + " câu",
@@ -192,10 +214,10 @@ public class SubmitConfirmDialog extends JDialog {
                 "TIẾN ĐỘ",
                 progressPercent + "%",
                 "toàn bộ bài thi",
-                Theme.SKY_LIGHT,
-                new Color(0xBF, 0xDB, 0xFE),
-                new Color(0x1E, 0x40, 0xAF),
-                new Color(0x25, 0x63, 0xEB));
+                new Color(0x0C, 0x4A, 0x6E, 140),
+                new Color(0x02, 0x84, 0xC7, 180),
+                new Color(0x7D, 0xD3, 0xFC),
+                new Color(0x38, 0xBD, 0xF8));
 
         statsRow.add(cardAnswered);
         statsRow.add(cardUnanswered);
@@ -203,7 +225,7 @@ public class SubmitConfirmDialog extends JDialog {
         bodyPanel.add(statsRow);
         bodyPanel.add(Box.createVerticalStrut(14));
 
-        // 2.2 THANH TIẾN ĐỘ GRADIENT (GRADIENT PROGRESS BAR)
+        // 2.2 THANH TIẾN ĐỘ GRADIENT NEON
         JPanel progressTrack = new JPanel() {
             @Override
             protected void paintComponent(Graphics g) {
@@ -214,18 +236,19 @@ public class SubmitConfirmDialog extends JDialog {
                 int h = getHeight();
                 int radius = h;
 
-                // Nền track xám nhạt
-                g2.setColor(new Color(0xE2, 0xE8, 0xF0));
+                // Nền track tối
+                g2.setColor(new Color(0x1E, 0x29, 0x3B));
                 g2.fill(new RoundRectangle2D.Float(0, 0, w, h, radius, radius));
+                g2.setColor(new Color(0x33, 0x41, 0x55));
+                g2.setStroke(new BasicStroke(1f));
+                g2.draw(new RoundRectangle2D.Float(0.5f, 0.5f, w - 1, h - 1, radius, radius));
 
                 // Thanh fill gradient rực rỡ
                 float fillW = (float) w * (Math.max(0, Math.min(100, progressPercent)) / 100.0f);
                 if (fillW > 0) {
                     GradientPaint fillGp = new GradientPaint(
-                            0, 0,
-                            isAllAnswered ? Theme.CYAN : Theme.AMBER,
-                            fillW, 0,
-                            Theme.EMERALD);
+                            0, 0, new Color(0x06, 0xB6, 0xD4),
+                            fillW, 0, new Color(0x10, 0xB9, 0x81));
                     g2.setPaint(fillGp);
                     g2.fill(new RoundRectangle2D.Float(0, 0, fillW, h, radius, radius));
                 }
@@ -239,19 +262,19 @@ public class SubmitConfirmDialog extends JDialog {
         bodyPanel.add(progressTrack);
         bodyPanel.add(Box.createVerticalStrut(14));
 
-        // 2.3 LƯỚI MA TRẬN 10 CÂU HỎI TRỰC QUAN (QUESTION STATUS MATRIX)
+        // 2.3 LƯỚI MA TRẬN 10 CÂU HỎI TRỰC QUAN
         JPanel matrixHeader = new JPanel(new BorderLayout());
         matrixHeader.setOpaque(false);
         matrixHeader.setMaximumSize(new Dimension(Integer.MAX_VALUE, 22));
 
         JLabel lblMatrixTitle = new JLabel("Danh sách câu hỏi:");
         lblMatrixTitle.setFont(Theme.BODY_BOLD);
-        lblMatrixTitle.setForeground(Theme.DARK_TEXT);
+        lblMatrixTitle.setForeground(new Color(0xF1, 0xF5, 0xF9));
         matrixHeader.add(lblMatrixTitle, BorderLayout.WEST);
 
-        JLabel lblMatrixHint = new JLabel("👆 Bấm vào câu để làm tiếp");
+        JLabel lblMatrixHint = new JLabel("Bấm vào câu để làm tiếp");
         lblMatrixHint.setFont(Theme.SMALL_BOLD);
-        lblMatrixHint.setForeground(Theme.PURPLE);
+        lblMatrixHint.setForeground(new Color(0xA7, 0x8B, 0xFA));
         matrixHeader.add(lblMatrixHint, BorderLayout.EAST);
 
         bodyPanel.add(matrixHeader);
@@ -291,8 +314,8 @@ public class SubmitConfirmDialog extends JDialog {
                 int w = getWidth();
                 int h = getHeight();
 
-                Color bg = isAllAnswered ? Theme.EMERALD_LIGHT : Theme.AMBER_LIGHT;
-                Color border = isAllAnswered ? new Color(0xA7, 0xF3, 0xD0) : new Color(0xFD, 0xE6, 0x8A);
+                Color bg = isAllAnswered ? new Color(0x06, 0x4E, 0x3B, 150) : new Color(0x45, 0x1A, 0x03, 150);
+                Color border = isAllAnswered ? new Color(0x05, 0x96, 0x69) : new Color(0xD9, 0x77, 0x06);
 
                 g2.setColor(bg);
                 g2.fill(new RoundRectangle2D.Float(0, 0, w - 1, h - 1, 12, 12));
@@ -310,17 +333,19 @@ public class SubmitConfirmDialog extends JDialog {
         noticeCard.setMaximumSize(new Dimension(Integer.MAX_VALUE, 65));
 
         JLabel lblNoticeIcon = new JLabel(isAllAnswered ? "💡" : "⚠️");
-        lblNoticeIcon.setFont(new Font(Font.SANS_SERIF, Font.PLAIN, 20));
+        lblNoticeIcon.setFont(new Font("Segoe UI Emoji", Font.PLAIN, 18));
         lblNoticeIcon.setVerticalAlignment(SwingConstants.TOP);
         noticeCard.add(lblNoticeIcon, BorderLayout.WEST);
 
         String noticeHtml = isAllAnswered
-                ? "<html><b>Mẹo vàng:</b> Khi hai đấu thủ bằng điểm, hệ thống ưu tiên người có <i>tổng thời gian nộp bài nhanh hơn</i> để chiến thắng!</html>"
-                : "<html><b>Lưu ý quan trọng:</b> Những câu chưa làm sẽ nhận <b>0 điểm</b>. Bạn có thể bấm vào các ô màu cam ở trên để trả lời nốt trước khi nộp.</html>";
+                ? "<html><div style='line-height: 125%; color: #A7F3D0; font-family: Segoe UI, sans-serif; font-size: 11px;'>"
+                + "<b>Mẹo vàng:</b> Khi hai đấu thủ bằng điểm, hệ thống ưu tiên người có <i>tổng thời gian làm bài nhanh hơn</i> để chiến thắng!"
+                + "</div></html>"
+                : "<html><div style='line-height: 125%; color: #FDE68A; font-family: Segoe UI, sans-serif; font-size: 11px;'>"
+                + "<b>Lưu ý quan trọng:</b> Những câu chưa làm sẽ nhận <b>0 điểm</b>. Bạn có thể bấm vào các ô màu cam ở trên để hoàn thiện trước khi nộp."
+                + "</div></html>";
 
         JLabel lblNoticeText = new JLabel(noticeHtml);
-        lblNoticeText.setFont(Theme.SMALL);
-        lblNoticeText.setForeground(isAllAnswered ? new Color(0x06, 0x5F, 0x46) : new Color(0x92, 0x40, 0x0E));
         noticeCard.add(lblNoticeText, BorderLayout.CENTER);
 
         bodyPanel.add(noticeCard);
@@ -330,11 +355,12 @@ public class SubmitConfirmDialog extends JDialog {
         // 3. BOTTOM ACTION FOOTER
         // ==========================================
         JPanel footerPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 12, 12));
-        footerPanel.setBackground(new Color(0xF8, 0xFA, 0xFC));
-        footerPanel.setBorder(BorderFactory.createMatteBorder(1, 0, 0, 0, new Color(0xE2, 0xE8, 0xF0)));
+        footerPanel.setBackground(new Color(0x0B, 0x11, 0x20));
+        footerPanel.setBorder(BorderFactory.createMatteBorder(1, 0, 0, 0, new Color(0x1E, 0x29, 0x3B)));
 
-        ModernButton btnCancel = new ModernButton("✏️ TIẾP TỤC LÀM BÀI", ModernButton.Style.SECONDARY_SKY);
-        btnCancel.setPreferredSize(new Dimension(185, 42));
+        ModernButton btnCancel = new ModernButton("TIẾP TỤC LÀM BÀI", ModernButton.Style.SECONDARY_SKY);
+        btnCancel.setPreferredSize(new Dimension(175, 42));
+        btnCancel.setFont(Theme.BODY_BOLD);
         btnCancel.addActionListener(e -> {
             SoundManager.playClick();
             userChoice = Choice.CANCEL;
@@ -342,9 +368,10 @@ public class SubmitConfirmDialog extends JDialog {
         });
 
         ModernButton btnSubmit = new ModernButton(
-                isAllAnswered ? "🚀 NỘP BÀI NGAY" : "⚡ VẪN NỘP BÀI",
+                isAllAnswered ? "NỘP BÀI NGAY" : "XÁC NHẬN NỘP BÀI",
                 ModernButton.Style.EMERALD);
-        btnSubmit.setPreferredSize(new Dimension(165, 42));
+        btnSubmit.setPreferredSize(new Dimension(175, 42));
+        btnSubmit.setFont(Theme.BODY_BOLD);
         btnSubmit.addActionListener(e -> {
             SoundManager.playClick();
             userChoice = Choice.SUBMIT;
@@ -502,32 +529,39 @@ public class SubmitConfirmDialog extends JDialog {
             int h = getHeight();
             int radius = 8;
 
-            // Xác định màu nền
+            // Nền tối Cyberpunk
             Color bg;
+            Color border;
+            Color textColor;
             if (isAnswered) {
-                bg = isHovered ? Theme.EMERALD_DARK : Theme.EMERALD;
+                bg = isHovered ? new Color(0x06, 0x5F, 0x46) : new Color(0x06, 0x4E, 0x3B);
+                border = new Color(0x10, 0xB9, 0x81);
+                textColor = new Color(0xD1, 0xFA, 0xE5);
             } else {
-                bg = isHovered ? Theme.ORANGE_DARK : Theme.ORANGE;
+                bg = isHovered ? new Color(0x78, 0x35, 0x0F) : new Color(0x45, 0x1A, 0x03);
+                border = new Color(0xF5, 0x9E, 0x0B);
+                textColor = new Color(0xFE, 0xF3, 0xC7);
             }
 
             g2.setColor(bg);
             g2.fill(new RoundRectangle2D.Float(0, 0, w - 1, h - 1, radius, radius));
 
-            // Nếu là câu hiện tại đang đứng, vẽ viền nổi bật (vàng kim / tím)
+            // Viền
             if (isCurrent) {
-                g2.setColor(new Color(0xFC, 0xD3, 0x4D));
-                g2.setStroke(new BasicStroke(2.5f));
-                g2.draw(new RoundRectangle2D.Float(1.5f, 1.5f, w - 3, h - 3, radius, radius));
-            } else if (isHovered) {
-                g2.setColor(new Color(255, 255, 255, 180));
-                g2.setStroke(new BasicStroke(1.5f));
-                g2.draw(new RoundRectangle2D.Float(1, 1, w - 2, h - 2, radius, radius));
+                // Viền Cyan Neon nổi bật cho câu hiện tại
+                g2.setColor(new Color(0x06, 0xB6, 0xD4));
+                g2.setStroke(new BasicStroke(2.2f));
+                g2.draw(new RoundRectangle2D.Float(1.2f, 1.2f, w - 2.4f, h - 2.4f, radius, radius));
+            } else {
+                g2.setColor(border);
+                g2.setStroke(new BasicStroke(isHovered ? 1.5f : 1.0f));
+                g2.draw(new RoundRectangle2D.Float(0.5f, 0.5f, w - 1.5f, h - 1.5f, radius, radius));
             }
 
-            // Vẽ text nhãn: "✓ Câu 1" hoặc "✕ Câu 3"
-            String label = (isAnswered ? "✓ C." : "✕ C.") + questionNum;
+            // Vẽ text nhãn: "Câu 1", "Câu 2"...
+            String label = "Câu " + questionNum;
             g2.setFont(Theme.BODY_BOLD);
-            g2.setColor(Theme.WHITE);
+            g2.setColor(textColor);
             FontMetrics fm = g2.getFontMetrics();
             int tx = (w - fm.stringWidth(label)) / 2;
             int ty = (h - fm.getHeight()) / 2 + fm.getAscent();
@@ -535,15 +569,5 @@ public class SubmitConfirmDialog extends JDialog {
 
             g2.dispose();
         }
-    }
-
-    public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> {
-            int[] demoAnswers = new int[]{0, 1, -1, 3, 2, -1, 0, 1, 2, -1};
-            SubmitConfirmDialog dialog = new SubmitConfirmDialog(null, null, demoAnswers, 2);
-            dialog.setDefaultCloseOperation(JDialog.DISPOSE_ON_CLOSE);
-            dialog.setVisible(true);
-            System.out.println("Choice: " + dialog.getUserChoice() + ", Target: " + dialog.getTargetQuestionIndex());
-        });
     }
 }

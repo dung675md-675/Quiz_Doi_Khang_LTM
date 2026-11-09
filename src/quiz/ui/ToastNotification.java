@@ -63,14 +63,28 @@ public class ToastNotification extends JPanel {
         g2.setColor(themeColor);
         g2.fillOval(iconX, iconY, iconSize, iconSize);
 
-        // Biểu tượng icon bên trong
+        // Biểu tượng icon bên trong (vẽ vector tránh lỗi font tofu)
         g2.setColor(Theme.WHITE);
-        g2.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 13));
-        FontMetrics fmIcon = g2.getFontMetrics();
-        String symbol = resolveSymbol();
-        int sx = iconX + (iconSize - fmIcon.stringWidth(symbol)) / 2;
-        int sy = iconY + ((iconSize - fmIcon.getHeight()) / 2) + fmIcon.getAscent();
-        g2.drawString(symbol, sx, sy);
+        if (type == Type.SUCCESS) {
+            g2.setStroke(new BasicStroke(2.2f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+            int cx = iconX + iconSize / 2;
+            int cy = iconY + iconSize / 2;
+            g2.drawLine(cx - 5, cy, cx - 1, cy + 4);
+            g2.drawLine(cx - 1, cy + 4, cx + 5, cy - 4);
+        } else if (type == Type.ERROR) {
+            g2.setStroke(new BasicStroke(2.2f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+            int cx = iconX + iconSize / 2;
+            int cy = iconY + iconSize / 2;
+            g2.drawLine(cx - 4, cy - 4, cx + 4, cy + 4);
+            g2.drawLine(cx + 4, cy - 4, cx - 4, cy + 4);
+        } else {
+            g2.setFont(new Font("Segoe UI", Font.BOLD, 13));
+            FontMetrics fmIcon = g2.getFontMetrics();
+            String symbol = (type == Type.WARNING) ? "!" : "i";
+            int sx = iconX + (iconSize - fmIcon.stringWidth(symbol)) / 2;
+            int sy = iconY + ((iconSize - fmIcon.getHeight()) / 2) + fmIcon.getAscent();
+            g2.drawString(symbol, sx, sy);
+        }
 
         // 5. Vẽ thông điệp text
         g2.setColor(Theme.DARK_TEXT);
@@ -96,17 +110,6 @@ public class ToastNotification extends JPanel {
             case INFO:
             default:
                 return Theme.BLUE;
-        }
-    }
-
-    private String resolveSymbol() {
-        switch (type) {
-            case SUCCESS: return "\u2713"; // Checkmark
-            case ERROR: return "\u2715";   // Cross
-            case WARNING: return "!";      // Exclamation
-            case INFO:
-            default:
-                return "i";
         }
     }
 }

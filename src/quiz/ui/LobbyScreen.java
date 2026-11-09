@@ -9,7 +9,7 @@ import javax.swing.border.EmptyBorder;
 import quiz.Rank;
 
 /**
- * LobbyScreen — Màn hình Sảnh chờ với Quick Match, Rank, Avatar.
+ * LobbyScreen — Màn hình Sảnh chờ với Quick Match, Rank, Avatar, và Quản lý Người chơi.
  */
 public class LobbyScreen extends JPanel {
 
@@ -20,13 +20,21 @@ public class LobbyScreen extends JPanel {
     private String currentUsername = "";
     private int currentScore = 0;
     private String currentAvatarId = "avatar_01";
+    private String currentFullName = "";
+    private String currentEmail = "";
+    private String currentBio = "";
+    private String currentRole = "PLAYER";
 
     // Header Components
     private final JLabel lblUsername;
     private final JLabel lblRankBadge;
     private final ModernBadge badgeScore;
+    private final ModernBadge badgeRole;
+    private final ModernBadge badgePing;
     private final JLabel lblAvatarEmoji;
     private final JPanel avatarCircle;
+    private final NavigationBar navBar;
+    private JPanel sidebarPanel;
 
     // Filter & Match Config Components
     private final TopicSelector topicSelector;
@@ -54,6 +62,8 @@ public class LobbyScreen extends JPanel {
     // Tab panels
     private final LeaderboardPanel leaderboardPanel;
     private final HistoryPanel historyPanel;
+    private final PlayerManagementPanel playerManagementPanel;
+    private final QuestionManagementPanel questionManagementPanel;
 
     // Listeners
     private ChallengeListener challengeListener;
@@ -65,340 +75,451 @@ public class LobbyScreen extends JPanel {
     private Consumer<String> updateAvatarListener;
 
     public LobbyScreen(String[] levels) {
-        setLayout(new BorderLayout());
-        setBackground(Theme.OFF_WHITE);
+        super(new BorderLayout());
+        setBackground(ArenaPalette.BG);
 
-        // ===================================================
-        // 1. TOP HEADER
-        // ===================================================
-        JPanel topHeader = new JPanel(new BorderLayout(16, 0));
-        topHeader.setBackground(Theme.WHITE);
-        topHeader.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createMatteBorder(0, 0, 1, 0, Theme.BORDER_LIGHT),
-                new EmptyBorder(12, 24, 12, 24)));
+        // The navigation and account tools remain anchored while the arena scrolls.
+        JPanel sidebar = new JPanel(new BorderLayout(0, 10));
+        sidebarPanel = sidebar;
+        sidebar.setBackground(ArenaPalette.SIDEBAR);
+        sidebar.setPreferredSize(new Dimension(232, 0));
+        sidebar.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createMatteBorder(0, 0, 0, 1, ArenaPalette.BORDER),
+                new EmptyBorder(24, 16, 18, 16)));
 
-        // Left: Game Logo
-        JPanel brandPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 12, 0));
-        brandPanel.setOpaque(false);
-        JLabel logo = new JLabel("QUIZ ARENA");
-        logo.setFont(Theme.TITLE_XL);
-        logo.setForeground(Theme.BLUE);
-        brandPanel.add(logo);
-        ModernBadge onlineBadge = new ModernBadge("Sảnh Online", ModernBadge.Type.READY);
-        brandPanel.add(onlineBadge);
-        topHeader.add(brandPanel, BorderLayout.WEST);
+        JPanel brand = new JPanel(new BorderLayout(11, 0));
+        brand.setOpaque(false);
+        brand.add(new JLabel(new ArenaIcon(ArenaIcon.Type.BRAND, 34, ArenaPalette.ACCENT)), BorderLayout.WEST);
+        JPanel brandCopy = new JPanel(new GridLayout(2, 1, 0, 2));
+        brandCopy.setOpaque(false);
+        brandCopy.add(arenaLabel("QUIZ ARENA", 17, Font.BOLD, ArenaPalette.TEXT));
+        brandCopy.add(arenaLabel("PLAY. LEARN. CONQUER.", 9, Font.BOLD, ArenaPalette.MUTED));
+        brand.add(brandCopy, BorderLayout.CENTER);
 
-        // Right: Profile + Actions
-        JPanel rightPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
-        rightPanel.setOpaque(false);
+        navBar = new NavigationBar();
+        navBar.setSidebarMode(true);
+        navBar.addTab("Người Chơi");
+        navBar.addTab("Bảng Xếp Hạng");
+        navBar.addTab("Lịch Sử");
+        navBar.addTab("Quản Lý Người Chơi");
+        navBar.addTab("Ngân Hàng Câu Hỏi");
+        navBar.setTabVisible("Quản Lý Người Chơi", false);
+        navBar.setTabVisible("Ngân Hàng Câu Hỏi", false);
+        navBar.setBorder(BorderFactory.createEmptyBorder());
+        JPanel navigation = new JPanel(new BorderLayout(0, 10));
+        navigation.setOpaque(false);
+        JLabel navigationCaption = arenaLabel("KHÁM PHÁ", 10, Font.BOLD, ArenaPalette.MUTED);
+        navigationCaption.setBorder(new EmptyBorder(0, 12, 0, 0));
+        navigation.add(navigationCaption, BorderLayout.NORTH);
+        JScrollPane navigationScroll = new JScrollPane(navBar);
+        navigationScroll.setBorder(null);
+        navigationScroll.setOpaque(false);
+        navigationScroll.getViewport().setOpaque(false);
+        navigationScroll.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+        navigationScroll.getVerticalScrollBar().setUnitIncrement(28);
+        ArenaPalette.styleScrollBar(navigationScroll.getVerticalScrollBar());
+        navigation.add(navigationScroll, BorderLayout.CENTER);
+        JPanel sidebarTop = new JPanel(new BorderLayout(0, 20));
+        sidebarTop.setOpaque(false);
+        sidebarTop.add(brand, BorderLayout.NORTH);
+        sidebarTop.add(navigation, BorderLayout.CENTER);
+        sidebar.add(sidebarTop, BorderLayout.CENTER);
 
-        JButton btnSound = new JButton(SoundManager.isMuted() ? "Tắt âm" : "Bật âm");
-        btnSound.setToolTipText("Bật/Tắt âm thanh");
-        btnSound.setFont(Theme.SMALL_BOLD);
-        btnSound.setPreferredSize(new Dimension(72, 36));
-        btnSound.setFocusPainted(false);
-        btnSound.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-        btnSound.setBackground(Theme.WHITE);
-        btnSound.setBorder(BorderFactory.createLineBorder(Theme.BORDER_LIGHT, 1));
-        btnSound.addActionListener(e -> {
-            SoundManager.toggleMute();
-            btnSound.setText(SoundManager.isMuted() ? "Tắt âm" : "Bật âm");
-        });
-
-        JButton btnSoundSettings = new JButton("⚙");
-        btnSoundSettings.setToolTipText("Cài đặt âm thanh & nhạc nền");
-        btnSoundSettings.setFont(Theme.SMALL_BOLD);
-        btnSoundSettings.setPreferredSize(new Dimension(42, 36));
-        btnSoundSettings.setFocusPainted(false);
-        btnSoundSettings.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-        btnSoundSettings.setBackground(Theme.WHITE);
-        btnSoundSettings.setBorder(BorderFactory.createLineBorder(Theme.BORDER_LIGHT, 1));
-        btnSoundSettings.addActionListener(e -> {
+        ModernButton sound = accountButton(ArenaIcon.Type.SOUND, "Cài đặt âm thanh");
+        sound.setToolTipText("Cài đặt âm thanh & nhạc nền");
+        sound.addActionListener(e -> {
             SoundManager.playClick();
             new SoundSettingsDialog(SwingUtilities.getWindowAncestor(this)).setVisible(true);
-            btnSound.setText(SoundManager.isMuted() ? "Tắt âm" : "Bật âm");
+            sound.setToolTipText(getSoundButtonLabel() + " — cài đặt âm thanh & nhạc nền");
         });
-
-        ModernButton btnLogout = new ModernButton("Đăng Xuất", ModernButton.Style.SECONDARY);
-        btnLogout.setPreferredSize(new Dimension(120, 36));
-        btnLogout.addActionListener(e -> {
+        ModernButton profile = accountButton(ArenaIcon.Type.PROFILE, "Hồ sơ cá nhân");
+        profile.setToolTipText("Sửa thông tin cá nhân, mật khẩu hoặc xóa tài khoản");
+        profile.addActionListener(e -> {
             SoundManager.playClick();
-            if (logoutListener != null)
-                logoutListener.run();
+            openCurrentUserProfileDialog();
+        });
+        ModernButton logout = accountButton(ArenaIcon.Type.LOGOUT, "Đăng xuất");
+        logout.addActionListener(e -> {
+            SoundManager.playClick();
+            if (logoutListener != null) logoutListener.run();
         });
 
-        // Avatar tròn clickable — hiển thị ảnh tròn
         avatarCircle = new JPanel() {
-            @Override
-            protected void paintComponent(Graphics g) {
-                super.paintComponent(g);
-                Graphics2D g2 = (Graphics2D) g.create();
-                Theme.setupAntiAliasing(g2);
-                int size = Math.min(getWidth(), getHeight());
-                int ox = (getWidth() - size) / 2;
-                int oy = (getHeight() - size) / 2;
-                AvatarPicker.paintAvatar(g2, currentAvatarId, ox, oy, size);
-                g2.dispose();
+            @Override protected void paintComponent(Graphics graphics) {
+                super.paintComponent(graphics);
+                Graphics2D g = (Graphics2D) graphics.create();
+                Theme.setupAntiAliasing(g);
+                int size = Math.min(getWidth(), getHeight()) - 4;
+                int x = (getWidth() - size) / 2;
+                int y = (getHeight() - size) / 2;
+                AvatarPicker.paintAvatar(g, currentAvatarId, x, y, size);
+                g.setColor(ArenaPalette.ACCENT);
+                g.setStroke(new BasicStroke(1.4f));
+                g.drawOval(x, y, size, size);
+                g.dispose();
             }
         };
-        avatarCircle.setPreferredSize(new Dimension(40, 40));
+        avatarCircle.setPreferredSize(new Dimension(42, 42));
         avatarCircle.setOpaque(false);
         avatarCircle.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
         avatarCircle.setToolTipText("Nhấn để đổi avatar");
-
-        lblAvatarEmoji = new JLabel("");
-        lblAvatarEmoji.setPreferredSize(new Dimension(0, 0));
-
         avatarCircle.addMouseListener(new java.awt.event.MouseAdapter() {
-            @Override
-            public void mouseClicked(java.awt.event.MouseEvent e) {
-                Frame owner = (Frame) SwingUtilities.getWindowAncestor(LobbyScreen.this);
+            @Override public void mouseClicked(java.awt.event.MouseEvent event) {
+                Window window = SwingUtilities.getWindowAncestor(LobbyScreen.this);
+                Frame owner = window instanceof Frame ? (Frame) window : null;
                 AvatarPicker picker = new AvatarPicker(owner, currentAvatarId, newId -> {
-                    if (updateAvatarListener != null)
-                        updateAvatarListener.accept(newId);
+                    if (updateAvatarListener != null) updateAvatarListener.accept(newId);
                 });
                 picker.setVisible(true);
             }
         });
-
-        lblUsername = new JLabel("Đang tải...");
-        lblUsername.setFont(Theme.SUBTITLE);
-        lblUsername.setForeground(Theme.DARK_TEXT);
-
-        lblRankBadge = new JLabel("Sắt");
-        lblRankBadge.setFont(Theme.SMALL_BOLD);
-        lblRankBadge.setForeground(Theme.PURPLE);
+        lblAvatarEmoji = new JLabel("");
+        lblAvatarEmoji.setPreferredSize(new Dimension(0, 0));
+        lblUsername = arenaLabel("Người chơi", 14, Font.BOLD, ArenaPalette.TEXT);
+        lblUsername.setMaximumSize(new Dimension(Integer.MAX_VALUE, 24));
+        lblRankBadge = arenaLabel("Sắt", 12, Font.PLAIN, ArenaPalette.ACCENT);
+        lblRankBadge.setMaximumSize(new Dimension(Integer.MAX_VALUE, 22));
+        JPanel identity = new JPanel(new GridLayout(2, 1, 0, 1));
+        identity.setOpaque(false);
+        identity.add(lblUsername);
+        identity.add(lblRankBadge);
+        identity.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        identity.setToolTipText("Nhấn để sửa thông tin cá nhân");
+        identity.addMouseListener(new java.awt.event.MouseAdapter() {
+            @Override public void mouseClicked(java.awt.event.MouseEvent event) {
+                openCurrentUserProfileDialog();
+            }
+        });
+        JPanel profileHeading = new JPanel(new BorderLayout(10, 0));
+        profileHeading.setOpaque(false);
+        profileHeading.add(avatarCircle, BorderLayout.WEST);
+        profileHeading.add(identity, BorderLayout.CENTER);
 
         badgeScore = new ModernBadge("0 điểm", ModernBadge.Type.RANK);
+        badgeRole = new ModernBadge("ADMIN", ModernBadge.Type.WARNING);
+        badgeScore.setArenaStyle(true);
+        badgeRole.setArenaStyle(true);
+        badgeRole.setVisible(false);
+        JPanel accountStats = new JPanel();
+        accountStats.setLayout(new BoxLayout(accountStats, BoxLayout.Y_AXIS));
+        accountStats.setOpaque(false);
+        accountStats.add(badgeScore);
+        accountStats.add(Box.createVerticalStrut(3));
+        accountStats.add(badgeRole);
+        JPanel accountActions = new JPanel(new GridLayout(1, 3, 8, 0));
+        accountActions.setOpaque(false);
+        accountActions.add(sound);
+        accountActions.add(profile);
+        accountActions.add(logout);
+        JPanel accountDetails = new JPanel(new BorderLayout(0, 12));
+        accountDetails.setOpaque(false);
+        accountDetails.add(accountStats, BorderLayout.NORTH);
+        accountDetails.add(accountActions, BorderLayout.SOUTH);
+        ModernCard account = new ModernCard(new BorderLayout(0, 12));
+        account.setCardBackground(ArenaPalette.SURFACE);
+        account.setBorderColor(ArenaPalette.BORDER);
+        account.setCornerRadius(22);
+        account.setCardPadding(14, 12, 12, 12);
+        account.add(profileHeading, BorderLayout.NORTH);
+        account.add(accountDetails, BorderLayout.CENTER);
+        sidebar.add(account, BorderLayout.SOUTH);
+        add(sidebar, BorderLayout.WEST);
 
-        // Stack name + rank vertically
-        JPanel profileInfo = new JPanel();
-        profileInfo.setLayout(new BoxLayout(profileInfo, BoxLayout.Y_AXIS));
-        profileInfo.setOpaque(false);
-        lblUsername.setAlignmentX(Component.LEFT_ALIGNMENT);
-        lblRankBadge.setAlignmentX(Component.LEFT_ALIGNMENT);
-        profileInfo.add(lblUsername);
-        profileInfo.add(lblRankBadge);
-
-        rightPanel.add(btnSound);
-        rightPanel.add(btnSoundSettings);
-        rightPanel.add(btnLogout);
-        rightPanel.add(avatarCircle);
-        rightPanel.add(profileInfo);
-        rightPanel.add(badgeScore);
-        topHeader.add(rightPanel, BorderLayout.EAST);
-        add(topHeader, BorderLayout.NORTH);
-
-        // ===================================================
-        // 2. CENTER CONTENT
-        // ===================================================
-        KahootBackgroundPanel centerContent = new KahootBackgroundPanel(new BorderLayout());
+        JPanel centerContent = new JPanel(new BorderLayout());
         centerContent.setOpaque(false);
-
-        NavigationBar navBar = new NavigationBar();
-        navBar.addTab("Người Chơi");
-        navBar.addTab("Bảng Xếp Hạng");
-        navBar.addTab("Lịch Sử");
-        navBar.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createMatteBorder(0, 0, 1, 0, Theme.BORDER_LIGHT),
-                new EmptyBorder(10, 24, 0, 24)));
-        centerContent.add(navBar, BorderLayout.NORTH);
+        JPanel pageHeader = new JPanel(new BorderLayout(14, 0));
+        pageHeader.setOpaque(false);
+        pageHeader.setBorder(new EmptyBorder(24, 24, 18, 24));
+        JLabel pageTitle = arenaLabel("Đấu trường tri thức", 25, Font.BOLD, ArenaPalette.TEXT);
+        pageTitle.setIcon(new ArenaIcon(ArenaIcon.Type.BOLT, 19, ArenaPalette.ACCENT));
+        pageTitle.setIconTextGap(10);
+        pageHeader.add(pageTitle, BorderLayout.CENTER);
+        badgePing = new ModernBadge("Ping: -- ms", ModernBadge.Type.READY);
+        badgePing.setArenaStyle(true);
+        JPanel connection = new JPanel(new GridBagLayout());
+        connection.setOpaque(false);
+        connection.add(badgePing);
+        pageHeader.add(connection, BorderLayout.EAST);
+        centerContent.add(pageHeader, BorderLayout.NORTH);
 
         cardLayout = new CardLayout();
         cardPanel = new JPanel(cardLayout);
         cardPanel.setOpaque(false);
-
-        // --- Tab 1: Players Panel ---
-        JPanel playersWrapper = new JPanel();
-        playersWrapper.setLayout(new BoxLayout(playersWrapper, BoxLayout.Y_AXIS));
+        JPanel playersWrapper = new PlayersContentPanel();
         playersWrapper.setOpaque(false);
-        playersWrapper.setBorder(new EmptyBorder(14, 24, 14, 24));
+        playersWrapper.setBorder(new EmptyBorder(0, 24, 24, 24));
+        JPanel topControls = new JPanel(new BorderLayout(0, 22));
+        topControls.setOpaque(false);
 
-        // ---- QUICK MATCH CARD ----
-        ModernCard quickMatchCard = new ModernCard(new BorderLayout(12, 0));
-        quickMatchCard.setCardPadding(14, 20, 14, 20);
-        quickMatchCard.setMaximumSize(new Dimension(Integer.MAX_VALUE, 90));
-        quickMatchCard.setCardBackground(new Color(0xF0, 0xEB, 0xFF));
-        quickMatchCard.setBorderColor(Theme.PURPLE);
-
-        JPanel qmLeft = new JPanel();
-        qmLeft.setLayout(new BoxLayout(qmLeft, BoxLayout.Y_AXIS));
-        qmLeft.setOpaque(false);
-
-        JLabel qmTitle = new JLabel("QUICK MATCH");
-        qmTitle.setFont(Theme.SUBTITLE);
-        qmTitle.setForeground(Theme.PURPLE);
-        JLabel qmDesc = new JLabel("Tìm đối thủ có điểm gần bạn nhất");
-        qmDesc.setFont(Theme.SMALL);
-        qmDesc.setForeground(Theme.MUTED_GRAY);
-        qmLeft.add(qmTitle);
-        qmLeft.add(qmDesc);
-        quickMatchCard.add(qmLeft, BorderLayout.WEST);
-
-        // Quick match status + timer (hidden by default)
         quickMatchStatusPanel = new JPanel();
         quickMatchStatusPanel.setLayout(new BoxLayout(quickMatchStatusPanel, BoxLayout.Y_AXIS));
         quickMatchStatusPanel.setOpaque(false);
-        lblQuickMatchStatus = new JLabel("Đang tìm đối thủ...");
-        lblQuickMatchStatus.setFont(Theme.BODY_BOLD);
-        lblQuickMatchStatus.setForeground(Theme.BLUE);
-        lblQuickMatchTimer = new JLabel("0 giây");
-        lblQuickMatchTimer.setFont(Theme.SMALL);
-        lblQuickMatchTimer.setForeground(Theme.MUTED_GRAY);
+        lblQuickMatchStatus = arenaLabel("Đang tìm đối thủ...", 12, Font.BOLD, ArenaPalette.TEXT);
+        lblQuickMatchTimer = arenaLabel("0 giây", 11, Font.PLAIN, ArenaPalette.CYAN);
         quickMatchStatusPanel.add(lblQuickMatchStatus);
         quickMatchStatusPanel.add(lblQuickMatchTimer);
         quickMatchStatusPanel.setVisible(false);
-        quickMatchCard.add(quickMatchStatusPanel, BorderLayout.CENTER);
-
-        JPanel qmRight = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 0));
-        qmRight.setOpaque(false);
-
-        btnQuickMatch = new ModernButton("GHÉP TRẬN", ModernButton.Style.PRIMARY);
-        btnQuickMatch.setPreferredSize(new Dimension(140, 40));
+        JPanel matchmakingActions = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
+        matchmakingActions.setOpaque(false);
+        btnQuickMatch = new ModernButton("TÌM ĐỐI THỦ", ModernButton.Style.PRIMARY);
+        btnQuickMatch.setArenaStyle(true);
+        btnQuickMatch.setIcon(new ArenaIcon(ArenaIcon.Type.BOLT, 18, null));
+        btnQuickMatch.setPreferredSize(new Dimension(188, 48));
         btnQuickMatch.addActionListener(e -> {
             SoundManager.playClick();
-            if (quickMatchListener != null)
-                quickMatchListener.run();
+            if (quickMatchListener != null) quickMatchListener.run();
         });
-
-        btnCancelMatchmaking = new ModernButton("HỦY TÌM", ModernButton.Style.SECONDARY);
-        btnCancelMatchmaking.setPreferredSize(new Dimension(120, 40));
+        btnCancelMatchmaking = new ModernButton("Hủy tìm trận", ModernButton.Style.SECONDARY);
+        btnCancelMatchmaking.setArenaStyle(true);
+        btnCancelMatchmaking.setPreferredSize(new Dimension(158, 48));
         btnCancelMatchmaking.setVisible(false);
         btnCancelMatchmaking.addActionListener(e -> {
             SoundManager.playClick();
-            if (cancelMatchmakingListener != null)
-                cancelMatchmakingListener.run();
+            if (cancelMatchmakingListener != null) cancelMatchmakingListener.run();
         });
+        matchmakingActions.add(btnQuickMatch);
+        matchmakingActions.add(btnCancelMatchmaking);
+        ArenaHeroPanel arenaHero = new ArenaHeroPanel(matchmakingActions, quickMatchStatusPanel);
+        topControls.add(arenaHero, BorderLayout.NORTH);
 
-        qmRight.add(btnQuickMatch);
-        qmRight.add(btnCancelMatchmaking);
-        quickMatchCard.add(qmRight, BorderLayout.EAST);
-
-        playersWrapper.add(quickMatchCard);
-        playersWrapper.add(Box.createVerticalStrut(10));
-
-        // ---- Topic & Level Selection Card ----
-        ModernCard topicSectionCard = new ModernCard(new BorderLayout(0, 10));
-        topicSectionCard.setCardPadding(12, 18, 12, 18);
-        topicSectionCard.setMaximumSize(new Dimension(Integer.MAX_VALUE, 330));
-        topicSectionCard.setPreferredSize(new Dimension(880, 300));
-        topicSectionCard.setCardBackground(Theme.WHITE);
-        topicSectionCard.setBorderColor(Theme.BORDER_LIGHT);
-
-        // Visual Topic Cards selector
+        ModernCard topicSectionCard = new ModernCard(new BorderLayout(0, 16));
+        topicSectionCard.setCardPadding(20, 20, 18, 20);
+        topicSectionCard.setCornerRadius(24);
+        topicSectionCard.setCardBackground(ArenaPalette.SURFACE);
+        topicSectionCard.setBorderColor(ArenaPalette.BORDER);
+        topicSectionCard.setHasShadow(false);
         topicSelector = new TopicSelector(quiz.Bank.STANDARD_TOPICS);
         topicSectionCard.add(topicSelector, BorderLayout.CENTER);
 
-        // Action row: Level selection & Solo Practice
-        JPanel bottomActionRow = new JPanel(new BorderLayout(16, 0));
+        JPanel bottomActionRow = new JPanel(new PracticeRowLayout());
         bottomActionRow.setOpaque(false);
         bottomActionRow.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createMatteBorder(1, 0, 0, 0, Theme.BORDER_LIGHT),
-                new EmptyBorder(10, 4, 0, 4)));
-
-        JPanel levelBox = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
-        levelBox.setOpaque(false);
-        JLabel lblLevel = new JLabel("Mức độ:");
-        lblLevel.setFont(Theme.BODY_BOLD);
-        lblLevel.setForeground(Theme.DARK_TEXT);
-        levelBox.add(lblLevel);
+                BorderFactory.createMatteBorder(1, 0, 0, 0, ArenaPalette.BORDER),
+                new EmptyBorder(16, 0, 0, 0)));
         levelSelector = new LevelSelector();
-        levelBox.add(levelSelector);
-        bottomActionRow.add(levelBox, BorderLayout.WEST);
-
-        JPanel rightAction = new JPanel(new FlowLayout(FlowLayout.RIGHT, 12, 0));
-        rightAction.setOpaque(false);
-        JLabel lblNotice = new JLabel("10 câu • Đếm giờ");
-        lblNotice.setFont(Theme.SMALL);
-        lblNotice.setForeground(Theme.MUTED_GRAY);
-        rightAction.add(lblNotice);
-        ModernButton btnPractice = new ModernButton("Luyện Tập Đơn", ModernButton.Style.PRIMARY);
-        btnPractice.setPreferredSize(new Dimension(150, 36));
-        btnPractice.addActionListener(e -> {
+        bottomActionRow.add(levelSelector, BorderLayout.WEST);
+        ModernButton practice = new ModernButton("Luyện tập đơn", ModernButton.Style.SECONDARY);
+        practice.setArenaStyle(true);
+        practice.setIcon(new ArenaIcon(ArenaIcon.Type.PLAY, 15, null));
+        practice.setPreferredSize(new Dimension(158, 40));
+        practice.addActionListener(e -> {
             SoundManager.playClick();
-            if (soloPracticeListener != null)
-                soloPracticeListener.run();
+            if (soloPracticeListener != null) soloPracticeListener.run();
         });
-        rightAction.add(btnPractice);
-        bottomActionRow.add(rightAction, BorderLayout.EAST);
-
+        bottomActionRow.add(practice, BorderLayout.EAST);
         topicSectionCard.add(bottomActionRow, BorderLayout.SOUTH);
+        topControls.add(topicSectionCard, BorderLayout.CENTER);
+        playersWrapper.add(topControls, BorderLayout.NORTH);
 
-        playersWrapper.add(topicSectionCard);
-        playersWrapper.add(Box.createVerticalStrut(12));
-
-        // ---- Section header ----
-        JPanel sectionHeader = new JPanel(new BorderLayout());
-        sectionHeader.setOpaque(false);
-        sectionHeader.setMaximumSize(new Dimension(Integer.MAX_VALUE, 30));
-        JLabel lblSection = new JLabel("DANH SÁCH NGƯỜI CHƠI TRỰC TUYẾN");
-        lblSection.setFont(Theme.SUBTITLE);
-        lblSection.setForeground(Theme.DARK_TEXT);
-        sectionHeader.add(lblSection, BorderLayout.WEST);
-        lblOnlineCount = new JLabel("0 người chơi");
-        lblOnlineCount.setFont(Theme.SMALL_BOLD);
-        lblOnlineCount.setForeground(Theme.MUTED_GRAY);
-        sectionHeader.add(lblOnlineCount, BorderLayout.EAST);
-        playersWrapper.add(sectionHeader);
-        playersWrapper.add(Box.createVerticalStrut(8));
-
+        JPanel onlineSection = new JPanel(new BorderLayout(0, 14));
+        onlineSection.setOpaque(false);
+        JPanel onlineHeading = new JPanel(new BorderLayout(10, 0));
+        onlineHeading.setOpaque(false);
+        JLabel onlineTitle = arenaLabel("Đối thủ trực tuyến", 19, Font.BOLD, ArenaPalette.TEXT);
+        onlineTitle.setIcon(new ArenaIcon(ArenaIcon.Type.PLAYERS, 22, ArenaPalette.CYAN));
+        onlineTitle.setIconTextGap(10);
+        onlineHeading.add(onlineTitle, BorderLayout.WEST);
+        lblOnlineCount = arenaLabel("0 người chơi khác", 12, Font.PLAIN, ArenaPalette.MUTED);
+        onlineHeading.add(lblOnlineCount, BorderLayout.EAST);
+        onlineSection.add(onlineHeading, BorderLayout.NORTH);
         playersListPanel = new JPanel();
         playersListPanel.setLayout(new BoxLayout(playersListPanel, BoxLayout.Y_AXIS));
         playersListPanel.setOpaque(false);
-
-        emptyStateCard = new ModernCard(new BorderLayout(0, 10));
-        emptyStateCard.setCardPadding(36, 20, 36, 20);
-        emptyStateCard.setMaximumSize(new Dimension(Integer.MAX_VALUE, 220));
-        JLabel lblEmptyTitle = new JLabel("Chưa có người chơi nào khác đang online", SwingConstants.CENTER);
-        lblEmptyTitle.setFont(Theme.BODY_BOLD);
-        lblEmptyTitle.setForeground(Theme.DARK_TEXT);
-        JLabel lblEmptySub = new JLabel("Hãy mở thêm cửa sổ Client hoặc rủ bạn bè kết nối!", SwingConstants.CENTER);
-        lblEmptySub.setFont(Theme.SMALL);
-        lblEmptySub.setForeground(Theme.MUTED_GRAY);
-        JPanel emptyTextPanel = new JPanel(new GridLayout(2, 1, 0, 4));
-        emptyTextPanel.setOpaque(false);
-        emptyTextPanel.add(lblEmptyTitle);
-        emptyTextPanel.add(lblEmptySub);
-        emptyStateCard.add(emptyTextPanel, BorderLayout.CENTER);
+        emptyStateCard = new ModernCard(new BorderLayout(20, 0));
+        emptyStateCard.setCardPadding(24, 24, 24, 24);
+        emptyStateCard.setCardBackground(ArenaPalette.SURFACE);
+        emptyStateCard.setBorderColor(ArenaPalette.BORDER);
+        emptyStateCard.setCornerRadius(22);
+        emptyStateCard.setMaximumSize(new Dimension(Integer.MAX_VALUE, 132));
+        emptyStateCard.setPreferredSize(new Dimension(600, 132));
+        emptyStateCard.add(new JLabel(new ArenaIcon(ArenaIcon.Type.PLAYERS, 42, ArenaPalette.CYAN)), BorderLayout.WEST);
+        JPanel emptyCopy = new JPanel(new GridLayout(2, 1, 0, 7));
+        emptyCopy.setOpaque(false);
+        emptyCopy.add(arenaLabel("Đấu trường đang chờ người chơi", 15, Font.BOLD, ArenaPalette.TEXT));
+        JLabel hint = arenaLabel("Thử luyện tập đơn trong lúc chờ đối thủ trực tuyến.", 12, Font.PLAIN, ArenaPalette.MUTED);
+        hint.setToolTipText(hint.getText());
+        emptyCopy.add(hint);
+        emptyStateCard.add(emptyCopy, BorderLayout.CENTER);
         playersListPanel.add(emptyStateCard);
-
-        JScrollPane scrollPane = new JScrollPane(playersListPanel);
-        scrollPane.setBorder(null);
-        scrollPane.setOpaque(false);
-        scrollPane.getViewport().setOpaque(false);
-        scrollPane.getVerticalScrollBar().setUnitIncrement(16);
-        playersWrapper.add(scrollPane);
+        onlineSection.add(playersListPanel, BorderLayout.CENTER);
+        playersWrapper.add(onlineSection, BorderLayout.CENTER);
 
         leaderboardPanel = new LeaderboardPanel();
         historyPanel = new HistoryPanel();
-
-        cardPanel.add(playersWrapper, "Người Chơi");
+        playerManagementPanel = new PlayerManagementPanel();
+        questionManagementPanel = new QuestionManagementPanel();
+        JScrollPane playersScroll = new JScrollPane(playersWrapper);
+        playersScroll.setBorder(null);
+        playersScroll.setOpaque(false);
+        playersScroll.getViewport().setOpaque(false);
+        playersScroll.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+        playersScroll.getVerticalScrollBar().setUnitIncrement(28);
+        playersScroll.getVerticalScrollBar().setPreferredSize(new Dimension(9, 0));
+        playersScroll.getVerticalScrollBar().setUI(new QuietScrollBarUI());
+        cardPanel.add(playersScroll, "Người Chơi");
         cardPanel.add(leaderboardPanel, "Bảng Xếp Hạng");
         cardPanel.add(historyPanel, "Lịch Sử");
-
+        cardPanel.add(playerManagementPanel, "Quản Lý Người Chơi");
+        cardPanel.add(questionManagementPanel, "Ngân Hàng Câu Hỏi");
         centerContent.add(cardPanel, BorderLayout.CENTER);
-        add(centerContent, BorderLayout.CENTER);
-
-        navBar.setOnTabChanged(tabName -> {
-            cardLayout.show(cardPanel, tabName);
-            if (tabChangedListener != null)
-                tabChangedListener.accept(tabName);
+        add(new MaximumWidthPanel(centerContent, 1340), BorderLayout.CENTER);
+        navBar.setOnTabChanged(tab -> {
+            if (("Quản Lý Người Chơi".equals(tab) || "Ngân Hàng Câu Hỏi".equals(tab)) && !isAdmin()) return;
+            cardLayout.show(cardPanel, tab);
+            pageTitle.setText(switch (tab) {
+                case "Người Chơi" -> "Đấu trường tri thức";
+                case "Bảng Xếp Hạng" -> "Vinh danh cao thủ";
+                case "Lịch Sử" -> "Thành tích của bạn";
+                case "Quản Lý Người Chơi" -> "Quản lý tài khoản";
+                default -> "Kho tri thức";
+            });
+            if (tabChangedListener != null) tabChangedListener.accept(tab);
         });
     }
 
-    public void setCurrentUser(String username) {
-        setCurrentUser(username, 0, "avatar_01");
+    private static JLabel arenaLabel(String text, int size, int style, Color color) {
+        JLabel label = new JLabel(text);
+        label.putClientProperty("html.disable", Boolean.TRUE);
+        label.setFont(ArenaPalette.font(size, style));
+        label.setForeground(color);
+        return label;
     }
 
-    // --- Setter for current user (with score + avatarId) ---
+    private static ModernButton accountButton(ArenaIcon.Type icon, String name) {
+        ModernButton button = new ModernButton("", ModernButton.Style.SECONDARY);
+        button.setArenaStyle(true);
+        button.setPreferredSize(new Dimension(40, 38));
+        button.setIcon(new ArenaIcon(icon, 18, null));
+        button.setToolTipText(name);
+        button.getAccessibleContext().setAccessibleName(name);
+        return button;
+    }
+
+    /** Caps line lengths on a maximized desktop while remaining fluid on a laptop. */
+    private static final class MaximumWidthPanel extends JPanel {
+        private final JComponent content;
+        private final int maximum;
+        MaximumWidthPanel(JComponent content, int maximum) {
+            super(null);
+            this.content = content;
+            this.maximum = maximum;
+            setOpaque(false);
+            add(content);
+        }
+        @Override public void doLayout() {
+            int width = Math.min(maximum, getWidth());
+            content.setBounds((getWidth() - width) / 2, 0, width, getHeight());
+        }
+        @Override public Dimension getPreferredSize() {
+            Dimension preferred = content.getPreferredSize();
+            return new Dimension(Math.min(maximum, preferred.width), preferred.height);
+        }
+    }
+
+    @Override public void doLayout() {
+        int width = getWidth() < 1000 ? 200 : 232;
+        if (sidebarPanel != null && sidebarPanel.getPreferredSize().width != width)
+            sidebarPanel.setPreferredSize(new Dimension(width, 0));
+        super.doLayout();
+    }
+
+    /** Lets the existing difficulty and practice actions remain reachable at 760px. */
+    private static final class PracticeRowLayout implements LayoutManager {
+        @Override public void addLayoutComponent(String name, Component child) {}
+        @Override public void removeLayoutComponent(Component child) {}
+        @Override public Dimension preferredLayoutSize(Container parent) {
+            int width = parent.getWidth();
+            boolean narrow = width > 0 && width < 530;
+            Insets insets = parent.getInsets();
+            return new Dimension(480, (narrow ? 84 : 40) + insets.top + insets.bottom);
+        }
+        @Override public Dimension minimumLayoutSize(Container parent) { return preferredLayoutSize(parent); }
+        @Override public void layoutContainer(Container parent) {
+            if (parent.getComponentCount() < 2) return;
+            Insets insets = parent.getInsets();
+            int width = parent.getWidth() - insets.left - insets.right;
+            Component levels = parent.getComponent(0);
+            Component practice = parent.getComponent(1);
+            if (width < 530) {
+                levels.setBounds(insets.left, insets.top, width, 38);
+                practice.setBounds(Math.max(insets.left, parent.getWidth() - insets.right - 158),
+                        insets.top + 46, Math.min(158, width), 38);
+            } else {
+                levels.setBounds(insets.left, insets.top, levels.getPreferredSize().width, 40);
+                practice.setBounds(parent.getWidth() - insets.right - 158, insets.top, 158, 40);
+            }
+        }
+    }
+
+    public boolean isAdmin() {
+        return "ADMIN".equalsIgnoreCase(currentRole) || "admin".equalsIgnoreCase(currentUsername);
+    }
+
+    public void updatePing(long ms) {
+        if (badgePing != null) {
+            badgePing.setText("Ping: " + ms + " ms");
+        }
+    }
+
+    public void openCurrentUserProfileDialog() {
+        PlayerManagementPanel.PlayerRecord rec = playerManagementPanel.findRecord(currentUsername);
+        if (rec == null) {
+            rec = new PlayerManagementPanel.PlayerRecord(
+                    currentUsername,
+                    currentScore,
+                    currentAvatarId,
+                    Rank.fromScore(currentScore).getDisplayName(),
+                    "Trực tuyến",
+                    currentFullName,
+                    currentEmail,
+                    currentBio,
+                    currentRole);
+        }
+        playerManagementPanel.openEditDialog(rec);
+    }
+
+    public void setCurrentUser(String username) {
+        setCurrentUser(username, 0, "avatar_01", "", "", "", "PLAYER");
+    }
+
     public void setCurrentUser(String username, int score, String avatarId) {
-        this.currentUsername = username;
+        setCurrentUser(username, score, avatarId, this.currentFullName, this.currentEmail, this.currentBio, this.currentRole);
+    }
+
+    public void setCurrentUser(String username, int score, String avatarId, String role) {
+        setCurrentUser(username, score, avatarId, this.currentFullName, this.currentEmail, this.currentBio, role);
+    }
+
+    public void setCurrentUser(String username, int score, String avatarId, String fullName, String email, String bio) {
+        setCurrentUser(username, score, avatarId, fullName, email, bio, this.currentRole);
+    }
+
+    // --- Setter for current user (with score + avatarId + profile info + role) ---
+    public void setCurrentUser(String username, int score, String avatarId, String fullName, String email, String bio, String role) {
+        this.currentUsername = username != null ? username : "";
         this.currentScore = score;
-        this.currentAvatarId = avatarId != null ? avatarId : "avatar_01";
-        lblUsername.setText(username);
+        this.currentAvatarId = avatarId != null && !avatarId.isBlank() ? avatarId : "avatar_01";
+        this.currentFullName = fullName != null ? fullName : "";
+        this.currentEmail = email != null ? email : "";
+        this.currentBio = bio != null ? bio : "";
+        this.currentRole = (role != null && !role.isBlank()) ? role : ("admin".equalsIgnoreCase(this.currentUsername) ? "ADMIN" : "PLAYER");
+        boolean admin = isAdmin();
+
+        String displayLabel = (!this.currentFullName.isBlank())
+                ? (this.currentUsername + " (" + this.currentFullName + ")")
+                : this.currentUsername;
+        lblUsername.setText(displayLabel);
+        lblUsername.setToolTipText(displayLabel);
         Rank rank = Rank.fromScore(score);
         lblRankBadge.setText(rank.getLabel());
         badgeScore.setText(score + " điểm");
+        badgeRole.setVisible(admin);
+        navBar.setTabVisible("Quản Lý Người Chơi", admin);
+        navBar.setTabVisible("Ngân Hàng Câu Hỏi", admin);
+        playerManagementPanel.setAdminMode(admin);
+        if (!admin && ("Quản Lý Người Chơi".equals(navBar.getActiveTab()) || "Ngân Hàng Câu Hỏi".equals(navBar.getActiveTab()))) {
+            cardLayout.show(cardPanel, "Người Chơi");
+        }
         avatarCircle.repaint();
     }
 
@@ -507,6 +628,14 @@ public class LobbyScreen extends JPanel {
         return historyPanel;
     }
 
+    public PlayerManagementPanel getPlayerManagementPanel() {
+        return playerManagementPanel;
+    }
+
+    public QuestionManagementPanel getQuestionManagementPanel() {
+        return questionManagementPanel;
+    }
+
     public void updatePlayersFromLobbyData(String lobbyData) {
         updatePlayersFromLobbyData(lobbyData, currentUsername);
     }
@@ -584,5 +713,68 @@ public class LobbyScreen extends JPanel {
 
         playersListPanel.revalidate();
         playersListPanel.repaint();
+    }
+
+    /** A quiet page scrollbar keeps the illustrated content visually prominent. */
+    private static final class QuietScrollBarUI extends javax.swing.plaf.basic.BasicScrollBarUI {
+        @Override protected JButton createDecreaseButton(int orientation) { return emptyButton(); }
+        @Override protected JButton createIncreaseButton(int orientation) { return emptyButton(); }
+        private JButton emptyButton() {
+            JButton button = new JButton();
+            button.setPreferredSize(new Dimension(0, 0));
+            button.setMinimumSize(new Dimension(0, 0));
+            button.setMaximumSize(new Dimension(0, 0));
+            return button;
+        }
+        @Override protected void paintTrack(Graphics g, JComponent component, Rectangle bounds) {
+            g.setColor(ArenaPalette.BG);
+            g.fillRect(bounds.x, bounds.y, bounds.width, bounds.height);
+        }
+        @Override protected void paintThumb(Graphics graphics, JComponent component, Rectangle bounds) {
+            if (bounds.isEmpty() || !scrollbar.isEnabled()) return;
+            Graphics2D g = (Graphics2D) graphics.create();
+            Theme.setupAntiAliasing(g);
+            g.setColor(isThumbRollover() ? new Color(102, 125, 161) : ArenaPalette.BORDER);
+            g.fillRoundRect(bounds.x + 2, bounds.y + 2, Math.max(4, bounds.width - 4),
+                    Math.max(8, bounds.height - 4), 8, 8);
+            g.dispose();
+        }
+    }
+
+    /** One page scrollbar keeps the hero, topics and player list reachable on small windows. */
+    private static final class PlayersContentPanel extends JPanel implements Scrollable {
+        PlayersContentPanel() {
+            super(new BorderLayout(0, 14));
+        }
+
+        @Override
+        public Dimension getPreferredScrollableViewportSize() {
+            return new Dimension(900, 610);
+        }
+
+        @Override
+        public int getScrollableUnitIncrement(Rectangle visibleRect, int orientation, int direction) {
+            return 24;
+        }
+
+        @Override
+        public int getScrollableBlockIncrement(Rectangle visibleRect, int orientation, int direction) {
+            return Math.max(24, visibleRect.height - 48);
+        }
+
+        @Override
+        public boolean getScrollableTracksViewportWidth() {
+            return true;
+        }
+
+        @Override
+        public boolean getScrollableTracksViewportHeight() {
+            return false;
+        }
+    }
+
+    private String getSoundButtonLabel() {
+        boolean allMuted = SoundManager.isMuted() && MusicManager.isMusicMuted();
+        return allMuted ? "Âm Thanh: Tắt" : "Âm Thanh";
     }
 }

@@ -1,74 +1,474 @@
 package quiz.ui;
 
 import java.awt.*;
+import java.awt.geom.RoundRectangle2D;
+import java.util.ArrayList;
+import java.util.List;
 import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 
+/**
+ * HistoryPanel — Giao diện Lịch sử thi đấu (Match History) phong cách eSports hiện đại:
+ * - 4 thẻ thống kê sự nghiệp rực rỡ (Tổng trận, Tỉ lệ thắng, Chuỗi kỷ lục, Điểm tích lũy)
+ *   với hiệu ứng chuyển màu pastel sang trọng và biểu tượng Java2D vector.
+ * - Thanh chuyển tab bộ lọc capsule: Tất cả, Thắng, Thua, Hòa (bỏ ô tìm kiếm theo yêu cầu).
+ * - Danh sách thẻ trận đấu trực quan với tỉ số lớn, avatar hai đấu thủ, nhãn kết quả và xem chi tiết.
+ * - Tương thích mượt mà với thanh cuộn ModernScrollBarUI.
+ */
 public class HistoryPanel extends JPanel {
+
+    private enum FilterMode {
+        ALL,
+        WIN,
+        LOSS,
+        DRAW
+    }
 
     private final JPanel listPanel;
     private final JScrollPane scrollPane;
     private final EmptyStatePanel emptyState;
-    private String currentUsername;
+    private final List<HistoryCard> allCards = new ArrayList<>();
+
+    // 4 Stat Labels
+    private final JLabel lblTotalMatchesVal = new JLabel("0");
+    private final JLabel lblWinRateVal = new JLabel("0%");
+    private final JLabel lblMaxStreakVal = new JLabel("0 trận");
+    private final JLabel lblTotalPointsVal = new JLabel("0 đ");
+
+    // Filter toolbar buttons
+    private FilterMode currentFilter = FilterMode.ALL;
+    private final FilterCapsuleButton btnFilterAll;
+    private final FilterCapsuleButton btnFilterWin;
+    private final FilterCapsuleButton btnFilterLoss;
+    private final FilterCapsuleButton btnFilterDraw;
+
+    private String currentUsername = "";
 
     public HistoryPanel() {
-        setLayout(new BorderLayout());
+        setLayout(new BorderLayout(0, 12));
         setOpaque(false);
+        setBorder(new EmptyBorder(14, 20, 16, 20));
 
-        // HEADER
-        JPanel header = new JPanel();
-        header.setLayout(new BoxLayout(header, BoxLayout.Y_AXIS));
-        header.setOpaque(false);
-        header.setBorder(new EmptyBorder(16, 24, 12, 24));
+        // ==========================================
+        // 1. TOP CONTAINER: STATS + FILTER TOOLBAR
+        // ==========================================
+        JPanel topContainer = new JPanel();
+        topContainer.setLayout(new BoxLayout(topContainer, BoxLayout.Y_AXIS));
+        topContainer.setOpaque(false);
 
-        JLabel title = new JLabel("LỊCH SỬ THI ĐẤU");
+        // Header Title
+        JPanel headerTitle = new JPanel(new BorderLayout());
+        headerTitle.setOpaque(false);
+
+        JLabel title = new JLabel("LỊCH SỬ THI ĐẤU ĐỐI KHÁNG 1V1");
         title.setFont(Theme.TITLE);
-        title.setForeground(Theme.BLUE);
-        title.setAlignmentX(Component.LEFT_ALIGNMENT);
+        title.setForeground(ArenaPalette.CYAN);
 
-        JLabel desc = new JLabel("Danh sách các trận đấu gần đây của bạn.");
-        desc.setFont(Theme.SMALL);
-        desc.setForeground(Theme.MUTED_GRAY);
-        desc.setAlignmentX(Component.LEFT_ALIGNMENT);
+        JLabel subtitle = new JLabel("Thống kê phong độ và tra cứu chi tiết kết quả các trận đối kháng 1v1");
+        subtitle.setFont(Theme.SMALL);
+        subtitle.setForeground(ArenaPalette.MUTED);
 
-        header.add(title);
-        header.add(Box.createVerticalStrut(4));
-        header.add(desc);
-        add(header, BorderLayout.NORTH);
+        headerTitle.add(title, BorderLayout.NORTH);
+        headerTitle.add(subtitle, BorderLayout.SOUTH);
 
-        // LIST
-        listPanel = new JPanel();
+        topContainer.add(headerTitle);
+        topContainer.add(Box.createVerticalStrut(12));
+
+        // 4 Stat Cards: Tổng trận, Tỉ lệ thắng, Chuỗi kỷ lục, Điểm tích lũy
+        JPanel statsRow = new JPanel(new GridLayout(1, 4, 12, 0));
+        statsRow.setOpaque(false);
+
+        statsRow.add(createModernStatCard(
+                "TỔNG SỐ TRẬN",
+                "Trận đấu xếp hạng",
+                lblTotalMatchesVal,
+                ArenaPalette.SURFACE_RAISED,
+                new Color(29, 45, 70),
+                ArenaPalette.BORDER,
+                ArenaPalette.CYAN,
+                0 // Icon: Swords/Gamepad
+        ));
+
+        statsRow.add(createModernStatCard(
+                "TỈ LỆ THẮNG",
+                "Hiệu suất chiến thắng",
+                lblWinRateVal,
+                new Color(23, 54, 47),
+                new Color(30, 67, 56),
+                new Color(52, 99, 80),
+                new Color(105, 226, 178),
+                1 // Icon: Trophy
+        ));
+
+        statsRow.add(createModernStatCard(
+                "CHUỖI KỶ LỤC",
+                "Chuỗi thắng dài nhất",
+                lblMaxStreakVal,
+                new Color(57, 45, 31),
+                new Color(67, 51, 32),
+                new Color(112, 90, 49),
+                new Color(246, 200, 121),
+                2 // Icon: Flame/Streak
+        ));
+
+        statsRow.add(createModernStatCard(
+                "ĐIỂM TÍCH LŨY",
+                "Điểm xếp hạng Rank",
+                lblTotalPointsVal,
+                new Color(35, 29, 59),
+                new Color(43, 36, 70),
+                new Color(78, 63, 110),
+                new Color(188, 174, 255),
+                3 // Icon: Star/Crown
+        ));
+
+        topContainer.add(statsRow);
+        topContainer.add(Box.createVerticalStrut(14));
+
+        // Filter Toolbar (Capsule tabs, không có ô tìm kiếm)
+        JPanel toolbar = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 0));
+        toolbar.setOpaque(false);
+
+        btnFilterAll = new FilterCapsuleButton("Tất cả", new Color(0x4F, 0x46, 0xE5), () -> setFilter(FilterMode.ALL));
+        btnFilterWin = new FilterCapsuleButton("Thắng", new Color(105, 226, 178), () -> setFilter(FilterMode.WIN));
+        btnFilterLoss = new FilterCapsuleButton("Thua", new Color(255, 141, 165), () -> setFilter(FilterMode.LOSS));
+        btnFilterDraw = new FilterCapsuleButton("Hòa", new Color(246, 200, 121), () -> setFilter(FilterMode.DRAW));
+
+        btnFilterAll.setActive(true);
+
+        toolbar.add(btnFilterAll);
+        toolbar.add(btnFilterWin);
+        toolbar.add(btnFilterLoss);
+        toolbar.add(btnFilterDraw);
+
+        topContainer.add(toolbar);
+        topContainer.add(Box.createVerticalStrut(4));
+        add(topContainer, BorderLayout.NORTH);
+
+        // ==========================================
+        // 2. LIST PANEL & MODERN SCROLLPANE
+        // ==========================================
+        listPanel = new HistoryList();
         listPanel.setLayout(new BoxLayout(listPanel, BoxLayout.Y_AXIS));
         listPanel.setOpaque(false);
-        listPanel.setBorder(new EmptyBorder(0, 24, 24, 24));
+        listPanel.setBorder(new EmptyBorder(4, 0, 10, 0));
 
-        emptyState = new EmptyStatePanel("", "Chưa có lịch sử đấu", "Hãy tham gia các trận đấu để ghi danh vào lịch sử.");
-        
+        emptyState = new EmptyStatePanel("", "Chưa có lịch sử đấu", "Hãy tham gia các trận đối kháng 1v1 để ghi danh thành tích vào lịch sử.");
+
         scrollPane = new JScrollPane(listPanel);
-        scrollPane.setBorder(BorderFactory.createMatteBorder(1, 0, 0, 0, Theme.BORDER_LIGHT));
+        scrollPane.setBorder(null);
         scrollPane.setOpaque(false);
         scrollPane.getViewport().setOpaque(false);
-        scrollPane.getVerticalScrollBar().setUnitIncrement(16);
+        scrollPane.getVerticalScrollBar().setUI(new ModernScrollBarUI());
+        scrollPane.getVerticalScrollBar().setUnitIncrement(18);
         add(scrollPane, BorderLayout.CENTER);
+        ArenaPalette.styleTree(this);
+    }
+
+    /**
+     * Tạo thẻ thống kê hiện đại với Gradient pastel sang trọng và Vector Java2D icon.
+     */
+    private JPanel createModernStatCard(String title, String subtitle, JLabel lblValue,
+                                        Color bgTop, Color bgBottom, Color borderColor, Color primaryColor,
+                                        int iconType) {
+        JPanel card = new JPanel() {
+            @Override
+            protected void paintComponent(Graphics g) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                Theme.setupAntiAliasing(g2);
+                int w = getWidth();
+                int h = getHeight();
+
+                // Gradient pastel
+                GradientPaint gp = new GradientPaint(0, 0, ArenaPalette.SURFACE, 0, h, ArenaPalette.SURFACE_RAISED);
+                g2.setPaint(gp);
+                g2.fillRoundRect(0, 0, w, h, 14, 14);
+
+                // Border
+                g2.setColor(ArenaPalette.BORDER);
+                g2.setStroke(new BasicStroke(1.2f));
+                g2.drawRoundRect(0, 0, w - 1, h - 1, 14, 14);
+
+                // Java2D Vector Icon Badge (28x28 ở góc trên bên phải)
+                int icSize = 28;
+                int icX = w - icSize - 12;
+                int icY = 12;
+
+                g2.setColor(new Color(primaryColor.getRed(), primaryColor.getGreen(), primaryColor.getBlue(), 28));
+                g2.fillOval(icX, icY, icSize, icSize);
+
+                g2.setColor(readableAccent(primaryColor));
+                g2.setStroke(new BasicStroke(1.8f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+                int cx = icX + icSize / 2;
+                int cy = icY + icSize / 2;
+
+                if (iconType == 0) {
+                    // Swords / Gamepad
+                    g2.drawLine(cx - 5, cy - 5, cx + 5, cy + 5);
+                    g2.drawLine(cx + 5, cy - 5, cx - 5, cy + 5);
+                    g2.drawOval(cx - 7, cy - 7, 14, 14);
+                } else if (iconType == 1) {
+                    // Trophy Cup
+                    g2.drawArc(cx - 5, cy - 6, 10, 8, 0, -180);
+                    g2.drawLine(cx - 5, cy - 6, cx + 5, cy - 6);
+                    g2.drawLine(cx, cy + 2, cx, cy + 6);
+                    g2.drawLine(cx - 4, cy + 6, cx + 4, cy + 6);
+                } else if (iconType == 2) {
+                    // Flame / Streak
+                    int[] xf = {cx, cx + 5, cx + 2, cx + 6, cx - 1, cx - 6, cx - 3};
+                    int[] yf = {cy - 7, cy - 1, cy + 1, cy + 6, cy + 7, cy + 3, cy - 2};
+                    g2.drawPolygon(xf, yf, 7);
+                } else {
+                    // Star / Crown
+                    g2.drawLine(cx - 6, cy + 4, cx - 6, cy - 2);
+                    g2.drawLine(cx - 6, cy - 2, cx - 2, cy + 1);
+                    g2.drawLine(cx - 2, cy + 1, cx, cy - 4);
+                    g2.drawLine(cx, cy - 4, cx + 2, cy + 1);
+                    g2.drawLine(cx + 2, cy + 1, cx + 6, cy - 2);
+                    g2.drawLine(cx + 6, cy - 2, cx + 6, cy + 4);
+                    g2.drawLine(cx - 6, cy + 4, cx + 6, cy + 4);
+                }
+
+                g2.dispose();
+                super.paintComponent(g);
+            }
+        };
+        card.setLayout(new BoxLayout(card, BoxLayout.Y_AXIS));
+        card.setOpaque(false);
+        card.setBorder(new EmptyBorder(10, 14, 10, 14));
+        card.setPreferredSize(new Dimension(170, 82));
+
+        JLabel lblTitle = new JLabel(title);
+        lblTitle.setFont(Theme.SMALL_BOLD);
+        lblTitle.setForeground(readableAccent(primaryColor));
+        lblTitle.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        lblValue.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 20));
+        lblValue.setForeground(readableAccent(primaryColor));
+        lblValue.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        JLabel lblSub = new JLabel(subtitle);
+        lblSub.setFont(Theme.SMALL);
+        lblSub.setForeground(ArenaPalette.MUTED);
+        lblSub.setAlignmentX(Component.LEFT_ALIGNMENT);
+
+        card.add(lblTitle);
+        card.add(Box.createVerticalStrut(2));
+        card.add(lblValue);
+        card.add(Box.createVerticalStrut(2));
+        card.add(lblSub);
+
+        return card;
+    }
+
+    private void setFilter(FilterMode mode) {
+        this.currentFilter = mode;
+        btnFilterAll.setActive(mode == FilterMode.ALL);
+        btnFilterWin.setActive(mode == FilterMode.WIN);
+        btnFilterLoss.setActive(mode == FilterMode.LOSS);
+        btnFilterDraw.setActive(mode == FilterMode.DRAW);
+        applyFilters();
     }
 
     public void updateData(String rawData, String currentUsername) {
-        this.currentUsername = currentUsername;
+        this.currentUsername = currentUsername != null ? currentUsername : "";
+        allCards.clear();
         listPanel.removeAll();
 
         if (rawData == null || rawData.isBlank()) {
+            lblTotalMatchesVal.setText("0");
+            lblWinRateVal.setText("0%");
+            lblMaxStreakVal.setText("0 trận");
+            lblTotalPointsVal.setText("0 đ");
             listPanel.add(emptyState);
-        } else {
-            String[] rows = rawData.split("\n");
-            for (String row : rows) {
-                if (row.isBlank()) continue;
-                HistoryCard card = new HistoryCard(row, currentUsername);
-                listPanel.add(card);
-                listPanel.add(Box.createVerticalStrut(10));
+            listPanel.revalidate();
+            listPanel.repaint();
+            return;
+        }
+
+        String[] rows = rawData.split("\n");
+        int totalMatches = 0;
+        int winCount = 0;
+        int lossCount = 0;
+        int drawCount = 0;
+        int currentStreak = 0;
+        int maxStreak = 0;
+
+        List<HistoryCard> parsedCards = new ArrayList<>();
+        for (String row : rows) {
+            if (row.isBlank()) continue;
+            HistoryCard card = new HistoryCard(row, this.currentUsername, SwingUtilities.getWindowAncestor(this));
+            parsedCards.add(card);
+            totalMatches++;
+
+            if (card.getResult() == HistoryCard.MatchResult.WIN) {
+                winCount++;
+                currentStreak++;
+                if (currentStreak > maxStreak) {
+                    maxStreak = currentStreak;
+                }
+            } else if (card.getResult() == HistoryCard.MatchResult.LOSS) {
+                lossCount++;
+                currentStreak = 0;
+            } else {
+                drawCount++;
+                currentStreak = 0;
             }
         }
-        
+
+        // Sắp xếp trận đấu gần nhất lên đầu tiên (timestamp giảm dần)
+        parsedCards.sort((c1, c2) -> Long.compare(c2.getTimestamp(), c1.getTimestamp()));
+        allCards.addAll(parsedCards);
+
+        // Cập nhật thống kê 4 thẻ
+        int winRate = totalMatches > 0 ? (winCount * 100 / totalMatches) : 0;
+        int estimatedPoints = winCount * 2 - lossCount;
+        lblTotalMatchesVal.setText(totalMatches + " trận");
+        lblWinRateVal.setText(winRate + "%");
+        lblMaxStreakVal.setText(maxStreak + " trận");
+        lblTotalPointsVal.setText(Math.max(0, estimatedPoints) + " đ");
+
+        // Cập nhật nhãn nút bộ lọc
+        btnFilterAll.setLabelText("Tất cả (" + totalMatches + ")");
+        btnFilterWin.setLabelText("Thắng (" + winCount + ")");
+        btnFilterLoss.setLabelText("Thua (" + lossCount + ")");
+        btnFilterDraw.setLabelText("Hòa (" + drawCount + ")");
+
+        applyFilters();
+    }
+
+    private void applyFilters() {
+        listPanel.removeAll();
+
+        int visibleCount = 0;
+        for (HistoryCard card : allCards) {
+            boolean matchesFilter = switch (currentFilter) {
+                case ALL -> true;
+                case WIN -> card.getResult() == HistoryCard.MatchResult.WIN;
+                case LOSS -> card.getResult() == HistoryCard.MatchResult.LOSS;
+                case DRAW -> card.getResult() == HistoryCard.MatchResult.DRAW;
+            };
+
+            if (matchesFilter) {
+                listPanel.add(card);
+                listPanel.add(Box.createVerticalStrut(10));
+                visibleCount++;
+            }
+        }
+
+        if (visibleCount == 0) {
+            listPanel.add(emptyState);
+        }
+
         listPanel.revalidate();
         listPanel.repaint();
+    }
+
+    public List<HistoryCard> getAllCards() {
+        return java.util.Collections.unmodifiableList(allCards);
+    }
+
+    /**
+     * FilterCapsuleButton — Nút chọn bộ lọc dạng Capsule phong cách hiện đại.
+     */
+    private static class FilterCapsuleButton extends JPanel {
+        private String text;
+        private final Color activeColor;
+        private boolean isActive = false;
+        private boolean isHover = false;
+        private final Runnable onClick;
+
+        public FilterCapsuleButton(String text, Color activeColor, Runnable onClick) {
+            this.text = text;
+            this.activeColor = activeColor;
+            this.onClick = onClick;
+            setOpaque(false);
+            setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+            setPreferredSize(new Dimension(96, 32));
+
+            addMouseListener(new java.awt.event.MouseAdapter() {
+                @Override
+                public void mouseEntered(java.awt.event.MouseEvent e) {
+                    isHover = true;
+                    repaint();
+                }
+
+                @Override
+                public void mouseExited(java.awt.event.MouseEvent e) {
+                    isHover = false;
+                    repaint();
+                }
+
+                @Override
+                public void mouseClicked(java.awt.event.MouseEvent e) {
+                    SoundManager.playClick();
+                    if (onClick != null) onClick.run();
+                }
+            });
+        }
+
+        public void setActive(boolean active) {
+            this.isActive = active;
+            repaint();
+        }
+
+        public void setLabelText(String text) {
+            this.text = text;
+            // Tự động điều chỉnh kích thước nếu text dài hơn
+            FontMetrics fm = getFontMetrics(Theme.SMALL_BOLD);
+            int width = Math.max(96, fm.stringWidth(text) + 24);
+            setPreferredSize(new Dimension(width, 32));
+            revalidate();
+            repaint();
+        }
+
+        @Override
+        protected void paintComponent(Graphics g) {
+            Graphics2D g2 = (Graphics2D) g.create();
+            Theme.setupAntiAliasing(g2);
+            int w = getWidth();
+            int h = getHeight();
+
+            if (isActive) {
+                // Active pill: Màu chủ đạo nổi bật + đổ bóng nhẹ
+                g2.setColor(new Color(activeColor.getRed(), activeColor.getGreen(), activeColor.getBlue(), 95));
+                g2.fillRoundRect(0, 0, w, h, 16, 16);
+
+                g2.setColor(readableAccent(activeColor));
+                g2.setFont(Theme.SMALL_BOLD);
+                FontMetrics fm = g2.getFontMetrics();
+                int tx = (w - fm.stringWidth(text)) / 2;
+                int ty = (h - fm.getHeight()) / 2 + fm.getAscent();
+                g2.drawString(text, tx, ty);
+            } else {
+                // Inactive pill: Nền xám nhạt phẳng, chữ xám đậm
+                Color bg = isHover ? ArenaPalette.BORDER : ArenaPalette.SURFACE;
+                g2.setColor(bg);
+                g2.fillRoundRect(0, 0, w, h, 16, 16);
+
+                g2.setColor(isHover ? new Color(0x94, 0xA3, 0xB8) : ArenaPalette.BORDER);
+                g2.setStroke(new BasicStroke(1.0f));
+                g2.drawRoundRect(0, 0, w - 1, h - 1, 16, 16);
+
+                g2.setColor(isHover ? ArenaPalette.TEXT : ArenaPalette.MUTED);
+                g2.setFont(Theme.SMALL);
+                FontMetrics fm = g2.getFontMetrics();
+                int tx = (w - fm.stringWidth(text)) / 2;
+                int ty = (h - fm.getHeight()) / 2 + fm.getAscent();
+                g2.drawString(text, tx, ty);
+            }
+            g2.dispose();
+        }
+    }
+
+    private static Color readableAccent(Color color) {
+        return new Color(Math.max(105, color.getRed()), Math.max(155, color.getGreen()), Math.max(155, color.getBlue()));
+    }
+    private static final class HistoryList extends JPanel implements Scrollable {
+        @Override public Dimension getPreferredScrollableViewportSize() { return getPreferredSize(); }
+        @Override public int getScrollableUnitIncrement(Rectangle r, int orientation, int direction) { return 24; }
+        @Override public int getScrollableBlockIncrement(Rectangle r, int orientation, int direction) { return Math.max(24, r.height - 48); }
+        @Override public boolean getScrollableTracksViewportWidth() { return true; }
+        @Override public boolean getScrollableTracksViewportHeight() { return false; }
     }
 }

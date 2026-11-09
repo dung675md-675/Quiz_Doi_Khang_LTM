@@ -5,18 +5,20 @@ import javax.swing.*;
 import javax.swing.border.EmptyBorder;
 
 public class EmptyStatePanel extends JPanel {
+    private final JLabel lblTitle;
+    private final JLabel lblSubtitle;
 
     public EmptyStatePanel(String icon, String title, String subtitle) {
         setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
         setOpaque(false);
         setBorder(new EmptyBorder(40, 20, 40, 20));
 
-        JLabel lblTitle = new JLabel(title, SwingConstants.CENTER);
+        lblTitle = new JLabel(title, SwingConstants.CENTER);
         lblTitle.setFont(Theme.TITLE);
         lblTitle.setForeground(Theme.DARK_TEXT);
         lblTitle.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        JLabel lblSubtitle = new JLabel(subtitle, SwingConstants.CENTER);
+        lblSubtitle = new JLabel(subtitle, SwingConstants.CENTER);
         lblSubtitle.setFont(Theme.BODY);
         lblSubtitle.setForeground(Theme.MUTED_GRAY);
         lblSubtitle.setAlignmentX(Component.CENTER_ALIGNMENT);
@@ -33,5 +35,11 @@ public class EmptyStatePanel extends JPanel {
         add(Box.createVerticalStrut(8));
         add(lblSubtitle);
         add(Box.createVerticalGlue());
+    }
+
+    public void setArenaStyle(boolean enabled) {
+        lblTitle.setForeground(enabled ? ArenaPalette.TEXT : Theme.DARK_TEXT);
+        lblSubtitle.setForeground(enabled ? ArenaPalette.MUTED : Theme.MUTED_GRAY);
+        repaint();
     }
 }

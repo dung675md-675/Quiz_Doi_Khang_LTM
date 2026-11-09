@@ -16,6 +16,7 @@ public class ModernTextField extends JTextField {
     private String placeholder = "";
     private boolean isFocused = false;
     private boolean hasError = false;
+    private boolean arenaStyle;
     private int cornerRadius = 8;
 
     public ModernTextField() {
@@ -63,6 +64,16 @@ public class ModernTextField extends JTextField {
         return placeholder;
     }
 
+    public void setArenaStyle(boolean enabled) {
+        arenaStyle = enabled;
+        setForeground(enabled ? ArenaPalette.TEXT : Theme.DARK_TEXT);
+        setCaretColor(enabled ? ArenaPalette.CYAN : Theme.BLUE);
+        setSelectionColor(enabled ? new Color(56, 76, 111) : Theme.SKY_LIGHT);
+        setSelectedTextColor(enabled ? ArenaPalette.TEXT : Theme.DARK_TEXT);
+        setDisabledTextColor(enabled ? ArenaPalette.MUTED : Theme.MUTED_GRAY);
+        repaint();
+    }
+
     public void setError(boolean error) {
         this.hasError = error;
         repaint();
@@ -80,19 +91,28 @@ public class ModernTextField extends JTextField {
         int w = getWidth();
         int h = getHeight();
 
-        // 1. Vẽ nền trắng bo góc
-        g2.setColor(isEnabled() ? Theme.WHITE : Theme.OFF_WHITE);
+        // 1. Hiệu ứng viền phát sáng (focus glow) khi đang nhập liệu
+        if (isFocused && !hasError) {
+            g2.setColor(new Color(19, 104, 206, 35));
+            g2.fill(new RoundRectangle2D.Float(0, 0, w, h, cornerRadius + 2, cornerRadius + 2));
+        } else if (hasError) {
+            g2.setColor(new Color(226, 27, 60, 30));
+            g2.fill(new RoundRectangle2D.Float(0, 0, w, h, cornerRadius + 2, cornerRadius + 2));
+        }
+
+        // 2. Vẽ nền trắng bo góc
+        g2.setColor(arenaStyle ? ArenaPalette.SURFACE_RAISED : isEnabled() ? Theme.WHITE : Theme.OFF_WHITE);
         g2.fill(new RoundRectangle2D.Float(1, 1, w - 2, h - 2, cornerRadius, cornerRadius));
 
-        // 2. Vẽ viền (thay đổi theo focus hoặc error)
+        // 3. Vẽ viền tinh tế
         if (hasError) {
             g2.setColor(Theme.RED);
             g2.setStroke(new BasicStroke(1.8f));
         } else if (isFocused) {
-            g2.setColor(Theme.BLUE);
+            g2.setColor(arenaStyle ? ArenaPalette.CYAN : Theme.BLUE);
             g2.setStroke(new BasicStroke(1.8f));
         } else {
-            g2.setColor(Theme.BORDER_LIGHT);
+            g2.setColor(arenaStyle ? ArenaPalette.BORDER : Theme.BORDER_LIGHT);
             g2.setStroke(new BasicStroke(1.2f));
         }
         g2.draw(new RoundRectangle2D.Float(1.5f, 1.5f, w - 3, h - 3, cornerRadius, cornerRadius));
@@ -100,13 +120,14 @@ public class ModernTextField extends JTextField {
         g2.dispose();
         super.paintComponent(g);
 
-        // 3. Vẽ placeholder khi chưa nhập chữ
+        // 4. Vẽ placeholder khi chưa nhập chữ
         if (getText().isEmpty() && !isFocused && placeholder != null && !placeholder.isEmpty()) {
             Graphics2D gPlaceholder = (Graphics2D) g.create();
             Theme.setupAntiAliasing(gPlaceholder);
-            gPlaceholder.setColor(Theme.MUTED_GRAY);
+            gPlaceholder.setColor(arenaStyle ? ArenaPalette.MUTED : new Color(156, 163, 175));
             gPlaceholder.setFont(getFont());
             Insets insets = getInsets();
+            gPlaceholder.clipRect(insets.left, 0, Math.max(0, w - insets.left - insets.right), h);
             FontMetrics fm = gPlaceholder.getFontMetrics();
             int y = (h - fm.getHeight()) / 2 + fm.getAscent();
             gPlaceholder.drawString(placeholder, insets.left, y);
