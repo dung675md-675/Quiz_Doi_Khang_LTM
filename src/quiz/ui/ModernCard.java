@@ -40,6 +40,21 @@ public class ModernCard extends JPanel {
         repaint();
     }
 
+    public void setArenaStyle(boolean enabled) {
+        if (enabled) {
+            if (cardBackground.getRed() + cardBackground.getGreen() + cardBackground.getBlue() > 500)
+                cardBackground = ArenaPalette.SURFACE;
+            if (borderColor != null && borderColor.getRed() + borderColor.getGreen() + borderColor.getBlue() > 450)
+                borderColor = ArenaPalette.BORDER;
+            hasShadow = false;
+        } else {
+            cardBackground = Theme.WHITE;
+            borderColor = Theme.BORDER_LIGHT;
+            hasShadow = true;
+        }
+        repaint();
+    }
+
     public void setCardBackground(Color bg) {
         this.cardBackground = bg;
         repaint();

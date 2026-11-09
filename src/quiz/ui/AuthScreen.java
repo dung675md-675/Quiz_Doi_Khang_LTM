@@ -13,7 +13,7 @@ import javax.swing.border.EmptyBorder;
  * - Sử dụng GridBagLayout đảm bảo các trường nhập và nút bấm luôn giữ đúng kích thước, không lệch lạc khi chuyển màn hình/logout.
  * - Bảng màu & hiệu ứng Game Quiz đối kháng sinh động: Logo huy hiệu, Tab Pill chuyển chế độ, Viền focus sáng, Validation trực quan.
  */
-public class AuthScreen extends KahootBackgroundPanel {
+public class AuthScreen extends ArenaBackgroundPanel {
 
     public enum Mode {
         LOGIN, REGISTER
@@ -45,16 +45,17 @@ public class AuthScreen extends KahootBackgroundPanel {
     private BiConsumer<String, String> onRegister;
 
     public AuthScreen() {
-        super(new GridBagLayout());
+        super(new GridBagLayout(), Scene.AUTH);
 
         // Card chính với kích thước chuẩn, viền bo góc mượt mà và đổ bóng nhẹ
-        card = new ModernCard(new BorderLayout(0, 14));
-        card.setPreferredSize(new Dimension(460, 560));
-        card.setMinimumSize(new Dimension(420, 520));
-        card.setMaximumSize(new Dimension(480, 580));
-        card.setCardPadding(28, 36, 26, 36);
-        card.setCornerRadius(20);
-        card.setBorderColor(new Color(225, 232, 245));
+        card = new ModernCard(new BorderLayout(0, 20));
+        card.setPreferredSize(new Dimension(424, 500));
+        card.setMinimumSize(new Dimension(360, 480));
+        card.setCardPadding(28, 30, 25, 30);
+        card.setCornerRadius(30);
+        card.setCardBackground(new Color(14, 24, 44));
+        card.setBorderColor(ArenaPalette.BORDER);
+        card.setHasShadow(false);
 
         // ==========================================
         // 1. HEADER (Logo Badge, Title & Mode Tabs)
@@ -63,77 +64,47 @@ public class AuthScreen extends KahootBackgroundPanel {
         headerPanel.setLayout(new BoxLayout(headerPanel, BoxLayout.Y_AXIS));
         headerPanel.setOpaque(false);
 
-        // Logo icon / badge
-        lblLogoBadge = new JLabel("", SwingConstants.CENTER) {
-            @Override
-            protected void paintComponent(Graphics g) {
-                Graphics2D g2 = (Graphics2D) g.create();
-                Theme.setupAntiAliasing(g2);
-                int size = Math.min(getWidth(), getHeight()) - 4;
-                int x = (getWidth() - size) / 2;
-                int y = (getHeight() - size) / 2;
-                // Vòng gradient tròn
-                GradientPaint gp = new GradientPaint(x, y, new Color(0x3B, 0x82, 0xF6), x + size, y + size, new Color(0x8B, 0x5C, 0xF6));
-                g2.setPaint(gp);
-                g2.fillOval(x, y, size, size);
+        lblLogoBadge = welcomeLabel("TÀI KHOẢN QUIZ ARENA", 11, ArenaPalette.ACCENT);
 
-                // Vẽ tia sét vector màu trắng sắc nét (không dùng emoji tránh lỗi tofu font)
-                java.awt.geom.Path2D bolt = new java.awt.geom.Path2D.Float();
-                bolt.moveTo(x + size * 0.54f, y + size * 0.20f);
-                bolt.lineTo(x + size * 0.32f, y + size * 0.54f);
-                bolt.lineTo(x + size * 0.49f, y + size * 0.54f);
-                bolt.lineTo(x + size * 0.44f, y + size * 0.82f);
-                bolt.lineTo(x + size * 0.68f, y + size * 0.46f);
-                bolt.lineTo(x + size * 0.52f, y + size * 0.46f);
-                bolt.closePath();
-                g2.setColor(Color.WHITE);
-                g2.fill(bolt);
-
-                g2.dispose();
-            }
-        };
-        lblLogoBadge.setPreferredSize(new Dimension(56, 56));
-        lblLogoBadge.setMaximumSize(new Dimension(56, 56));
-        lblLogoBadge.setAlignmentX(Component.CENTER_ALIGNMENT);
-
-        lblTitle = new JLabel("QUIZ ARENA");
-        lblTitle.setFont(new Font(Theme.TITLE_XL.getFamily(), Font.BOLD, 26));
-        lblTitle.setForeground(new Color(0x1E, 0x29, 0x3B));
-        lblTitle.setAlignmentX(Component.CENTER_ALIGNMENT);
+        lblTitle = new JLabel("Chào mừng trở lại");
+        lblTitle.setFont(new Font(Theme.TITLE_XL.getFamily(), Font.BOLD, 25));
+        lblTitle.setForeground(ArenaPalette.TEXT);
+        lblTitle.setAlignmentX(Component.LEFT_ALIGNMENT);
 
         lblSubtitle = new JLabel("Đấu Trường Trí Tuệ Đối Kháng 1v1");
         lblSubtitle.setFont(Theme.BODY);
-        lblSubtitle.setForeground(Theme.MUTED_GRAY);
-        lblSubtitle.setAlignmentX(Component.CENTER_ALIGNMENT);
+        lblSubtitle.setForeground(ArenaPalette.MUTED);
+        lblSubtitle.setAlignmentX(Component.LEFT_ALIGNMENT);
 
         headerPanel.add(lblLogoBadge);
         headerPanel.add(Box.createVerticalStrut(8));
         headerPanel.add(lblTitle);
-        headerPanel.add(Box.createVerticalStrut(3));
+        headerPanel.add(Box.createVerticalStrut(4));
         headerPanel.add(lblSubtitle);
-        headerPanel.add(Box.createVerticalStrut(16));
+        headerPanel.add(Box.createVerticalStrut(14));
 
         // TAB SWITCHER: Thiết kế dạng Pill Capsule bo tròn hiện đại
-        JPanel tabWrapper = new JPanel(new FlowLayout(FlowLayout.CENTER, 0, 0));
+        JPanel tabWrapper = new JPanel(new BorderLayout());
         tabWrapper.setOpaque(false);
+        tabWrapper.setAlignmentX(Component.LEFT_ALIGNMENT);
 
         JPanel tabPill = new JPanel(new GridLayout(1, 2, 4, 0)) {
             @Override
             protected void paintComponent(Graphics g) {
                 Graphics2D g2 = (Graphics2D) g.create();
                 Theme.setupAntiAliasing(g2);
-                g2.setColor(new Color(0xEE, 0xF2, 0xF6));
-                g2.fill(new RoundRectangle2D.Float(0, 0, getWidth(), getHeight(), 16, 16));
+                g2.setColor(new Color(9, 17, 34));
+                g2.fill(new RoundRectangle2D.Float(0, 0, getWidth(), getHeight(), 20, 20));
                 g2.dispose();
                 super.paintComponent(g);
             }
         };
         tabPill.setOpaque(false);
-        tabPill.setPreferredSize(new Dimension(360, 42));
-        tabPill.setBorder(new EmptyBorder(3, 4, 3, 4));
+        tabPill.setPreferredSize(new Dimension(360, 40));
+        tabPill.setBorder(new EmptyBorder(4, 4, 4, 4));
 
-        tabLogin = new TabButton("ĐĂNG NHẬP", true);
-        tabRegister = new TabButton("ĐĂNG KÝ", false);
+        tabLogin = new TabButton("Đăng nhập", true);
+        tabRegister = new TabButton("Tạo tài khoản", false);
 
         tabLogin.addActionListener(e -> {
             SoundManager.playClick();
@@ -156,7 +127,7 @@ public class AuthScreen extends KahootBackgroundPanel {
         // ==========================================
         JPanel formPanel = new JPanel(new GridBagLayout());
         formPanel.setOpaque(false);
-        formPanel.setBorder(new EmptyBorder(4, 4, 4, 4));
+        formPanel.setBorder(new EmptyBorder(0, 0, 0, 0));
 
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.fill = GridBagConstraints.HORIZONTAL;
@@ -167,15 +138,16 @@ public class AuthScreen extends KahootBackgroundPanel {
         // Header Username
         lblUserHeader = new JLabel("Tên đăng nhập");
         lblUserHeader.setFont(Theme.BODY_BOLD);
-        lblUserHeader.setForeground(new Color(0x33, 0x41, 0x55));
+        lblUserHeader.setForeground(ArenaPalette.TEXT);
         gbc.gridy = 0;
-        gbc.insets = new Insets(2, 0, 3, 0);
+        gbc.insets = new Insets(0, 0, 6, 0);
         formPanel.add(lblUserHeader, gbc);
 
         // Field Username
-        txtUsername = new ModernTextField("Nhập tên từ 3-24 ký tự...", 20);
-        txtUsername.setPreferredSize(new Dimension(360, 40));
+        txtUsername = new ModernTextField("Tên tài khoản của bạn", 20);
+        txtUsername.setPreferredSize(new Dimension(360, 44));
         txtUsername.setFont(new Font(Theme.BODY.getFamily(), Font.PLAIN, 14));
+        txtUsername.setArenaStyle(true);
         gbc.gridy = 1;
         gbc.insets = new Insets(0, 0, 2, 0);
         formPanel.add(txtUsername, gbc);
@@ -183,23 +155,24 @@ public class AuthScreen extends KahootBackgroundPanel {
         // Error Username
         lblUserError = new JLabel(" ");
         lblUserError.setFont(Theme.SMALL_BOLD);
-        lblUserError.setForeground(Theme.RED);
+        lblUserError.setForeground(new Color(255, 142, 164));
         gbc.gridy = 2;
-        gbc.insets = new Insets(0, 2, 6, 0);
+        gbc.insets = new Insets(0, 2, 5, 0);
         formPanel.add(lblUserError, gbc);
 
         // Header Password
         lblPassHeader = new JLabel("Mật khẩu");
         lblPassHeader.setFont(Theme.BODY_BOLD);
-        lblPassHeader.setForeground(new Color(0x33, 0x41, 0x55));
+        lblPassHeader.setForeground(ArenaPalette.TEXT);
         gbc.gridy = 3;
-        gbc.insets = new Insets(0, 0, 3, 0);
+        gbc.insets = new Insets(0, 0, 6, 0);
         formPanel.add(lblPassHeader, gbc);
 
         // Field Password
-        txtPassword = new ModernPasswordField("Nhập mật khẩu từ 4 ký tự...", 20);
-        txtPassword.setPreferredSize(new Dimension(360, 40));
+        txtPassword = new ModernPasswordField("Nhập mật khẩu", 20);
+        txtPassword.setPreferredSize(new Dimension(360, 44));
         txtPassword.setFont(new Font(Theme.BODY.getFamily(), Font.PLAIN, 14));
+        txtPassword.setArenaStyle(true);
         gbc.gridy = 4;
         gbc.insets = new Insets(0, 0, 2, 0);
         formPanel.add(txtPassword, gbc);
@@ -207,23 +180,24 @@ public class AuthScreen extends KahootBackgroundPanel {
         // Error Password
         lblPassError = new JLabel(" ");
         lblPassError.setFont(Theme.SMALL_BOLD);
-        lblPassError.setForeground(Theme.RED);
+        lblPassError.setForeground(new Color(255, 142, 164));
         gbc.gridy = 5;
-        gbc.insets = new Insets(0, 2, 6, 0);
+        gbc.insets = new Insets(0, 2, 5, 0);
         formPanel.add(lblPassError, gbc);
 
         // Header Confirm Password (cho chế độ Đăng Ký)
         lblConfirmHeader = new JLabel("Nhập lại mật khẩu");
         lblConfirmHeader.setFont(Theme.BODY_BOLD);
-        lblConfirmHeader.setForeground(new Color(0x33, 0x41, 0x55));
+        lblConfirmHeader.setForeground(ArenaPalette.TEXT);
         gbc.gridy = 6;
-        gbc.insets = new Insets(0, 0, 3, 0);
+        gbc.insets = new Insets(0, 0, 6, 0);
         formPanel.add(lblConfirmHeader, gbc);
 
         // Field Confirm Password
-        txtConfirmPassword = new ModernPasswordField("Xác nhận lại mật khẩu...", 20);
-        txtConfirmPassword.setPreferredSize(new Dimension(360, 40));
+        txtConfirmPassword = new ModernPasswordField("Nhập lại mật khẩu của bạn", 20);
+        txtConfirmPassword.setPreferredSize(new Dimension(360, 44));
         txtConfirmPassword.setFont(new Font(Theme.BODY.getFamily(), Font.PLAIN, 14));
+        txtConfirmPassword.setArenaStyle(true);
         gbc.gridy = 7;
         gbc.insets = new Insets(0, 0, 2, 0);
         formPanel.add(txtConfirmPassword, gbc);
@@ -231,15 +205,15 @@ public class AuthScreen extends KahootBackgroundPanel {
         // Error Confirm Password
         lblConfirmError = new JLabel(" ");
         lblConfirmError.setFont(Theme.SMALL_BOLD);
-        lblConfirmError.setForeground(Theme.RED);
+        lblConfirmError.setForeground(new Color(255, 142, 164));
         gbc.gridy = 8;
         gbc.insets = new Insets(0, 2, 4, 0);
         formPanel.add(lblConfirmError, gbc);
 
         // Thông báo toàn cục
         lblGlobalMessage = new JLabel(" ", SwingConstants.CENTER);
-        lblGlobalMessage.setFont(Theme.BODY_BOLD);
-        lblGlobalMessage.setForeground(Theme.RED);
+        lblGlobalMessage.setFont(Theme.SMALL_BOLD);
+        lblGlobalMessage.setForeground(new Color(255, 142, 164));
         lblGlobalMessage.setPreferredSize(new Dimension(360, 20));
         gbc.gridy = 9;
         gbc.insets = new Insets(0, 0, 2, 0);
@@ -255,17 +229,22 @@ public class AuthScreen extends KahootBackgroundPanel {
         // ==========================================
         // 3. FOOTER (Action Button với Gradient / Hiệu ứng nổi bật)
         // ==========================================
-        JPanel footerPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 0, 0));
+        JPanel footerPanel = new JPanel(new BorderLayout(0, 10));
         footerPanel.setOpaque(false);
-        footerPanel.setBorder(new EmptyBorder(4, 0, 4, 0));
 
         btnSubmit = new ModernButton("VÀO ĐẤU TRƯỜNG", ModernButton.Style.PRIMARY);
-        btnSubmit.setPreferredSize(new Dimension(368, 46));
-        btnSubmit.setFont(new Font(Theme.SUBTITLE.getFamily(), Font.BOLD, 15));
-        btnSubmit.setCornerRadius(12);
+        btnSubmit.setPreferredSize(new Dimension(340, 46));
+        btnSubmit.setFont(new Font(Theme.SUBTITLE.getFamily(), Font.BOLD, 14));
+        btnSubmit.setCornerRadius(14);
+        btnSubmit.setArenaStyle(true);
+        btnSubmit.setIcon(new ArenaIcon(ArenaIcon.Type.ARROW, 18, null));
         btnSubmit.addActionListener(e -> handleSubmit());
 
-        footerPanel.add(btnSubmit);
+        footerPanel.add(btnSubmit, BorderLayout.CENTER);
+        JLabel footerNote = new JLabel("KIẾN THỨC CỦA BẠN. DẤU ẤN CỦA BẠN.", SwingConstants.CENTER);
+        footerNote.setFont(new Font(Theme.BODY.getFamily(), Font.BOLD, 9));
+        footerNote.setForeground(ArenaPalette.MUTED);
+        footerPanel.add(footerNote, BorderLayout.SOUTH);
         card.add(footerPanel, BorderLayout.SOUTH);
 
         // Lắng nghe phím Enter
@@ -281,12 +260,175 @@ public class AuthScreen extends KahootBackgroundPanel {
         txtPassword.addKeyListener(enterSubmit);
         txtConfirmPassword.addKeyListener(enterSubmit);
 
-        // Đặt Card vào trung tâm màn hình
+        // Artwork stays on the left; the form remains a solid, readable surface.
+        JPanel welcome = createWelcomePanel();
+        welcome.setPreferredSize(new Dimension(340, 480));
+        welcome.setMinimumSize(new Dimension(240, 200));
+        GridBagConstraints welcomeGbc = new GridBagConstraints();
+        welcomeGbc.gridx = 0;
+        welcomeGbc.gridy = 0;
+        welcomeGbc.weightx = 1.0;
+        welcomeGbc.weighty = 1.0;
+        welcomeGbc.fill = GridBagConstraints.BOTH;
+        welcomeGbc.insets = new Insets(32, 40, 30, 16);
+        add(welcome, welcomeGbc);
+
         GridBagConstraints centerGbc = new GridBagConstraints();
-        centerGbc.gridx = 0;
+        centerGbc.gridx = 1;
         centerGbc.gridy = 0;
+        centerGbc.weighty = 1.0;
         centerGbc.anchor = GridBagConstraints.CENTER;
+        centerGbc.insets = new Insets(12, 14, 12, 36);
         add(card, centerGbc);
+
+        lblTitle.setFont(new Font(Theme.BODY.getFamily(), Font.BOLD, 25));
+        lblTitle.setMaximumSize(new Dimension(Integer.MAX_VALUE, 40));
+        lblTitle.setHorizontalAlignment(SwingConstants.LEFT);
+        lblSubtitle.setFont(new Font(Theme.BODY.getFamily(), Font.PLAIN, 12));
+        lblSubtitle.setMaximumSize(new Dimension(Integer.MAX_VALUE, 26));
+        lblSubtitle.setHorizontalAlignment(SwingConstants.LEFT);
+        setLayout(new AuthLayout(welcome, card));
+        setMode(Mode.LOGIN);
+    }
+
+    /** Keeps the two-column composition together on a maximized desktop. */
+    private static final class AuthLayout implements LayoutManager {
+        private final JPanel welcome;
+        private final ModernCard form;
+        AuthLayout(JPanel welcome, ModernCard form) { this.welcome = welcome; this.form = form; }
+        @Override public void addLayoutComponent(String name, Component child) {}
+        @Override public void removeLayoutComponent(Component child) {}
+        @Override public Dimension preferredLayoutSize(Container parent) { return new Dimension(1080, 760); }
+        @Override public Dimension minimumLayoutSize(Container parent) { return new Dimension(720, 520); }
+        @Override public void layoutContainer(Container parent) {
+            int width = parent.getWidth();
+            int height = parent.getHeight();
+            int content = Math.min(1240, Math.max(0, width - 64));
+            int formWidth = Math.min(440, Math.max(360, (content - 32) / 2));
+            int left = Math.max(24, (width - content) / 2);
+            int gap = width >= 1200 ? 56 : 24;
+            int welcomeWidth = Math.max(0, content - formWidth - gap);
+            int formHeight = Math.min(form.getPreferredSize().height, Math.max(0, height - 24));
+            welcome.setBounds(left, 32, welcomeWidth, Math.max(0, height - 64));
+            form.setCardPadding(height < 580 ? 12 : 28, height < 580 ? 22 : 30,
+                    height < 580 ? 12 : 25, height < 580 ? 22 : 30);
+            ((BorderLayout) form.getLayout()).setVgap(height < 580 ? 6 : 20);
+            form.setBounds(left + welcomeWidth + gap, (height - formHeight) / 2, formWidth, formHeight);
+            resizeHeadline(welcome, width >= 1400 ? 46 : width < 840 ? 28 : 36);
+        }
+        private void resizeHeadline(Container root, int size) {
+            for (Component child : root.getComponents()) {
+                if (child instanceof JLabel label && (label.getText().equals("Đấu trí hôm nay.")
+                        || label.getText().equals("Tỏa sáng mỗi ngày."))) {
+                    label.setFont(ArenaPalette.font(size, Font.BOLD));
+                    label.setMaximumSize(new Dimension(Integer.MAX_VALUE, label.getPreferredSize().height));
+                }
+                if (child instanceof Container nested) resizeHeadline(nested, size);
+            }
+            root.invalidate();
+        }
+    }
+
+    private JPanel createWelcomePanel() {
+        JPanel welcome = new JPanel(new BorderLayout());
+        welcome.setOpaque(false);
+
+        JPanel copy = new JPanel();
+        copy.setLayout(new BoxLayout(copy, BoxLayout.Y_AXIS));
+        copy.setOpaque(false);
+
+        JLabel brand = welcomeLabel("QUIZ ARENA", 17, Color.WHITE);
+        brand.setIcon(new ArenaIcon(ArenaIcon.Type.BRAND, 32, new Color(125, 224, 255)));
+        brand.setIconTextGap(12);
+        copy.add(brand);
+        copy.add(Box.createVerticalStrut(22));
+        copy.add(welcomeLabel("Đấu trí hôm nay.", 36, Color.WHITE));
+        copy.add(Box.createVerticalStrut(1));
+        copy.add(welcomeLabel("Tỏa sáng mỗi ngày.", 36, new Color(139, 224, 255)));
+        copy.add(Box.createVerticalStrut(12));
+
+        JLabel description = new JLabel(
+                "<html>Thách đấu bạn bè. Chinh phục kiến thức.<br>Ghi tên mình trên bảng xếp hạng.</html>") {
+            @Override protected void paintComponent(Graphics graphics) {
+                Graphics2D shade = (Graphics2D) graphics.create();
+                Theme.setupAntiAliasing(shade);
+                shade.setColor(new Color(6, 14, 33, 195));
+                shade.fillRoundRect(0, 0, getWidth(), getHeight(), 14, 14);
+                shade.dispose();
+                super.paintComponent(graphics);
+            }
+        };
+        description.setBorder(new EmptyBorder(8, 10, 8, 10));
+        description.setFont(new Font(Theme.BODY.getFamily(), Font.PLAIN, 13));
+        description.setForeground(new Color(198, 215, 240));
+        description.setAlignmentX(Component.LEFT_ALIGNMENT);
+        copy.add(description);
+        welcome.add(copy, BorderLayout.NORTH);
+
+        JPanel footer = new JPanel();
+        footer.setLayout(new BoxLayout(footer, BoxLayout.Y_AXIS));
+        footer.setOpaque(false);
+        JPanel features = new JPanel(new GridLayout(1, 2, 18, 0));
+        features.setOpaque(false);
+        features.setAlignmentX(Component.LEFT_ALIGNMENT);
+        features.setMaximumSize(new Dimension(335, 50));
+        features.add(featureLabel("1v1", "ĐỐI KHÁNG TRỰC TUYẾN"));
+        features.add(featureLabel("10", "CÂU HỎI MỖI TRẬN"));
+        footer.add(features);
+        footer.add(Box.createVerticalStrut(18));
+
+        JToggleButton motion = new JToggleButton() {
+            @Override
+            protected void paintComponent(Graphics graphics) {
+                Graphics2D background = (Graphics2D) graphics.create();
+                Theme.setupAntiAliasing(background);
+                background.setColor(new Color(7, 16, 39, 190));
+                background.fillRoundRect(0, 0, getWidth(), getHeight(), 10, 10);
+                background.dispose();
+                super.paintComponent(graphics);
+            }
+        };
+        motion.setSelected(isMotionEnabled());
+        motion.setText(isMotionEnabled() ? "Hiệu ứng: Bật" : "Hiệu ứng: Tắt");
+        motion.setFont(Theme.SMALL_BOLD);
+        motion.setForeground(new Color(224, 238, 255));
+        motion.setOpaque(false);
+        motion.setContentAreaFilled(false);
+        motion.setFocusPainted(true);
+        motion.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(new Color(120, 165, 220, 100), 1, true),
+                new EmptyBorder(7, 12, 7, 12)));
+        motion.setIcon(new ArenaIcon(ArenaIcon.Type.SETTINGS, 13, new Color(171, 215, 250)));
+        motion.setIconTextGap(7);
+        motion.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        motion.setToolTipText("Bật hoặc tắt chuyển động nền");
+        motion.setAlignmentX(Component.LEFT_ALIGNMENT);
+        motion.addActionListener(e -> {
+            setMotionEnabled(motion.isSelected());
+            motion.setText(isMotionEnabled() ? "Hiệu ứng: Bật" : "Hiệu ứng: Tắt");
+        });
+        footer.add(motion);
+        welcome.add(footer, BorderLayout.SOUTH);
+        return welcome;
+    }
+
+    private static JPanel featureLabel(String value, String caption) {
+        JPanel feature = new JPanel();
+        feature.setLayout(new BoxLayout(feature, BoxLayout.Y_AXIS));
+        feature.setOpaque(false);
+        feature.setBorder(new EmptyBorder(0, 0, 0, 0));
+        feature.add(welcomeLabel(value, 24, Color.WHITE));
+        feature.add(Box.createVerticalStrut(3));
+        feature.add(welcomeLabel(caption, 9, new Color(180, 202, 233)));
+        return feature;
+    }
+
+    private static JLabel welcomeLabel(String text, int size, Color color) {
+        JLabel label = new JLabel(text);
+        label.setFont(new Font(Theme.BODY.getFamily(), Font.BOLD, size));
+        label.setForeground(color);
+        label.setAlignmentX(Component.LEFT_ALIGNMENT);
+        return label;
     }
 
     private class TabButton extends JButton {
@@ -316,9 +458,9 @@ public class AuthScreen extends KahootBackgroundPanel {
 
         private void updateStyle() {
             if (active) {
-                setForeground(currentMode == Mode.LOGIN ? Theme.BLUE : Theme.PURPLE);
+                setForeground(ArenaPalette.ACCENT);
             } else {
-                setForeground(new Color(0x64, 0x74, 0x8B));
+                setForeground(ArenaPalette.MUTED);
             }
         }
 
@@ -329,11 +471,15 @@ public class AuthScreen extends KahootBackgroundPanel {
             int w = getWidth();
             int h = getHeight();
             if (active) {
-                // Nền trắng bo góc nổi lên giống tab capsule
-                g2.setColor(Theme.WHITE);
-                g2.fill(new RoundRectangle2D.Float(1, 1, w - 2, h - 2, 14, 14));
-                g2.setColor(new Color(0, 0, 0, 20));
-                g2.draw(new RoundRectangle2D.Float(1, 1, w - 2, h - 2, 14, 14));
+                g2.setColor(new Color(38, 57, 51));
+                g2.fill(new RoundRectangle2D.Float(0, 0, w, h, 14, 14));
+            } else if (getModel().isRollover()) {
+                g2.setColor(ArenaPalette.SURFACE_RAISED);
+                g2.fill(new RoundRectangle2D.Float(0, 0, w, h, 14, 14));
+            }
+            if (hasFocus()) {
+                g2.setColor(active ? new Color(190, 220, 255) : Theme.INDIGO);
+                g2.drawRoundRect(2, 2, w - 5, h - 5, 12, 12);
             }
             g2.dispose();
             super.paintComponent(g);
@@ -354,13 +500,17 @@ public class AuthScreen extends KahootBackgroundPanel {
         lblConfirmError.setVisible(!isLogin);
 
         if (isLogin) {
+            lblTitle.setText("Chào mừng trở lại");
+            lblSubtitle.setText("Đăng nhập để bắt đầu trận đấu của bạn");
             btnSubmit.setText("VÀO ĐẤU TRƯỜNG");
             btnSubmit.setStyle(ModernButton.Style.PRIMARY);
-            card.setPreferredSize(new Dimension(460, 540));
+            card.setPreferredSize(new Dimension(424, 500));
         } else {
+            lblTitle.setText("Gia nhập đấu trường");
+            lblSubtitle.setText("Tạo tài khoản và khám phá thử thách mới");
             btnSubmit.setText("TẠO TÀI KHOẢN MỚI");
-            btnSubmit.setStyle(ModernButton.Style.ACCENT_PURPLE);
-            card.setPreferredSize(new Dimension(460, 610));
+            btnSubmit.setStyle(ModernButton.Style.PRIMARY);
+            card.setPreferredSize(new Dimension(424, 574));
         }
         card.revalidate();
         card.repaint();
@@ -393,13 +543,13 @@ public class AuthScreen extends KahootBackgroundPanel {
 
     public void showError(String message) {
         setLoading(false);
-        lblGlobalMessage.setForeground(Theme.RED);
+        lblGlobalMessage.setForeground(new Color(255, 142, 164));
         lblGlobalMessage.setText(message != null ? message : "Đã xảy ra lỗi");
     }
 
     public void showSuccess(String message) {
         setLoading(false);
-        lblGlobalMessage.setForeground(Theme.GREEN);
+        lblGlobalMessage.setForeground(new Color(105, 226, 178));
         lblGlobalMessage.setText(message != null ? message : "Thành công!");
     }
 

@@ -15,6 +15,7 @@ public class NavigationBar extends JPanel {
 
     private final List<NavigationTab> tabs = new ArrayList<>();
     private Consumer<String> onTabChanged;
+    private boolean sidebarMode;
 
     // Toạ độ & kích thước của vạch indicator chuyển động
     private float animIndicatorX = -1.0f;
@@ -33,13 +34,23 @@ public class NavigationBar extends JPanel {
         this.onTabChanged = callback;
     }
 
+    public void setSidebarMode(boolean enabled) {
+        sidebarMode = enabled;
+        if (slideTimer != null) slideTimer.stop();
+        setLayout(enabled ? new SidebarLayout() : new FlowLayout(FlowLayout.LEFT, 16, 0));
+        for (NavigationTab tab : tabs) tab.setSidebarMode(enabled);
+        revalidate();
+        repaint();
+    }
+
     public void addTab(String name) {
         NavigationTab tab = new NavigationTab(name);
+        tab.setSidebarMode(sidebarMode);
 
         // Tính toán kích thước tab linh hoạt theo độ dài chữ để không bao giờ bị cắt
         FontMetrics fm = getFontMetrics(Theme.BODY_BOLD);
         int tabW = Math.max(115, fm.stringWidth(name) + 36);
-        tab.setPreferredSize(new Dimension(tabW, 48));
+        if (!sidebarMode) tab.setPreferredSize(new Dimension(tabW, 48));
 
         tab.addActionListener(e -> selectTab(name));
 
@@ -70,7 +81,8 @@ public class NavigationBar extends JPanel {
         }
 
         if (targetTab != null) {
-            animateToTab(targetTab);
+            if (sidebarMode) targetTab.scrollRectToVisible(new Rectangle(0, 0, targetTab.getWidth(), targetTab.getHeight()));
+            else animateToTab(targetTab);
         }
     }
 
@@ -117,6 +129,7 @@ public class NavigationBar extends JPanel {
      * Kích hoạt animation trượt vạch indicator sang tab mục tiêu.
      */
     private void animateToTab(NavigationTab targetTab) {
+        if (sidebarMode) return;
         if (targetTab == null || targetTab.getWidth() <= 0) {
             return;
         }
@@ -162,6 +175,7 @@ public class NavigationBar extends JPanel {
     @Override
     public void doLayout() {
         super.doLayout();
+        if (sidebarMode) return;
         NavigationTab activeTab = getActiveTabComponent();
         if (activeTab != null && activeTab.getWidth() > 0) {
             int pad = 12;
@@ -184,6 +198,7 @@ public class NavigationBar extends JPanel {
     protected void paintChildren(Graphics g) {
         // 1. Vẽ các tab con trước
         super.paintChildren(g);
+        if (sidebarMode) return;
 
         Graphics2D g2 = (Graphics2D) g.create();
         Theme.setupAntiAliasing(g2);
@@ -221,5 +236,34 @@ public class NavigationBar extends JPanel {
         }
 
         g2.dispose();
+    }
+
+    private static final class SidebarLayout implements LayoutManager {
+        @Override public void addLayoutComponent(String name, Component component) {}
+        @Override public void removeLayoutComponent(Component component) {}
+        @Override public Dimension preferredLayoutSize(Container parent) {
+            int count = 0;
+            for (Component child : parent.getComponents()) if (child.isVisible()) count++;
+            Insets insets = parent.getInsets();
+            return new Dimension(168 + insets.left + insets.right,
+                    count * 44 + Math.max(0, count - 1) * 6 + insets.top + insets.bottom);
+        }
+        @Override public Dimension minimumLayoutSize(Container parent) { return preferredLayoutSize(parent); }
+        @Override public void layoutContainer(Container parent) {
+            Insets insets = parent.getInsets();
+            int width = Math.max(1, parent.getWidth() - insets.left - insets.right);
+            int y = insets.top;
+            for (Component child : parent.getComponents()) {
+                if (!child.isVisible()) continue;
+                child.setFont(ArenaPalette.font(width < 190 ? 12 : 13, Font.BOLD));
+                child.setBounds(insets.left, y, width, 44);
+                y += 50;
+            }
+        }
+    }
+
+    @Override public void removeNotify() {
+        if (slideTimer != null) slideTimer.stop();
+        super.removeNotify();
     }
 }

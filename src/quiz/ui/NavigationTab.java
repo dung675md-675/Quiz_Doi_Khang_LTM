@@ -16,6 +16,7 @@ public class NavigationTab extends JButton {
 
     private boolean active = false;
     private boolean hovered = false;
+    private boolean sidebarMode;
 
     public NavigationTab(String text) {
         super(text);
@@ -32,7 +33,7 @@ public class NavigationTab extends JButton {
             public void mouseEntered(MouseEvent e) {
                 hovered = true;
                 if (!active) {
-                    setForeground(Theme.DARK_TEXT);
+                    setForeground(sidebarMode ? ArenaPalette.TEXT : Theme.DARK_TEXT);
                 }
                 repaint();
             }
@@ -41,7 +42,7 @@ public class NavigationTab extends JButton {
             public void mouseExited(MouseEvent e) {
                 hovered = false;
                 if (!active) {
-                    setForeground(Theme.MUTED_GRAY);
+                    setForeground(sidebarMode ? ArenaPalette.MUTED : Theme.MUTED_GRAY);
                 }
                 repaint();
             }
@@ -50,7 +51,9 @@ public class NavigationTab extends JButton {
 
     public void setActive(boolean active) {
         this.active = active;
-        if (active) {
+        if (sidebarMode) {
+            setForeground(active ? ArenaPalette.ACCENT : ArenaPalette.MUTED);
+        } else if (active) {
             setForeground(new Color(0x1D, 0x4E, 0xD8)); // Blue-700 nổi bật
         } else {
             setForeground(hovered ? Theme.DARK_TEXT : Theme.MUTED_GRAY);
@@ -62,6 +65,26 @@ public class NavigationTab extends JButton {
         return active;
     }
 
+    public void setSidebarMode(boolean enabled) {
+        sidebarMode = enabled;
+        setHorizontalAlignment(enabled ? SwingConstants.LEFT : SwingConstants.CENTER);
+        setBorder(enabled ? BorderFactory.createEmptyBorder(10, 9, 10, 9) : null);
+        setIcon(enabled ? new ArenaIcon(iconFor(getText()), 17, null) : null);
+        setIconTextGap(7);
+        setToolTipText(getText());
+        setActive(active);
+    }
+
+    private static ArenaIcon.Type iconFor(String text) {
+        return switch (text) {
+            case "Người Chơi" -> ArenaIcon.Type.PLAYERS;
+            case "Bảng Xếp Hạng" -> ArenaIcon.Type.TROPHY;
+            case "Lịch Sử" -> ArenaIcon.Type.HISTORY;
+            case "Ngân Hàng Câu Hỏi" -> ArenaIcon.Type.BOOK;
+            default -> ArenaIcon.Type.SETTINGS;
+        };
+    }
+
     @Override
     protected void paintComponent(Graphics g) {
         Graphics2D g2 = (Graphics2D) g.create();
@@ -69,6 +92,24 @@ public class NavigationTab extends JButton {
 
         int w = getWidth();
         int h = getHeight();
+
+        if (sidebarMode) {
+            if (active || hovered || hasFocus()) {
+                g2.setColor(active ? new Color(34, 51, 47) : ArenaPalette.SURFACE_RAISED);
+                g2.fillRoundRect(0, 0, w, h, 14, 14);
+            }
+            if (active) {
+                g2.setColor(ArenaPalette.ACCENT);
+                g2.fillRoundRect(0, 12, 3, h - 24, 3, 3);
+            }
+            if (hasFocus()) {
+                g2.setColor(ArenaPalette.CYAN);
+                g2.drawRoundRect(1, 1, w - 3, h - 3, 12, 12);
+            }
+            g2.dispose();
+            super.paintComponent(g);
+            return;
+        }
 
         // 1. Nền pill bo góc khi Active hoặc Hover
         if (active) {

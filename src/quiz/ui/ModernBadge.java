@@ -20,6 +20,7 @@ public class ModernBadge extends JComponent {
 
     private String text;
     private Type type = Type.READY;
+    private boolean arenaStyle;
 
     public ModernBadge(String text, Type type) {
         this.text = text;
@@ -30,6 +31,13 @@ public class ModernBadge extends JComponent {
 
     public String getText() {
         return text;
+    }
+
+    public void setArenaStyle(boolean enabled) {
+        arenaStyle = enabled;
+        setFont(enabled ? ArenaPalette.font(12, Font.BOLD) : Theme.SMALL_BOLD);
+        revalidate();
+        repaint();
     }
 
     public void setText(String text) {
@@ -91,6 +99,13 @@ public class ModernBadge extends JComponent {
     }
 
     private Color resolveBg() {
+        if (arenaStyle) return switch (type) {
+            case READY -> new Color(24, 57, 49);
+            case BUSY -> new Color(64, 32, 48);
+            case WARNING -> new Color(66, 50, 31);
+            case RANK -> new Color(42, 42, 75);
+            default -> new Color(23, 48, 66);
+        };
         switch (type) {
             case READY:
                 return new Color(0xDC, 0xFD, 0xD7); // Xanh lá pastel nhạt
@@ -107,6 +122,13 @@ public class ModernBadge extends JComponent {
     }
 
     private Color resolveFg() {
+        if (arenaStyle) return switch (type) {
+            case READY -> new Color(105, 226, 178);
+            case BUSY -> new Color(255, 142, 164);
+            case WARNING -> new Color(248, 205, 132);
+            case RANK -> new Color(190, 175, 255);
+            default -> ArenaPalette.CYAN;
+        };
         switch (type) {
             case READY:
                 return Theme.GREEN;
@@ -123,6 +145,7 @@ public class ModernBadge extends JComponent {
     }
 
     private Color resolveDot() {
+        if (arenaStyle && (type == Type.READY || type == Type.BUSY)) return resolveFg();
         switch (type) {
             case READY:
                 return Theme.GREEN;

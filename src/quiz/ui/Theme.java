@@ -37,6 +37,11 @@ public final class Theme {
     public static final Color BORDER_SUBTLE = new Color(0xCB, 0xD5, 0xE1); // #CBD5E1 - Viền card hover/đậm hơn (Slate-300)
     public static final Color BORDER_DARK = new Color(0x33, 0x41, 0x55);   // #334155 - Viền card dark (Slate-700)
 
+    // Opt-in controls for the illustrated Arena skin. Existing game colors stay unchanged.
+    public static final Color ACTION = new Color(0x55, 0x48, 0xE8);
+    public static final Color ACTION_HOVER = new Color(0x45, 0x37, 0xD0);
+    public static final Color ACTION_TINT = new Color(0xED, 0xEA, 0xFF);
+
     // ==========================================
     // 1.1 BẢNG MÀU TƯƠI SÁNG (Vibrant Palette)
     // ==========================================

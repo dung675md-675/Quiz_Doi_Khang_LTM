@@ -217,7 +217,7 @@ public class MatchScreen extends JPanel {
         // ==========================================
         // 1. TOP HUD (Kahoot! / Quizizz Arena Header)
         // ==========================================
-        JPanel topHud = new JPanel(new BorderLayout(12, 0)) {
+        JPanel topHud = new JPanel(new BorderLayout(12, 8)) {
             @Override
             protected void paintComponent(Graphics g) {
                 Graphics2D g2 = (Graphics2D) g.create();
@@ -238,13 +238,12 @@ public class MatchScreen extends JPanel {
         topHud.setBorder(new EmptyBorder(10, 20, 10, 20));
 
         // 1.1 Left: Topic, Level & Ping Badges (Giữ nguyên ban đầu đầy đủ 3 huy hiệu)
-        JPanel leftMeta = new JPanel();
-        leftMeta.setLayout(new BoxLayout(leftMeta, BoxLayout.Y_AXIS));
+        JPanel leftMeta = new JPanel(new BorderLayout(10, 0));
         leftMeta.setOpaque(false);
 
         JLabel lblGameMode = new JLabel("ĐỐI KHÁNG 1V1");
         lblGameMode.setFont(Theme.SMALL_BOLD);
-        lblGameMode.setForeground(Theme.MUTED_GRAY);
+        lblGameMode.setForeground(ArenaPalette.MUTED);
 
         JPanel badgesRow = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 0));
         badgesRow.setOpaque(false);
@@ -265,10 +264,9 @@ public class MatchScreen extends JPanel {
         badgePing = new ModernBadge("Ping: -- ms", ModernBadge.Type.READY);
         badgesRow.add(badgePing);
 
-        leftMeta.add(lblGameMode);
-        leftMeta.add(Box.createVerticalStrut(4));
-        leftMeta.add(badgesRow);
-        topHud.add(leftMeta, BorderLayout.WEST);
+        leftMeta.add(lblGameMode, BorderLayout.WEST);
+        leftMeta.add(badgesRow, BorderLayout.CENTER);
+        topHud.add(leftMeta, BorderLayout.NORTH);
 
         // 1.2 Center: 1v1 Versus HUD with REAL-TIME SCORES, STREAK & TUG-OF-WAR (Single horizontal row, NEVER wraps)
         JPanel centerHud = new JPanel(new GridBagLayout());
@@ -337,33 +335,32 @@ public class MatchScreen extends JPanel {
         opponentEmoteContainer.setOpaque(false);
         opponentEmoteContainer.setPreferredSize(new Dimension(28, 28));
 
-        JPanel p1Row = new JPanel();
-        p1Row.setLayout(new BoxLayout(p1Row, BoxLayout.X_AXIS));
+        JPanel p1Row = new JPanel(new BorderLayout(2, 0));
         p1Row.setOpaque(false);
-        p1Row.add(myEmoteContainer);
-        p1Row.add(Box.createHorizontalStrut(2));
-        p1Row.add(p1);
+        p1Row.add(myEmoteContainer, BorderLayout.WEST);
+        p1Row.add(p1, BorderLayout.CENTER);
 
-        JPanel p2Row = new JPanel();
-        p2Row.setLayout(new BoxLayout(p2Row, BoxLayout.X_AXIS));
+        JPanel p2Row = new JPanel(new BorderLayout(2, 0));
         p2Row.setOpaque(false);
-        p2Row.add(p2);
-        p2Row.add(Box.createHorizontalStrut(2));
-        p2Row.add(opponentEmoteContainer);
+        p2Row.add(p2, BorderLayout.CENTER);
+        p2Row.add(opponentEmoteContainer, BorderLayout.EAST);
 
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.gridy = 0;
         gbc.anchor = GridBagConstraints.CENTER;
-        gbc.fill = GridBagConstraints.NONE;
+        gbc.fill = GridBagConstraints.HORIZONTAL;
+        gbc.weightx = 1;
         gbc.insets = new Insets(0, 3, 0, 3);
 
         gbc.gridx = 0;
         centerHud.add(p1Row, gbc);
 
         gbc.gridx = 1;
+        gbc.weightx = 0;
         centerHud.add(vsColumn, gbc);
 
         gbc.gridx = 2;
+        gbc.weightx = 1;
         centerHud.add(p2Row, gbc);
 
         topHud.add(centerHud, BorderLayout.CENTER);
@@ -378,7 +375,7 @@ public class MatchScreen extends JPanel {
 
         JLabel lblTimerTitle = new JLabel("CÂU HỎI", SwingConstants.RIGHT);
         lblTimerTitle.setFont(Theme.SMALL_BOLD);
-        lblTimerTitle.setForeground(Theme.MUTED_GRAY);
+        lblTimerTitle.setForeground(ArenaPalette.MUTED);
         lblTimerTitle.setAlignmentX(Component.RIGHT_ALIGNMENT);
 
         lblTimer = new JLabel(formatTime(perQuestionSeconds), SwingConstants.RIGHT);
@@ -658,6 +655,7 @@ public class MatchScreen extends JPanel {
         questionCard = new AnimatedQuestionCard(new BorderLayout(0, 12));
         questionCard.setCardBackground(new Color(0x17, 0x20, 0x38));
         questionCard.setBorderColor(new Color(0x33, 0x41, 0x55));
+        questionCard.setCornerRadius(24);
         questionCard.setCardPadding(16, 24, 18, 24);
 
         // Question header with Question Pill, Type Pill, Hint, and Full-width Smooth Timer Banner
@@ -740,7 +738,14 @@ public class MatchScreen extends JPanel {
         JPanel normalQuestionPanel = new JPanel(new BorderLayout(0, 4));
         normalQuestionPanel.setOpaque(false);
         normalQuestionPanel.add(lblMultiSelectNotice, BorderLayout.NORTH);
-        normalQuestionPanel.add(txtQuestion, BorderLayout.CENTER);
+        JScrollPane questionTextScroll = new JScrollPane(txtQuestion);
+        questionTextScroll.setBorder(BorderFactory.createEmptyBorder());
+        questionTextScroll.setOpaque(false);
+        questionTextScroll.getViewport().setOpaque(false);
+        questionTextScroll.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+        questionTextScroll.setMinimumSize(new Dimension(0, 36));
+        ArenaPalette.styleScrollBar(questionTextScroll.getVerticalScrollBar());
+        normalQuestionPanel.add(questionTextScroll, BorderLayout.CENTER);
 
         // Question center card switcher (Standard Text vs Drag & Drop Sentence)
         questionCardCenter = new JPanel(new CardLayout());
@@ -956,6 +961,7 @@ public class MatchScreen extends JPanel {
 
         btnLeave = new ModernButton("Thoát", ModernButton.Style.DANGER);
         btnLeave.setPreferredSize(new Dimension(92, 38));
+        btnLeave.setArenaStyle(true);
         btnLeave.addActionListener(e -> {
             SoundManager.playClick();
             confirmLeave();
@@ -1002,6 +1008,7 @@ public class MatchScreen extends JPanel {
 
         btnNext = new ModernButton("Chốt đáp án", ModernButton.Style.PRIMARY);
         btnNext.setPreferredSize(new Dimension(160, 40));
+        btnNext.setArenaStyle(true);
         btnNext.addActionListener(e -> {
             if (rhythmOverlayPanel != null && rhythmOverlayPanel.isVisible()) {
                 return;
@@ -1031,6 +1038,7 @@ public class MatchScreen extends JPanel {
         // 4.3 Right: Submit Button
         btnSubmit = new ModernButton("NỘP BÀI", ModernButton.Style.SUCCESS);
         btnSubmit.setPreferredSize(new Dimension(140, 40));
+        btnSubmit.setArenaStyle(true);
         btnSubmit.addActionListener(e -> {
             SoundManager.playClick();
             confirmSubmit();
@@ -1048,17 +1056,20 @@ public class MatchScreen extends JPanel {
                 int h = getHeight();
                 int w = getWidth();
                 if (h <= 0 || w <= 0) return;
-                int optH = Math.max(152, Math.min(255, (int) (h * 0.28)));
+                int optH = h < 580 ? Math.max(112, Math.min(128, (int) (h * 0.22)))
+                        : Math.max(152, Math.min(255, (int) (h * 0.26)));
                 bottomOptionsCard.setPreferredSize(new Dimension(0, optH));
                 answersGrid.setPreferredSize(new Dimension(0, optH));
                 tfPanel.setPreferredSize(new Dimension(0, optH));
                 fillInPanel.setPreferredSize(new Dimension(0, optH));
 
                 int padX = Math.max(16, Math.min(36, w / 42));
-                int padY = Math.max(10, Math.min(20, h / 48));
+                int padY = h < 580 ? 6 : Math.max(10, Math.min(20, h / 48));
                 centerWrapper.setBorder(new EmptyBorder(padY, padX, padY, padX));
+                questionCard.setCardPadding(h < 580 ? 8 : 16, h < 580 ? 16 : 24,
+                        h < 580 ? 8 : 18, h < 580 ? 16 : 24);
 
-                int qFontSize = Math.max(18, Math.min(27, 14 + h / 88));
+                int qFontSize = h < 580 ? 18 : Math.max(18, Math.min(27, 14 + h / 88));
                 txtQuestion.setFont(Theme.TITLE.deriveFont((float) qFontSize));
                 int btnFontSize = Math.max(15, Math.min(20, 12 + h / 120));
                 Font btnFont = Theme.BODY_BOLD.deriveFont((float) btnFontSize);
@@ -1087,8 +1098,8 @@ public class MatchScreen extends JPanel {
 
         // Kahoot! / Quizizz Arena Diagonal Gradient
         GradientPaint bgGrad = new GradientPaint(
-                0, 0, new Color(0x0E, 0x15, 0x28),
-                w, h, new Color(0x1E, 0x17, 0x3D));
+                0, 0, ArenaPalette.BG,
+                w, h, new Color(27, 27, 61));
         g2.setPaint(bgGrad);
         g2.fillRect(0, 0, w, h);
 
@@ -1101,22 +1112,10 @@ public class MatchScreen extends JPanel {
         g2.setPaint(stageGlow);
         g2.fillRect(0, 0, w, h);
 
-        // Subtle Kahoot geometric watermark shapes in background corners
-        g2.setColor(new Color(255, 255, 255, 7));
-        int sz = Math.max(90, Math.min(w, h) / 6);
-        // Top-left Triangle
-        int[] tx = { 45, 45 + sz, 45 - sz / 2 };
-        int[] ty = { 70, 70 + sz, 70 + sz };
-        g2.fillPolygon(tx, ty, 3);
-        // Bottom-right Circle
-        g2.fillOval(w - sz - 50, h - sz - 60, sz, sz);
-        // Top-right Diamond
-        int dx = w - 90;
-        int dy = 110;
-        int r = sz / 2;
-        g2.fillPolygon(new int[] { dx, dx + r, dx, dx - r }, new int[] { dy - r, dy, dy + r, dy }, 4);
-        // Bottom-left Rounded Square
-        g2.fillRoundRect(40, h - sz - 70, sz - 15, sz - 15, 20, 20);
+        g2.setColor(new Color(119, 143, 232, 10));
+        int orbit = Math.max(w, h);
+        g2.drawOval(w - orbit / 2, -orbit / 2, orbit, orbit);
+        g2.drawOval(-orbit * 3 / 4, h - orbit / 3, orbit, orbit);
 
         g2.dispose();
     }
@@ -1316,9 +1315,9 @@ public class MatchScreen extends JPanel {
             }
         };
         p.setOpaque(false);
-        p.setBorder(new EmptyBorder(2, 6, 2, 6));
-        p.setPreferredSize(new Dimension(190, 36));
-        p.setMinimumSize(new Dimension(140, 36));
+        p.setBorder(new EmptyBorder(4, 6, 4, 6));
+        p.setPreferredSize(new Dimension(180, 52));
+        p.setMinimumSize(new Dimension(140, 48));
 
         final String avatarId = isMe ? this.myAvatarId : this.opponentAvatarId;
 
@@ -1349,20 +1348,18 @@ public class MatchScreen extends JPanel {
         }
         String labelText = displayName + (isMe ? " (Bạn)" : "");
         JLabel lblName = new JLabel(labelText, SwingConstants.CENTER);
+        lblName.setPreferredSize(new Dimension(128, 20));
         lblName.setToolTipText(rawName + (isMe ? " (Bạn)" : ""));
         lblName.setFont(Theme.BODY_BOLD);
         lblName.setForeground(Theme.WHITE);
         lblName.setBorder(new EmptyBorder(0, 3, 0, 3));
 
-        if (isMe) {
-            p.add(avatar, BorderLayout.WEST);
-            p.add(lblName, BorderLayout.CENTER);
-            p.add(badge, BorderLayout.EAST);
-        } else {
-            p.add(badge, BorderLayout.WEST);
-            p.add(lblName, BorderLayout.CENTER);
-            p.add(avatar, BorderLayout.EAST);
-        }
+        JPanel information = new JPanel(new GridLayout(2, 1, 0, 2));
+        information.setOpaque(false);
+        information.add(lblName);
+        information.add(badge);
+        p.add(avatar, isMe ? BorderLayout.WEST : BorderLayout.EAST);
+        p.add(information, BorderLayout.CENTER);
         return p;
     }
 
