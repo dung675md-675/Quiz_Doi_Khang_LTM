@@ -377,6 +377,10 @@ public final class Client {
    case "INFO"->{
     String msg=Wire.field(a,1);
     if(name==null){authScreen.showSuccess(msg);if(msg.contains("thành công")){authScreen.setMode(AuthScreen.Mode.LOGIN);authScreen.clearPassword();}}
+    if(currentResultDialog!=null && msg!=null && msg.toLowerCase().contains("đã rời trận đấu")){
+     String oppLeftMsg=(currentOpponent!=null&&!currentOpponent.isBlank())?(currentOpponent+" đã về sảnh chờ"):"Đối thủ đã về sảnh chờ";
+     currentResultDialog.onOpponentLeft(oppLeftMsg);
+    }
     ToastManager.info(frame, msg);
    }
    case "ERROR"->{
@@ -454,7 +458,9 @@ public final class Client {
    case "TACTICAL_CONFIRM"->{
     if(userLeftMatch || currentMatchScreen==null) return;
     String action=Wire.field(a,1);
-    int atk=1, def=1, star=1;
+    int atk=currentMatchScreen.getAttackRemaining();
+    int def=currentMatchScreen.getDefendRemaining();
+    int star=currentMatchScreen.getStarRemaining();
     try{atk=Integer.parseInt(Wire.field(a,2));}catch(Exception ignored){}
     try{def=Integer.parseInt(Wire.field(a,3));}catch(Exception ignored){}
     try{star=Integer.parseInt(Wire.field(a,4));}catch(Exception ignored){}
@@ -462,7 +468,9 @@ public final class Client {
    }
    case "TACTICAL_STATUS"->{
     if(userLeftMatch || currentMatchScreen==null) return;
-    int atk=1, def=1, star=1;
+    int atk=currentMatchScreen.getAttackRemaining();
+    int def=currentMatchScreen.getDefendRemaining();
+    int star=currentMatchScreen.getStarRemaining();
     try{atk=Integer.parseInt(Wire.field(a,1));}catch(Exception ignored){}
     try{def=Integer.parseInt(Wire.field(a,2));}catch(Exception ignored){}
     try{star=Integer.parseInt(Wire.field(a,3));}catch(Exception ignored){}
@@ -589,7 +597,7 @@ public final class Client {
      currentSubmittedAnswers=currentMatchScreen.getSelectedAnswers();
      if(currentQuestions==null){currentQuestions=currentMatchScreen.getQuestions();}
     }
-    String winner=Wire.field(a,1);String leftInfo=Wire.field(a,2);String rightInfo=Wire.field(a,3);
+    String winner=Wire.field(a,1);String leftInfo=Wire.field(a,2);String rightInfo=Wire.field(a,3);String statusInfo=Wire.field(a,4);
     log("Kết quả: "+winner+" | "+leftInfo+" | "+rightInfo);
     int[] correctAnswers=null;
     if(a.length>=15){correctAnswers=new int[10];for(int i=0;i<10;i++){try{correctAnswers[i]=Integer.parseInt(Wire.field(a,5+i));}catch(Exception ignored){correctAnswers[i]=-1;}}}
@@ -610,7 +618,19 @@ public final class Client {
     int[] myDeltas=(currentMatchScreen!=null)?currentMatchScreen.getMyDeltaHistory():null;
     int[] oppDeltas=(currentMatchScreen!=null)?currentMatchScreen.getOppDeltaHistory():null;
     currentResultDialog=new ResultDialog(frame,name,winner,leftInfo,rightInfo,()->send("REMATCH","YES"),()->{send("REMATCH","NO");showLobby();},currentQuestions,currentSubmittedAnswers,correctAnswers,myAvatarId,oppAvatar,fillInInputs,myOutcomes,oppOutcomes,myDeltas,oppDeltas);
+    if(statusInfo!=null&&(statusInfo.toLowerCase().contains("thoát")||statusInfo.toLowerCase().contains("rời"))){
+     String oppLeftMsg=(currentOpponent!=null&&!currentOpponent.isBlank())?(currentOpponent+" đã về sảnh chờ"):"Đối thủ đã về sảnh chờ";
+     currentResultDialog.onOpponentLeft(oppLeftMsg);
+    }
     currentResultDialog.setVisible(true);
+   }
+   case "REMATCH_OFFER"->{
+    String oppName = Wire.field(a,1);
+    SoundManager.playInviteAlert();
+    if(currentResultDialog!=null && currentResultDialog.isDisplayable()){
+     currentResultDialog.onOpponentRequestedRematch(oppName);
+    }
+    ToastManager.info(frame, oppName + " đang yêu cầu tái đấu với bạn!");
    }
    case "CLOSED"->{
     if(userLeftMatch){

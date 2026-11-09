@@ -319,6 +319,7 @@ public final class Server {
    Random rnd=ThreadLocalRandom.current();
    if("ATTACK".equals(currentTactical[0])&&defendRemaining[1]>0&&"NONE".equals(currentTactical[1])){
     if(rnd.nextDouble()<0.65){
+     defendRemaining[1]=Math.max(0,defendRemaining[1]-1);
      currentTactical[1]="DEFEND";
      send(left,"OPPONENT_TACTICAL","DEFEND");
      return;
@@ -327,12 +328,15 @@ public final class Server {
    if("NONE".equals(currentTactical[1])){
     double r=rnd.nextDouble();
     if(r<0.15&&attackRemaining[1]>0&&points[1]>=50){
+     attackRemaining[1]=Math.max(0,attackRemaining[1]-1);
      currentTactical[1]="ATTACK";
      send(left,"OPPONENT_TACTICAL","ATTACK");
     }else if(r<0.25&&starRemaining[1]>0&&points[1]>=50){
+     starRemaining[1]=Math.max(0,starRemaining[1]-1);
      currentTactical[1]="STAR";
      send(left,"OPPONENT_TACTICAL","STAR");
     }else if(r<0.35&&defendRemaining[1]>0){
+     defendRemaining[1]=Math.max(0,defendRemaining[1]-1);
      currentTactical[1]="DEFEND";
      send(left,"OPPONENT_TACTICAL","DEFEND");
     }
@@ -354,6 +358,10 @@ public final class Server {
    String act=action.trim().toUpperCase();
 
    if("CANCEL".equals(act)){
+    String prev=currentTactical[i];
+    if("ATTACK".equals(prev)) attackRemaining[i]=Math.min(1,attackRemaining[i]+1);
+    else if("DEFEND".equals(prev)) defendRemaining[i]=Math.min(1,defendRemaining[i]+1);
+    else if("STAR".equals(prev)) starRemaining[i]=Math.min(1,starRemaining[i]+1);
     currentTactical[i]="NONE";
     send(name,"TACTICAL_CONFIRM","CANCEL",String.valueOf(attackRemaining[i]),String.valueOf(defendRemaining[i]),String.valueOf(starRemaining[i]));
     if(!isSolo){
@@ -366,12 +374,14 @@ public final class Server {
    if("ATTACK".equals(act)){
     if(attackRemaining[i]<=0){
      send(name,"ERROR","Bạn đã dùng hết số lượt Tấn công (1/1)!");
+     send(name,"TACTICAL_STATUS",String.valueOf(attackRemaining[i]),String.valueOf(defendRemaining[i]),String.valueOf(starRemaining[i]),currentTactical[i],isSolo?"NONE":currentTactical[1-i]);
      return;
     }
     if(points[i]<50){
      send(name,"ERROR","Cần tối thiểu 50 điểm để dùng Tấn công (hiện có: "+points[i]+")!");
      return;
     }
+    attackRemaining[i]=Math.max(0,attackRemaining[i]-1);
     currentTactical[i]="ATTACK";
     send(name,"TACTICAL_CONFIRM","ATTACK",String.valueOf(attackRemaining[i]),String.valueOf(defendRemaining[i]),String.valueOf(starRemaining[i]));
     if(!isSolo){
@@ -386,8 +396,10 @@ public final class Server {
    if("DEFEND".equals(act)){
     if(defendRemaining[i]<=0){
      send(name,"ERROR","Bạn đã dùng hết số lượt Phòng thủ (1/1)!");
+     send(name,"TACTICAL_STATUS",String.valueOf(attackRemaining[i]),String.valueOf(defendRemaining[i]),String.valueOf(starRemaining[i]),currentTactical[i],isSolo?"NONE":currentTactical[1-i]);
      return;
     }
+    defendRemaining[i]=Math.max(0,defendRemaining[i]-1);
     currentTactical[i]="DEFEND";
     send(name,"TACTICAL_CONFIRM","DEFEND",String.valueOf(attackRemaining[i]),String.valueOf(defendRemaining[i]),String.valueOf(starRemaining[i]));
     if(!isSolo){
@@ -400,12 +412,14 @@ public final class Server {
    if("STAR".equals(act)){
     if(starRemaining[i]<=0){
      send(name,"ERROR","Bạn đã dùng hết lượt Ngôi sao hy vọng (1/1)!");
+     send(name,"TACTICAL_STATUS",String.valueOf(attackRemaining[i]),String.valueOf(defendRemaining[i]),String.valueOf(starRemaining[i]),currentTactical[i],isSolo?"NONE":currentTactical[1-i]);
      return;
     }
     if(points[i]<50){
      send(name,"ERROR","Cần tối thiểu 50 điểm để đặt Ngôi sao hy vọng (hiện có: "+points[i]+")!");
      return;
     }
+    starRemaining[i]=Math.max(0,starRemaining[i]-1);
     currentTactical[i]="STAR";
     send(name,"TACTICAL_CONFIRM","STAR",String.valueOf(attackRemaining[i]),String.valueOf(defendRemaining[i]),String.valueOf(starRemaining[i]));
     if(!isSolo){
@@ -583,6 +597,8 @@ public final class Server {
    String[] activePkt=new String[]{"MATCH_PHASE","QUESTION_ACTIVE",id,String.valueOf(qIndex),String.valueOf(perQSec)};
    send(left,activePkt);
    if(!isSolo)send(right,activePkt);
+   send(left,"TACTICAL_STATUS",String.valueOf(attackRemaining[0]),String.valueOf(defendRemaining[0]),String.valueOf(starRemaining[0]),currentTactical[0],currentTactical[1]);
+   if(!isSolo)send(right,"TACTICAL_STATUS",String.valueOf(attackRemaining[1]),String.valueOf(defendRemaining[1]),String.valueOf(starRemaining[1]),currentTactical[1],currentTactical[0]);
    if(isSolo){
     int delay=1200+ThreadLocalRandom.current().nextInt(Math.min(3500,Math.max(1500,perQSec*1000-1500)));
     timer.schedule(()->{
@@ -625,15 +641,9 @@ public final class Server {
    Arrays.fill(skipReveal,false);
    if(isSolo)skipReveal[1]=true;
 
-   for(int pIdx=0;pIdx<2;pIdx++){
-    String act=currentTactical[pIdx];
-    if("ATTACK".equals(act)){
-     attackRemaining[pIdx]=Math.max(0,attackRemaining[pIdx]-1);
-    }else if("DEFEND".equals(act)){
-     defendRemaining[pIdx]=Math.max(0,defendRemaining[pIdx]-1);
-    }else if("STAR".equals(act)){
-     starRemaining[pIdx]=Math.max(0,starRemaining[pIdx]-1);
-    }
+   send(left,"TACTICAL_STATUS",String.valueOf(attackRemaining[0]),String.valueOf(defendRemaining[0]),String.valueOf(starRemaining[0]),currentTactical[0],currentTactical[1]);
+   if(!isSolo){
+    send(right,"TACTICAL_STATUS",String.valueOf(attackRemaining[1]),String.valueOf(defendRemaining[1]),String.valueOf(starRemaining[1]),currentTactical[1],currentTactical[0]);
    }
 
    Model.Question q=(set!=null&&qIndex>=0&&qIndex<set.questions().size())?set.questions().get(qIndex):null;
@@ -856,7 +866,12 @@ public final class Server {
    }
    rematch[i]=true;
    send(name,"INFO","Đang chờ đối thủ đồng ý tái đấu");
-   if(rematch[0]&&rematch[1])start();
+   if(rematch[0]&&rematch[1]){
+    start();
+   }else{
+    String other=name.equals(left)?right:left;
+    send(other,"REMATCH_OFFER",name,topic,level);
+   }
   }
   synchronized void onNetworkDrop(String name){
    if(done||isSolo){
@@ -1453,6 +1468,6 @@ public final class Server {
  void leaderboard(Peer p){StringBuilder b=new StringBuilder();synchronized(store){List<Model.User> users=new ArrayList<>(store.users.values());Map<String,Double> opponent=new HashMap<>(),speed=new HashMap<>();Map<String,Integer> totalMatches=new HashMap<>();Map<String,Double> winRate=new HashMap<>();for(Model.User u:users){List<Model.Result> rs=store.results.stream().filter(r->r.left().equals(u.name)||r.right().equals(u.name)).toList();int matchesCount=rs.size();totalMatches.put(u.name,matchesCount);long wins=rs.stream().filter(r->r.winner().equals(u.name)).count();winRate.put(u.name,matchesCount>0?(wins*100.0/matchesCount):0.0);opponent.put(u.name,rs.stream().mapToInt(r->{Model.User other=store.users.get(r.left().equals(u.name)?r.right():r.left());return other==null?0:other.score;}).average().orElse(0));speed.put(u.name,rs.stream().filter(r->r.winner().equals(u.name)).mapToDouble(r->(r.left().equals(u.name)?r.leftMs():r.rightMs())/(r.duration()*1000.0)).average().orElse(Double.POSITIVE_INFINITY));}
   users.sort(Comparator.comparingInt((Model.User u)->u.score).reversed().thenComparing(Comparator.comparingDouble((Model.User u)->opponent.get(u.name)).reversed()).thenComparingDouble(u->speed.get(u.name)).thenComparing(u->u.name));
   for(Model.User u:users){String rankLabel=Rank.fromScore(u.score).getDisplayName();b.append(u.name).append(';').append(u.score).append(';').append(String.format(Locale.ROOT,"%.2f",opponent.get(u.name))).append(';').append(Double.isInfinite(speed.get(u.name))?"—":String.format(Locale.ROOT,"%.3f",speed.get(u.name))).append(';').append(totalMatches.get(u.name)).append(';').append(String.format(Locale.ROOT,"%.1f%%",winRate.get(u.name))).append(';').append(rankLabel).append('|');}}p.send("LEADERBOARD",b.toString());}
- void history(Peer p){StringBuilder b=new StringBuilder();synchronized(store){List<Model.Result> rs=db.isAvailable()?db.getUserHistory(p.name):store.results.stream().filter(r->r.left().equals(p.name)||r.right().equals(p.name)).toList();for(Model.Result r:rs){long pMs=r.left().equals(p.name)?r.leftMs():r.rightMs();long dispMs=pMs>0?pMs:(r.duration()*1000L);b.append(r.topic()).append(" / ").append(r.level()).append(" / ").append(r.setId()).append(": ").append(r.left()).append(" ").append(r.leftCorrect()).append("–").append(r.rightCorrect()).append(" ").append(r.right()).append(" → ").append(r.winner()).append(" | ").append(dispMs).append(" | ").append(r.timestamp()).append('\n');}}p.send("HISTORY",b.toString());}
+ void history(Peer p){StringBuilder b=new StringBuilder();synchronized(store){List<Model.Result> rs=db.isAvailable()?db.getUserHistory(p.name):store.results.stream().filter(r->r.left().equals(p.name)||r.right().equals(p.name)).toList();List<Model.Result> rsList=new ArrayList<>(rs);rsList.sort((r1,r2)->Long.compare(r2.timestamp(),r1.timestamp()));for(Model.Result r:rsList){long pMs=r.left().equals(p.name)?r.leftMs():r.rightMs();long dispMs=pMs>0?pMs:(r.duration()*1000L);b.append(r.topic()).append(" / ").append(r.level()).append(" / ").append(r.setId()).append(": ").append(r.left()).append(" ").append(r.leftCorrect()).append("–").append(r.rightCorrect()).append(" ").append(r.right()).append(" → ").append(r.winner()).append(" | ").append(dispMs).append(" | ").append(r.timestamp()).append('\n');}}p.send("HISTORY",b.toString());}
  public static void main(String[] args)throws Exception{int port=args.length>0?Integer.parseInt(args[0]):5050;Path folder=Path.of(args.length>1?args[1]:"data");Server app=new Server(folder);try(ServerSocket socket=new ServerSocket(port)){System.out.println("Quiz server: port "+port+", data "+folder.toAbsolutePath());try{String ip=InetAddress.getLocalHost().getHostAddress();System.out.println("Dia chi IP may chu (de cac may khac ket noi): "+ip+":"+port);}catch(Exception ignored){}while(true){Peer p=new Peer(socket.accept());app.workers.submit(()->app.serve(p));}}}
 }

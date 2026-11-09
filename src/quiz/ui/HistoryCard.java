@@ -67,6 +67,7 @@ public class HistoryCard extends JPanel {
     private final MatchResult result;
     private final String opponentName;
     private final String rawData;
+    private final long timestamp;
     private boolean isHovered = false;
 
     public MatchResult getResult() {
@@ -75,6 +76,10 @@ public class HistoryCard extends JPanel {
 
     public String getOpponentName() {
         return opponentName;
+    }
+
+    public long getTimestamp() {
+        return timestamp;
     }
 
     public HistoryCard(String rawData, String currentUsername) {
@@ -94,7 +99,7 @@ public class HistoryCard extends JPanel {
         String[] parts = rawData.split("\\|");
         String mainInfo = parts[0].trim();
         long duration = parts.length > 1 ? parseLongSafe(parts[1].trim()) : 0;
-        long timestamp = parts.length > 2 ? parseLongSafe(parts[2].trim()) : 0;
+        this.timestamp = parts.length > 2 ? parseLongSafe(parts[2].trim()) : 0;
 
         // Parse mainInfo
         String[] colonSplit = mainInfo.split(":");

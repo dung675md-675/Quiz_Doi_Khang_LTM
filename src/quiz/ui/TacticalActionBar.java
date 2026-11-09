@@ -95,10 +95,14 @@ public class TacticalActionBar extends JPanel {
      */
     public void updateState(int points, int attackUses, int defendUses, int starUses, String serverActiveSkill) {
         this.currentPoints = points;
-        btnAttack.remainingUses = Math.max(0, attackUses);
-        btnDefend.remainingUses = Math.max(0, defendUses);
-        btnStar.remainingUses = Math.max(0, starUses);
-        this.activeSkill = (serverActiveSkill != null && !serverActiveSkill.isBlank()) ? serverActiveSkill.toUpperCase() : "NONE";
+        String act = (serverActiveSkill != null && !serverActiveSkill.isBlank()) ? serverActiveSkill.toUpperCase() : "NONE";
+        if (attackUses <= 0 || "ATTACK".equals(act)) btnAttack.usedInMatch = true;
+        if (defendUses <= 0 || "DEFEND".equals(act)) btnDefend.usedInMatch = true;
+        if (starUses <= 0 || "STAR".equals(act)) btnStar.usedInMatch = true;
+        btnAttack.remainingUses = btnAttack.usedInMatch ? 0 : Math.max(0, attackUses);
+        btnDefend.remainingUses = btnDefend.usedInMatch ? 0 : Math.max(0, defendUses);
+        btnStar.remainingUses = btnStar.usedInMatch ? 0 : Math.max(0, starUses);
+        this.activeSkill = act;
         updateButtonStates();
         repaint();
     }
@@ -132,6 +136,24 @@ public class TacticalActionBar extends JPanel {
         this.currentPoints = points;
         this.activeSkill = "NONE";
         this.questionLocked = false;
+        updateButtonStates();
+        repaint();
+    }
+
+    /**
+     * Khởi động câu hỏi mới với số lượt còn lại chính xác được đồng bộ từ trận đấu.
+     */
+    public void onNewQuestion(int points, int atkLeft, int defLeft, int starLeft) {
+        stopDefendBlink();
+        this.currentPoints = points;
+        this.activeSkill = "NONE";
+        this.questionLocked = false;
+        if (atkLeft <= 0) btnAttack.usedInMatch = true;
+        if (defLeft <= 0) btnDefend.usedInMatch = true;
+        if (starLeft <= 0) btnStar.usedInMatch = true;
+        btnAttack.remainingUses = btnAttack.usedInMatch ? 0 : Math.max(0, atkLeft);
+        btnDefend.remainingUses = btnDefend.usedInMatch ? 0 : Math.max(0, defLeft);
+        btnStar.remainingUses = btnStar.usedInMatch ? 0 : Math.max(0, starLeft);
         updateButtonStates();
         repaint();
     }
@@ -181,9 +203,12 @@ public class TacticalActionBar extends JPanel {
      * Cập nhật số lượt còn lại của 3 kỹ năng.
      */
     public void setTurns(int attackUses, int defendUses, int starUses) {
-        btnAttack.remainingUses = Math.max(0, attackUses);
-        btnDefend.remainingUses = Math.max(0, defendUses);
-        btnStar.remainingUses = Math.max(0, starUses);
+        if (attackUses <= 0) btnAttack.usedInMatch = true;
+        if (defendUses <= 0) btnDefend.usedInMatch = true;
+        if (starUses <= 0) btnStar.usedInMatch = true;
+        btnAttack.remainingUses = btnAttack.usedInMatch ? 0 : Math.max(0, attackUses);
+        btnDefend.remainingUses = btnDefend.usedInMatch ? 0 : Math.max(0, defendUses);
+        btnStar.remainingUses = btnStar.usedInMatch ? 0 : Math.max(0, starUses);
         updateButtonStates();
         repaint();
     }
@@ -205,6 +230,9 @@ public class TacticalActionBar extends JPanel {
         this.currentPoints = 0;
         this.activeSkill = "NONE";
         this.questionLocked = false;
+        btnAttack.usedInMatch = false;
+        btnDefend.usedInMatch = false;
+        btnStar.usedInMatch = false;
         btnAttack.remainingUses = TacticalSkill.ATTACK.maxUses;
         btnDefend.remainingUses = TacticalSkill.DEFEND.maxUses;
         btnStar.remainingUses = TacticalSkill.STAR.maxUses;
@@ -251,16 +279,8 @@ public class TacticalActionBar extends JPanel {
     private void handleButtonClick(TacticalSkill skill) {
         if (questionLocked) return;
 
-        // Nếu bấm lại nút đang sáng -> HỦY (CANCEL)
-        if (skill.actionCode.equals(activeSkill)) {
-            activeSkill = "NONE";
-            updateButtonStates();
-            repaint();
-            if (onActionListener != null) {
-                onActionListener.accept("CANCEL");
-            }
-            return;
-        }
+        // Nếu đã có kỹ năng đang kích hoạt trong câu này thì khóa, không cho đổi hay spam
+        if (!"NONE".equals(activeSkill)) return;
 
         // Kiểm tra điều kiện điểm cho Tấn công và Ngôi sao
         if ((skill == TacticalSkill.ATTACK || skill == TacticalSkill.STAR) && currentPoints < 50) {
@@ -269,7 +289,7 @@ public class TacticalActionBar extends JPanel {
 
         // Kiểm tra còn lượt dùng không
         TacticalButton btn = getButton(skill);
-        if (btn == null || btn.remainingUses <= 0) {
+        if (btn == null || btn.usedInMatch || btn.remainingUses <= 0) {
             return;
         }
 
@@ -277,7 +297,12 @@ public class TacticalActionBar extends JPanel {
             stopDefendBlink();
         }
 
-        // Kích hoạt kỹ năng mới (tự hủy kỹ năng cũ nếu có)
+        // Tiêu hao ngay lượt dùng thành 0 và tắt nút, mờ ô ngay lập tức
+        btn.usedInMatch = true;
+        btn.remainingUses = 0;
+        btn.setActive(false);
+        btn.setEnabled(false);
+        btn.updateLabel();
         activeSkill = skill.actionCode;
         updateButtonStates();
         repaint();
@@ -302,25 +327,34 @@ public class TacticalActionBar extends JPanel {
     }
 
     private void updateSingleButton(TacticalButton btn, TacticalSkill skill) {
+        if (btn.usedInMatch) {
+            btn.remainingUses = 0;
+        }
         boolean isCurrentActive = skill.actionCode.equals(activeSkill);
-        boolean isExhausted = (btn.remainingUses <= 0);
+        boolean isExhausted = btn.usedInMatch || (btn.remainingUses <= 0);
         boolean isPointRestricted = (skill != TacticalSkill.DEFEND) && (currentPoints < 50);
 
-        boolean canClick = !questionLocked && (!isExhausted && !isPointRestricted || isCurrentActive);
+        // Nút chỉ bấm được khi: chưa khóa câu hỏi, CHƯA HẾT LƯỢT DÙNG, đủ điểm, và chưa có chiêu nào đang kích hoạt
+        boolean anotherSkillActive = !"NONE".equals(activeSkill) && !isCurrentActive;
+        boolean canClick = !questionLocked && !isExhausted && !isPointRestricted && !anotherSkillActive;
 
-        btn.setActive(isCurrentActive);
+        btn.setActive(isCurrentActive && !isExhausted);
         btn.setEnabled(canClick);
         btn.updateLabel();
 
         // Cập nhật tooltip trực quan
         if (isExhausted) {
-            btn.setToolTipText("Đã hết số lượt dùng kỹ năng này (" + skill.title + ")");
+            if (isCurrentActive) {
+                btn.setToolTipText(skill.title + " đang được kích hoạt cho câu này (Đã hết lượt dùng)");
+            } else {
+                btn.setToolTipText("Đã hết số lượt dùng kỹ năng này (" + skill.title + ")");
+            }
+        } else if (anotherSkillActive) {
+            btn.setToolTipText("Đã kích hoạt kỹ năng khác cho câu này");
         } else if (questionLocked) {
             btn.setToolTipText("Đã nộp bài hoặc hết giờ câu hỏi");
         } else if (isPointRestricted) {
             btn.setToolTipText("Cần tối thiểu 50 điểm để kích hoạt " + skill.title + " (Điểm hiện tại: " + currentPoints + ")");
-        } else if (isCurrentActive) {
-            btn.setToolTipText("Đang kích hoạt " + skill.title + " • Nhấn để HỦY");
         } else {
             String desc = switch (skill) {
                 case ATTACK -> "Tấn công: Nếu trả lời đúng, cướp 50 điểm của đối thủ";
@@ -338,6 +372,7 @@ public class TacticalActionBar extends JPanel {
     private static class TacticalButton extends JButton {
         final TacticalSkill skill;
         int remainingUses;
+        boolean usedInMatch = false;
         boolean isActive = false;
         boolean isHovered = false;
         boolean isBlinkingAlert = false;
@@ -387,7 +422,8 @@ public class TacticalActionBar extends JPanel {
         }
 
         void updateLabel() {
-            setText(skill.title + " (" + remainingUses + ")");
+            int disp = usedInMatch ? 0 : Math.max(0, remainingUses);
+            setText(skill.title + " (" + disp + ")");
         }
 
         @Override
@@ -408,22 +444,22 @@ public class TacticalActionBar extends JPanel {
 
             boolean enabled = isEnabled();
 
-            if (!enabled) {
-                // Trạng thái vô hiệu hóa (Mờ, không sáng)
+            if (!enabled || remainingUses <= 0 || usedInMatch) {
+                // Trạng thái vô hiệu hóa / hết lượt (0 lượt) -> MỜ Ô HOÀN TOÀN NHƯ Ô BÊN CẠNH
                 g2.setColor(new Color(0x0F, 0x17, 0x2A, 180));
                 g2.fill(new RoundRectangle2D.Float(1, 1, w - 2, h - 2, cornerRadius, cornerRadius));
                 g2.setColor(new Color(255, 255, 255, 25));
                 g2.setStroke(new BasicStroke(1.0f));
                 g2.draw(new RoundRectangle2D.Float(1.5f, 1.5f, w - 3, h - 3, cornerRadius, cornerRadius));
 
-                // Vẽ icon và text mờ
+                // Vẽ icon và text xám mờ
                 drawButtonContent(g2, w, h, new Color(0x64, 0x74, 0x8B), new Color(0x47, 0x55, 0x69));
                 g2.dispose();
                 return;
             }
 
             if (isActive) {
-                // TRẠNG THÁI ACTIVE: VIỀN PHÁT SÁNG NEON TUYỆT ĐẸP
+                // TRẠNG THÁI ACTIVE TRONG CÂU HIỆN TẠI (NẾU CÒN LƯỢT DÙNG)
                 // 1. Lớp hào quang Neon bên ngoài (Outer Glow)
                 Color glow = skill.glowColor;
                 Color core = skill.coreColor;
@@ -449,9 +485,13 @@ public class TacticalActionBar extends JPanel {
                 g2.setStroke(new BasicStroke(1.5f));
                 g2.draw(new RoundRectangle2D.Float(1.5f, 1.5f, w - 3, h - 3, cornerRadius, cornerRadius));
 
-                // 5. Nội dung sáng trắng
-                drawButtonContent(g2, w, h, Color.WHITE, skill.glowColor);
-            } else if (isBlinkingAlert) {
+                // 5. Nội dung nút
+                drawButtonContent(g2, w, h, Color.WHITE, core);
+                g2.dispose();
+                return;
+            }
+
+            if (isBlinkingAlert) {
                 // TRẠNG THÁI NHẮP NHÁY NHẮC NHỞ KHI ĐỐI THỦ TẤN CÔNG
                 Color glow = skill.glowColor;
                 Color core = skill.coreColor;

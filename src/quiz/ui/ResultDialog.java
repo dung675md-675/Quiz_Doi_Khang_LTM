@@ -52,6 +52,8 @@ public class ResultDialog extends JDialog {
     private int[] myDeltaHistory;
     private int[] oppDeltaHistory;
     private boolean actionTaken = false;
+    private boolean opponentHasLeft = false;
+    private JDialog rematchOfferDialog;
 
     private final ModernButton btnReview;
     private final ModernButton btnRematch;
@@ -330,24 +332,15 @@ public class ResultDialog extends JDialog {
         btnLobby.setPreferredSize(new Dimension(145, 42));
         btnLobby.addActionListener(e -> {
             SoundManager.playClick();
-            actionTaken = true;
-            dispose();
-            if (this.onRematchNo != null) {
-                this.onRematchNo.run();
-            }
+            declineRematchToLobby();
         });
 
         btnRematch = new ModernButton("Tái Đấu Ngay", ModernButton.Style.SUCCESS);
         btnRematch.setPreferredSize(new Dimension(155, 42));
         btnRematch.addActionListener(e -> {
+            if (opponentHasLeft || !btnRematch.isEnabled()) return;
             SoundManager.playClick();
-            btnRematch.setEnabled(false);
-            btnRematch.setText("Đã Yêu Cầu...");
-            lblRematchStatus.setText("Đã gửi yêu cầu tái đấu! Đang chờ đối thủ đồng ý...");
-            lblRematchStatus.setForeground(Theme.BLUE);
-            if (this.onRematchYes != null) {
-                this.onRematchYes.run();
-            }
+            acceptRematch();
         });
 
         bottomBar.add(btnReview);
@@ -923,7 +916,49 @@ public class ResultDialog extends JDialog {
         }
     }
 
+    public void acceptRematch() {
+        if (opponentHasLeft) return;
+        actionTaken = true;
+        closeRematchOfferDialog();
+        if (btnRematch != null) {
+            btnRematch.setEnabled(false);
+            btnRematch.setText("Đã Yêu Cầu...");
+        }
+        if (lblRematchStatus != null) {
+            lblRematchStatus.setText("Đã gửi yêu cầu tái đấu! Đang chờ đối thủ đồng ý...");
+            lblRematchStatus.setForeground(Theme.BLUE);
+        }
+        if (this.onRematchYes != null) {
+            this.onRematchYes.run();
+        }
+    }
+
+    public void declineRematchToLobby() {
+        actionTaken = true;
+        closeRematchOfferDialog();
+        dispose();
+        if (this.onRematchNo != null) {
+            this.onRematchNo.run();
+        }
+    }
+
+    private void closeRematchOfferDialog() {
+        if (rematchOfferDialog != null) {
+            try {
+                rematchOfferDialog.dispose();
+            } catch (Exception ignored) {}
+            rematchOfferDialog = null;
+        }
+    }
+
+    @Override
+    public void dispose() {
+        closeRematchOfferDialog();
+        super.dispose();
+    }
+
     public void updateWaitingForRematch() {
+        if (opponentHasLeft) return;
         if (btnRematch != null) {
             btnRematch.setEnabled(false);
             btnRematch.setText("Đã Yêu Cầu...");
@@ -935,10 +970,110 @@ public class ResultDialog extends JDialog {
     }
 
     /**
+     * Khi đối thủ gửi yêu cầu tái đấu (REMATCH YES):
+     * Cập nhật dòng trạng thái trên bảng kết quả và bật hộp thoại thông báo có 2 nút:
+     * "Đồng Ý" và "Thoát Về Sảnh".
+     */
+    public void onOpponentRequestedRematch(String opponentName) {
+        if (opponentHasLeft) return;
+        String opp = (opponentName != null && !opponentName.isBlank()) ? opponentName : "Đối thủ";
+
+        if (btnRematch != null && btnRematch.isEnabled()) {
+            btnRematch.setText("Đồng Ý Tái Đấu");
+        }
+        if (lblRematchStatus != null) {
+            lblRematchStatus.setText(opp + " muốn tái đấu với bạn! Hãy chọn Đồng Ý hoặc Về Sảnh Chờ.");
+            lblRematchStatus.setForeground(Theme.GREEN);
+        }
+
+        // Nếu người chơi này chưa bấm nút nào, hiển thị thông báo nổi có nút Đồng Ý & Thoát Về Sảnh
+        if (btnRematch != null && btnRematch.isEnabled()) {
+            closeRematchOfferDialog();
+            rematchOfferDialog = new JDialog(this, "Yêu Cầu Tái Đấu — Quiz Arena", false);
+            rematchOfferDialog.setSize(450, 235);
+            rematchOfferDialog.setResizable(false);
+            rematchOfferDialog.setLocationRelativeTo(this);
+            rematchOfferDialog.setLayout(new BorderLayout());
+            rematchOfferDialog.getContentPane().setBackground(Theme.BG_LIGHT);
+
+            JPanel header = new JPanel(new BorderLayout(10, 0)) {
+                @Override
+                protected void paintComponent(Graphics g) {
+                    Graphics2D g2 = (Graphics2D) g.create();
+                    g2.setRenderingHint(RenderingHints.KEY_RENDERING, RenderingHints.VALUE_RENDER_QUALITY);
+                    g2.setPaint(new GradientPaint(0, 0, Theme.GREEN, getWidth(), getHeight(), new Color(0x05, 0x96, 0x69)));
+                    g2.fillRect(0, 0, getWidth(), getHeight());
+                    g2.dispose();
+                }
+            };
+            header.setOpaque(false);
+            header.setBorder(new EmptyBorder(14, 20, 14, 20));
+            JLabel lblHeader = new JLabel("LỜI MỜI TÁI ĐẤU NGAY");
+            lblHeader.setFont(Theme.SUBTITLE);
+            lblHeader.setForeground(Theme.WHITE);
+            header.add(lblHeader, BorderLayout.CENTER);
+            rematchOfferDialog.add(header, BorderLayout.NORTH);
+
+            JPanel body = new JPanel();
+            body.setLayout(new BoxLayout(body, BoxLayout.Y_AXIS));
+            body.setOpaque(false);
+            body.setBorder(new EmptyBorder(18, 22, 12, 22));
+
+            JLabel lblMain = new JLabel("<html><div style='text-align:center;'>Đối thủ <b>" + opp + "</b> đang yêu cầu tái đấu ngay với bạn!</div></html>", SwingConstants.CENTER);
+            lblMain.setFont(Theme.BODY_BOLD);
+            lblMain.setForeground(Theme.DARK_TEXT);
+            lblMain.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+            JLabel lblSub = new JLabel("Chọn \"Đồng Ý\" để bắt đầu ván mới hoặc \"Thoát Về Sảnh\" để rời phòng.", SwingConstants.CENTER);
+            lblSub.setFont(Theme.SMALL);
+            lblSub.setForeground(Theme.MUTED_GRAY);
+            lblSub.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+            body.add(lblMain);
+            body.add(Box.createVerticalStrut(8));
+            body.add(lblSub);
+            rematchOfferDialog.add(body, BorderLayout.CENTER);
+
+            JPanel footer = new JPanel(new FlowLayout(FlowLayout.CENTER, 14, 12));
+            footer.setBackground(Theme.WHITE);
+            footer.setBorder(BorderFactory.createMatteBorder(1, 0, 0, 0, Theme.BORDER_LIGHT));
+
+            ModernButton btnDeclineOffer = new ModernButton("Thoát Về Sảnh", ModernButton.Style.DANGER);
+            btnDeclineOffer.setPreferredSize(new Dimension(155, 40));
+            btnDeclineOffer.addActionListener(ev -> {
+                SoundManager.playClick();
+                declineRematchToLobby();
+            });
+
+            ModernButton btnAcceptOffer = new ModernButton("Đồng Ý", ModernButton.Style.SUCCESS);
+            btnAcceptOffer.setPreferredSize(new Dimension(155, 40));
+            btnAcceptOffer.addActionListener(ev -> {
+                SoundManager.playClick();
+                acceptRematch();
+            });
+
+            footer.add(btnDeclineOffer);
+            footer.add(btnAcceptOffer);
+            rematchOfferDialog.add(footer, BorderLayout.SOUTH);
+
+            if (isShowing()) {
+                rematchOfferDialog.setVisible(true);
+                rematchOfferDialog.toFront();
+            }
+        }
+    }
+
+    public JDialog getRematchOfferDialog() {
+        return rematchOfferDialog;
+    }
+
+    /**
      * Khi đối thủ rời phòng hoặc từ chối tái đấu trong lúc người chơi đang xem bảng kết quả / đáp án:
      * Không đóng cưỡng bức hộp thoại, chỉ khóa nút Tái Đấu và hiển thị trạng thái.
      */
     public void onOpponentLeft(String message) {
+        opponentHasLeft = true;
+        closeRematchOfferDialog();
         if (btnRematch != null) {
             btnRematch.setEnabled(false);
             btnRematch.setText("Đối Thủ Đã Rời");

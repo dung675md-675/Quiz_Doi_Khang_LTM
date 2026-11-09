@@ -49,6 +49,9 @@ public class MatchScreen extends JPanel {
     private int attackRemaining = 1;
     private int defendRemaining = 1;
     private int starRemaining = 1;
+    private boolean attackUsedInMatch = false;
+    private boolean defendUsedInMatch = false;
+    private boolean starUsedInMatch = false;
     private String currentTacticalAction = "NONE";
     private String opponentTacticalAction = "NONE";
     private final String[] myTacticalHistory = new String[10];
@@ -2579,6 +2582,31 @@ public class MatchScreen extends JPanel {
     }
 
     public void sendTacticalAction(String action) {
+        if (action != null) {
+            String act = action.toUpperCase();
+            if ("ATTACK".equals(act)) {
+                this.attackUsedInMatch = true;
+                this.attackRemaining = 0;
+                this.currentTacticalAction = "ATTACK";
+                SoundManager.playTacticalAttack();
+            } else if ("DEFEND".equals(act)) {
+                this.defendUsedInMatch = true;
+                this.defendRemaining = 0;
+                this.currentTacticalAction = "DEFEND";
+                SoundManager.playTacticalDefend();
+            } else if ("STAR".equals(act)) {
+                this.starUsedInMatch = true;
+                this.starRemaining = 0;
+                this.currentTacticalAction = "STAR";
+                SoundManager.playTacticalStar();
+            }
+            if (tacticalActionBar != null) {
+                tacticalActionBar.updateState(getEffectivePoints(), this.attackRemaining, this.defendRemaining, this.starRemaining, this.currentTacticalAction);
+            }
+            if (tacticalToastBanner != null) {
+                tacticalToastBanner.showSelfAction(act);
+            }
+        }
         if (onTacticalActionListener != null) {
             onTacticalActionListener.accept(action);
         }
@@ -2624,22 +2652,28 @@ public class MatchScreen extends JPanel {
 
     public void handleTacticalConfirm(String action, int atkLeft, int defLeft, int starLeft) {
         this.currentTacticalAction = (action != null) ? action : "NONE";
-        this.attackRemaining = atkLeft;
-        this.defendRemaining = defLeft;
-        this.starRemaining = starLeft;
+        if (atkLeft <= 0 || "ATTACK".equalsIgnoreCase(this.currentTacticalAction)) this.attackUsedInMatch = true;
+        if (defLeft <= 0 || "DEFEND".equalsIgnoreCase(this.currentTacticalAction)) this.defendUsedInMatch = true;
+        if (starLeft <= 0 || "STAR".equalsIgnoreCase(this.currentTacticalAction)) this.starUsedInMatch = true;
+        this.attackRemaining = this.attackUsedInMatch ? 0 : Math.min(this.attackRemaining, Math.max(0, atkLeft));
+        this.defendRemaining = this.defendUsedInMatch ? 0 : Math.min(this.defendRemaining, Math.max(0, defLeft));
+        this.starRemaining = this.starUsedInMatch ? 0 : Math.min(this.starRemaining, Math.max(0, starLeft));
         if (tacticalActionBar != null) {
-            tacticalActionBar.updateState(getEffectivePoints(), atkLeft, defLeft, starLeft, currentTacticalAction);
+            tacticalActionBar.updateState(getEffectivePoints(), this.attackRemaining, this.defendRemaining, this.starRemaining, currentTacticalAction);
         }
     }
 
     public void handleTacticalStatus(int atkLeft, int defLeft, int starLeft, String myCur, String oppCur) {
-        this.attackRemaining = atkLeft;
-        this.defendRemaining = defLeft;
-        this.starRemaining = starLeft;
         this.currentTacticalAction = (myCur != null) ? myCur : "NONE";
         this.opponentTacticalAction = (oppCur != null) ? oppCur : "NONE";
+        if (atkLeft <= 0 || "ATTACK".equalsIgnoreCase(this.currentTacticalAction)) this.attackUsedInMatch = true;
+        if (defLeft <= 0 || "DEFEND".equalsIgnoreCase(this.currentTacticalAction)) this.defendUsedInMatch = true;
+        if (starLeft <= 0 || "STAR".equalsIgnoreCase(this.currentTacticalAction)) this.starUsedInMatch = true;
+        this.attackRemaining = this.attackUsedInMatch ? 0 : Math.min(this.attackRemaining, Math.max(0, atkLeft));
+        this.defendRemaining = this.defendUsedInMatch ? 0 : Math.min(this.defendRemaining, Math.max(0, defLeft));
+        this.starRemaining = this.starUsedInMatch ? 0 : Math.min(this.starRemaining, Math.max(0, starLeft));
         if (tacticalActionBar != null) {
-            tacticalActionBar.updateState(getEffectivePoints(), atkLeft, defLeft, starLeft, currentTacticalAction);
+            tacticalActionBar.updateState(getEffectivePoints(), this.attackRemaining, this.defendRemaining, this.starRemaining, currentTacticalAction);
         }
     }
 
@@ -3353,8 +3387,11 @@ public class MatchScreen extends JPanel {
         if (tacticalToastBanner != null) {
             tacticalToastBanner.hideToast();
         }
+        if (this.attackUsedInMatch) this.attackRemaining = 0;
+        if (this.defendUsedInMatch) this.defendRemaining = 0;
+        if (this.starUsedInMatch) this.starRemaining = 0;
         if (tacticalActionBar != null) {
-            tacticalActionBar.onNewQuestion(getEffectivePoints());
+            tacticalActionBar.onNewQuestion(getEffectivePoints(), this.attackRemaining, this.defendRemaining, this.starRemaining);
         }
 
         if (qIdx >= 0 && questions != null && qIdx < questions.size()) {
