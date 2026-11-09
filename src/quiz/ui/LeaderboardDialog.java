@@ -23,7 +23,7 @@ public class LeaderboardDialog extends JDialog {
         setSize(860, 680);
         setLocationRelativeTo(owner);
         setLayout(new BorderLayout());
-        getContentPane().setBackground(Theme.BG_LIGHT);
+        getContentPane().setBackground(ArenaPalette.BG);
 
         // Modern Header
         JPanel header = new JPanel() {
@@ -33,7 +33,7 @@ public class LeaderboardDialog extends JDialog {
                 Theme.setupAntiAliasing(g2);
                 int w = getWidth();
                 int h = getHeight();
-                GradientPaint gp = new GradientPaint(0, 0, Theme.BLUE, w, h, Theme.INDIGO);
+                GradientPaint gp = new GradientPaint(0, 0, ArenaPalette.CYAN, w, h, Theme.INDIGO);
                 g2.setPaint(gp);
                 g2.fillRect(0, 0, w, h);
                 g2.dispose();
@@ -64,9 +64,10 @@ public class LeaderboardDialog extends JDialog {
 
         // Footer Bar
         JPanel footer = new JPanel(new FlowLayout(FlowLayout.RIGHT, 20, 12));
-        footer.setBackground(Theme.WHITE);
-        footer.setBorder(BorderFactory.createMatteBorder(1, 0, 0, 0, Theme.BORDER_LIGHT));
+        footer.setBackground(ArenaPalette.SURFACE);
+        footer.setBorder(BorderFactory.createMatteBorder(1, 0, 0, 0, ArenaPalette.BORDER));
         ModernButton btnClose = new ModernButton("Đóng", ModernButton.Style.PRIMARY);
+        btnClose.setArenaStyle(true);
         btnClose.setPreferredSize(new Dimension(110, 38));
         btnClose.addActionListener(e -> {
             SoundManager.playClick();
@@ -74,5 +75,6 @@ public class LeaderboardDialog extends JDialog {
         });
         footer.add(btnClose);
         add(footer, BorderLayout.SOUTH);
+        ArenaPalette.styleTree(getContentPane());
     }
 }

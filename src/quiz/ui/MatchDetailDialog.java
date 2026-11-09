@@ -31,7 +31,7 @@ public class MatchDetailDialog extends JDialog {
         setLocationRelativeTo(owner);
         setResizable(false);
         setLayout(new BorderLayout());
-        getContentPane().setBackground(Theme.WHITE);
+        getContentPane().setBackground(ArenaPalette.SURFACE);
 
         // Header
         JPanel header = new JPanel();
@@ -65,8 +65,8 @@ public class MatchDetailDialog extends JDialog {
 
         ModernCard vsCard = new ModernCard(new BorderLayout(16, 0));
         vsCard.setCardPadding(16, 18, 16, 18);
-        vsCard.setCardBackground(Theme.BG_LIGHT);
-        vsCard.setBorderColor(Theme.BORDER_LIGHT);
+        vsCard.setCardBackground(ArenaPalette.BG);
+        vsCard.setBorderColor(ArenaPalette.BORDER);
 
         // Player 1
         JPanel p1 = new JPanel();
@@ -74,11 +74,11 @@ public class MatchDetailDialog extends JDialog {
         p1.setOpaque(false);
         JLabel lblP1Name = new JLabel(p1Name, SwingConstants.CENTER);
         lblP1Name.setFont(Theme.SUBTITLE);
-        lblP1Name.setForeground(Theme.DARK_TEXT);
+        lblP1Name.setForeground(ArenaPalette.TEXT);
         lblP1Name.setAlignmentX(Component.CENTER_ALIGNMENT);
         JLabel lblP1Score = new JLabel(p1Score + "/10 câu", SwingConstants.CENTER);
         lblP1Score.setFont(Theme.TITLE_XL);
-        lblP1Score.setForeground(p1Score >= p2Score ? Theme.EMERALD_DARK : Theme.TEXT_BODY);
+        lblP1Score.setForeground(p1Score >= p2Score ? Theme.EMERALD_DARK : ArenaPalette.MUTED);
         lblP1Score.setAlignmentX(Component.CENTER_ALIGNMENT);
         p1.add(lblP1Name);
         p1.add(Box.createVerticalStrut(4));
@@ -87,7 +87,7 @@ public class MatchDetailDialog extends JDialog {
         // VS Center
         JLabel lblVs = new JLabel("VS", SwingConstants.CENTER);
         lblVs.setFont(Theme.TITLE);
-        lblVs.setForeground(Theme.MUTED_GRAY);
+        lblVs.setForeground(ArenaPalette.MUTED);
 
         // Player 2
         JPanel p2 = new JPanel();
@@ -95,11 +95,11 @@ public class MatchDetailDialog extends JDialog {
         p2.setOpaque(false);
         JLabel lblP2Name = new JLabel(p2Name, SwingConstants.CENTER);
         lblP2Name.setFont(Theme.SUBTITLE);
-        lblP2Name.setForeground(Theme.DARK_TEXT);
+        lblP2Name.setForeground(ArenaPalette.TEXT);
         lblP2Name.setAlignmentX(Component.CENTER_ALIGNMENT);
         JLabel lblP2Score = new JLabel(p2Score + "/10 câu", SwingConstants.CENTER);
         lblP2Score.setFont(Theme.TITLE_XL);
-        lblP2Score.setForeground(p2Score >= p1Score ? Theme.EMERALD_DARK : Theme.TEXT_BODY);
+        lblP2Score.setForeground(p2Score >= p1Score ? Theme.EMERALD_DARK : ArenaPalette.MUTED);
         lblP2Score.setAlignmentX(Component.CENTER_ALIGNMENT);
         p2.add(lblP2Name);
         p2.add(Box.createVerticalStrut(4));
@@ -114,16 +114,16 @@ public class MatchDetailDialog extends JDialog {
         // Topic info card
         ModernCard infoCard = new ModernCard(new GridLayout(2, 1, 0, 4));
         infoCard.setCardPadding(10, 16, 10, 16);
-        infoCard.setCardBackground(Theme.WHITE);
-        infoCard.setBorderColor(Theme.BORDER_LIGHT);
+        infoCard.setCardBackground(ArenaPalette.SURFACE);
+        infoCard.setBorderColor(ArenaPalette.BORDER);
 
         JLabel lblTopicInfo = new JLabel("Chủ đề: " + topic + " • Độ khó: " + level);
         lblTopicInfo.setFont(Theme.BODY_BOLD);
-        lblTopicInfo.setForeground(Theme.DARK_TEXT);
+        lblTopicInfo.setForeground(ArenaPalette.TEXT);
 
         JLabel lblNotice = new JLabel("Trận đấu từ phiên trước (Chi tiết câu hỏi chỉ lưu khi xem ngay sau trận).");
         lblNotice.setFont(Theme.SMALL);
-        lblNotice.setForeground(Theme.MUTED_GRAY);
+        lblNotice.setForeground(ArenaPalette.MUTED);
 
         infoCard.add(lblTopicInfo);
         infoCard.add(lblNotice);
@@ -133,14 +133,16 @@ public class MatchDetailDialog extends JDialog {
 
         // Bottom
         JPanel bottom = new JPanel(new FlowLayout(FlowLayout.RIGHT, 18, 12));
-        bottom.setBackground(Theme.WHITE);
-        bottom.setBorder(BorderFactory.createMatteBorder(1, 0, 0, 0, Theme.BORDER_LIGHT));
+        bottom.setBackground(ArenaPalette.SURFACE);
+        bottom.setBorder(BorderFactory.createMatteBorder(1, 0, 0, 0, ArenaPalette.BORDER));
 
         ModernButton btnClose = new ModernButton("Đóng", ModernButton.Style.PRIMARY);
+        btnClose.setArenaStyle(true);
         btnClose.setPreferredSize(new Dimension(110, 36));
         btnClose.addActionListener(e -> dispose());
         bottom.add(btnClose);
         add(bottom, BorderLayout.SOUTH);
+        ArenaPalette.styleTree(getContentPane());
     }
 }
 

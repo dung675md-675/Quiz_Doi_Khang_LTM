@@ -171,8 +171,8 @@ public class HistoryCard extends JPanel {
                 int w = getWidth();
                 int h = getHeight();
 
-                Color bg = isWin ? new Color(0xEC, 0xFD, 0xF5) : (isDraw ? new Color(0xFF, 0xFB, 0xEB) : new Color(0xFE, 0xF2, 0xF2));
-                Color border = isWin ? new Color(0xA7, 0xF3, 0xD0) : (isDraw ? new Color(0xFD, 0xE6, 0x8A) : new Color(0xFE, 0xCA, 0xCA));
+                Color bg = isWin ? new Color(23, 54, 47) : (isDraw ? new Color(57, 45, 31) : new Color(55, 28, 42));
+                Color border = isWin ? new Color(52, 99, 80) : (isDraw ? new Color(112, 90, 49) : new Color(107, 50, 70));
                 Color dotColor = accentColor;
 
                 g2.setColor(bg);
@@ -187,7 +187,7 @@ public class HistoryCard extends JPanel {
 
                 // Text
                 g2.setFont(Theme.SMALL_BOLD);
-                Color textCol = isWin ? new Color(0x04, 0x78, 0x57) : (isDraw ? new Color(0xB4, 0x53, 0x09) : new Color(0xB9, 0x1C, 0x1C));
+                Color textCol = isWin ? new Color(105, 226, 178) : (isDraw ? new Color(246, 200, 121) : new Color(255, 141, 165));
                 g2.setColor(textCol);
                 FontMetrics fm = g2.getFontMetrics();
                 String txt = isWin ? "THẮNG" : (isDraw ? "HÒA" : "THUA");
@@ -203,7 +203,7 @@ public class HistoryCard extends JPanel {
         SimpleDateFormat sdf = new SimpleDateFormat("dd/MM/yyyy HH:mm");
         JLabel lblDate = new JLabel(timestamp > 0 ? sdf.format(new Date(timestamp)) : "Gần đây");
         lblDate.setFont(Theme.SMALL);
-        lblDate.setForeground(Theme.MUTED_GRAY);
+        lblDate.setForeground(ArenaPalette.MUTED);
         lblDate.setAlignmentX(Component.LEFT_ALIGNMENT);
 
         leftPanel.add(Box.createVerticalStrut(4));
@@ -240,8 +240,10 @@ public class HistoryCard extends JPanel {
         p1Avatar.setOpaque(false);
 
         JLabel lblMyName = new JLabel(myName + " (Bạn)");
+        lblMyName.setPreferredSize(new Dimension(88, 24));
+        lblMyName.setToolTipText(lblMyName.getText());
         lblMyName.setFont(Theme.BODY_BOLD);
-        lblMyName.setForeground(Theme.DARK_TEXT);
+        lblMyName.setForeground(ArenaPalette.TEXT);
 
         JPanel p1Box = new JPanel(new FlowLayout(FlowLayout.RIGHT, 6, 0));
         p1Box.setOpaque(false);
@@ -257,9 +259,9 @@ public class HistoryCard extends JPanel {
                 int w = getWidth();
                 int h = getHeight();
 
-                g2.setColor(new Color(0xF8, 0xFA, 0xFC));
+                g2.setColor(ArenaPalette.SURFACE_RAISED);
                 g2.fillRoundRect(0, 0, w, h, 12, 12);
-                g2.setColor(new Color(0xCB, 0xD5, 0xE1));
+                g2.setColor(ArenaPalette.BORDER);
                 g2.setStroke(new BasicStroke(1.0f));
                 g2.drawRoundRect(0, 0, w - 1, h - 1, 12, 12);
 
@@ -295,8 +297,10 @@ public class HistoryCard extends JPanel {
         p2Avatar.setOpaque(false);
 
         JLabel lblOppName = new JLabel(opponentName);
+        lblOppName.setPreferredSize(new Dimension(88, 24));
+        lblOppName.setToolTipText(opponentName);
         lblOppName.setFont(Theme.BODY);
-        lblOppName.setForeground(Theme.TEXT_BODY);
+        lblOppName.setForeground(ArenaPalette.MUTED);
 
         JPanel p2Box = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 0));
         p2Box.setOpaque(false);
@@ -323,8 +327,9 @@ public class HistoryCard extends JPanel {
         }
 
         JLabel lblMeta = new JLabel(topic + "  •  " + level + "  •  " + seconds + " giây", SwingConstants.CENTER);
+        lblMeta.setToolTipText(lblMeta.getText());
         lblMeta.setFont(Theme.SMALL);
-        lblMeta.setForeground(Theme.MUTED_GRAY);
+        lblMeta.setForeground(ArenaPalette.MUTED);
         lblMeta.setAlignmentX(Component.CENTER_ALIGNMENT);
 
         centerPanel.add(Box.createVerticalStrut(2));
@@ -351,9 +356,9 @@ public class HistoryCard extends JPanel {
                 int w = getWidth();
                 int h = getHeight();
 
-                Color bg = isWin ? new Color(0xEC, 0xFD, 0xF5) : (isDraw ? new Color(0xF1, 0xF5, 0xF9) : new Color(0xFE, 0xF2, 0xF2));
-                Color border = isWin ? new Color(0xA7, 0xF3, 0xD0) : (isDraw ? new Color(0xE2, 0xE8, 0xF0) : new Color(0xFE, 0xCA, 0xCA));
-                Color fg = isWin ? new Color(0x04, 0x78, 0x57) : (isDraw ? new Color(0x47, 0x55, 0x69) : new Color(0xB9, 0x1C, 0x1C));
+                Color bg = isWin ? new Color(23, 54, 47) : (isDraw ? ArenaPalette.SURFACE : new Color(55, 28, 42));
+                Color border = isWin ? new Color(52, 99, 80) : (isDraw ? ArenaPalette.BORDER : new Color(107, 50, 70));
+                Color fg = isWin ? new Color(105, 226, 178) : (isDraw ? ArenaPalette.MUTED : new Color(255, 141, 165));
 
                 g2.setColor(bg);
                 g2.fillRoundRect(0, 0, w, h, 12, 12);
@@ -377,7 +382,7 @@ public class HistoryCard extends JPanel {
 
         JLabel lblAction = new JLabel("Chi tiết ›", SwingConstants.RIGHT);
         lblAction.setFont(Theme.SMALL_BOLD);
-        lblAction.setForeground(new Color(0x25, 0x63, 0xEB));
+        lblAction.setForeground(ArenaPalette.CYAN);
         lblAction.setAlignmentX(Component.RIGHT_ALIGNMENT);
 
         rightPanel.add(Box.createVerticalStrut(4));
@@ -455,6 +460,46 @@ public class HistoryCard extends JPanel {
                 }
             }
         });
+        setLayout(new CardLayoutManager(leftPanel, centerPanel, rightPanel));
+        addComponentListener(new java.awt.event.ComponentAdapter() {
+            @Override public void componentResized(java.awt.event.ComponentEvent event) { revalidate(); }
+        });
+        ArenaPalette.styleTree(this);
+    }
+
+    @Override public Dimension getPreferredSize() {
+        return new Dimension(740, 146);
+    }
+
+    @Override public Dimension getMinimumSize() { return new Dimension(0, getPreferredSize().height); }
+
+    @Override public Dimension getMaximumSize() {
+        return new Dimension(Integer.MAX_VALUE, getPreferredSize().height);
+    }
+
+    /** Keep the original result, matchup and detail controls visible on narrow dashboards. */
+    private static final class CardLayoutManager implements LayoutManager {
+        private final JPanel left, center, right;
+        CardLayoutManager(JPanel left, JPanel center, JPanel right) {
+            this.left = left; this.center = center; this.right = right;
+        }
+        @Override public void addLayoutComponent(String name, Component component) {}
+        @Override public void removeLayoutComponent(Component component) {}
+        @Override public Dimension preferredLayoutSize(Container parent) { return parent.getPreferredSize(); }
+        @Override public Dimension minimumLayoutSize(Container parent) { return parent.getMinimumSize(); }
+        @Override public void layoutContainer(Container parent) {
+            int w = parent.getWidth(), h = parent.getHeight();
+            if (w < 740) {
+                left.setBounds(16, 10, 116, 62);
+                right.setBounds(Math.max(140, w - 112), 10, 96, 62);
+                center.setBounds(16, 72, Math.max(0, w - 32), Math.max(0, h - 82));
+            } else {
+                int y = Math.max(10, (h - 64) / 2);
+                left.setBounds(16, y, 116, 64);
+                right.setBounds(w - 112, y, 96, 64);
+                center.setBounds(146, y, Math.max(0, w - 272), 64);
+            }
+        }
     }
 
     @Override
@@ -465,14 +510,14 @@ public class HistoryCard extends JPanel {
         int h = getHeight();
 
         // Nền thẻ: Trắng hoặc hơi sáng khi hover
-        Color bg = isHovered ? new Color(0xF8, 0xFA, 0xFC) : Theme.WHITE;
+        Color bg = isHovered ? ArenaPalette.SURFACE_RAISED : ArenaPalette.SURFACE;
         g2.setColor(bg);
         g2.fillRoundRect(0, 0, w, h, 14, 14);
 
         // Viền thẻ
         Color borderCol = isHovered ? (result == MatchResult.WIN ? new Color(0x6E, 0xE7, 0xB7) :
                 (result == MatchResult.DRAW ? new Color(0xFC, 0xD3, 0x4D) : new Color(0xFC, 0xA5, 0xA5)))
-                : Theme.BORDER_LIGHT;
+                : ArenaPalette.BORDER;
         g2.setColor(borderCol);
         g2.setStroke(new BasicStroke(isHovered ? 1.4f : 1.0f));
         g2.drawRoundRect(0, 0, w - 1, h - 1, 14, 14);

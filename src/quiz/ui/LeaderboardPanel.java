@@ -71,16 +71,16 @@ public class LeaderboardPanel extends JPanel {
         topContainer.setOpaque(false);
 
         // Header Title Row + Filter Buttons
-        JPanel headerRow = new JPanel(new BorderLayout(12, 0));
+        JPanel headerRow = new JPanel(new BorderLayout(0, 8));
         headerRow.setOpaque(false);
 
         JLabel title = new JLabel("BẢNG XẾP HẠNG CAO THỦ ĐỐI KHÁNG");
         title.setFont(Theme.TITLE);
-        title.setForeground(Theme.BLUE);
-        headerRow.add(title, BorderLayout.WEST);
+        title.setForeground(ArenaPalette.CYAN);
+        headerRow.add(title, BorderLayout.NORTH);
 
         // Filter: [Toàn thời gian] [Tuần này]
-        JPanel filterRow = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 0));
+        JPanel filterRow = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 0));
         filterRow.setOpaque(false);
 
         btnFilterAll = new ModernButton("Toàn thời gian", ModernButton.Style.PRIMARY);
@@ -103,7 +103,7 @@ public class LeaderboardPanel extends JPanel {
 
         filterRow.add(btnFilterAll);
         filterRow.add(btnFilterWeekly);
-        headerRow.add(filterRow, BorderLayout.EAST);
+        headerRow.add(filterRow, BorderLayout.SOUTH);
 
         topContainer.add(headerRow);
         topContainer.add(Box.createVerticalStrut(8));
@@ -126,7 +126,17 @@ public class LeaderboardPanel extends JPanel {
             }
         };
 
-        table = new JTable(model);
+        table = new JTable(model) {
+            @Override public Component prepareRenderer(javax.swing.table.TableCellRenderer renderer, int row, int column) {
+                Component cell = super.prepareRenderer(renderer, row, column);
+                boolean mine = row < allEntries.size() && allEntries.get(row).name.equalsIgnoreCase(currentUsername);
+                cell.setBackground(isRowSelected(row) ? new Color(42, 61, 88)
+                        : mine ? new Color(34, 51, 47) : row % 2 == 0 ? ArenaPalette.SURFACE : ArenaPalette.SURFACE_RAISED);
+                if (column >= 4) cell.setForeground(ArenaPalette.TEXT);
+                if (cell instanceof JComponent component) component.setOpaque(true);
+                return cell;
+            }
+        };
         table.setRowHeight(44);
         table.setFont(Theme.BODY);
         table.setShowGrid(false);
@@ -134,15 +144,28 @@ public class LeaderboardPanel extends JPanel {
         table.setFillsViewportHeight(true);
 
         table.getTableHeader().setFont(Theme.BODY_BOLD);
-        table.getTableHeader().setBackground(new Color(0xF1, 0xF5, 0xF9));
-        table.getTableHeader().setForeground(Theme.DARK_TEXT);
+        table.getTableHeader().setBackground(ArenaPalette.SURFACE);
+        table.getTableHeader().setForeground(ArenaPalette.TEXT);
         table.getTableHeader().setPreferredSize(new Dimension(0, 38));
+        table.getTableHeader().setDefaultRenderer(new DefaultTableCellRenderer() {
+            @Override public Component getTableCellRendererComponent(JTable grid, Object value,
+                    boolean selected, boolean focused, int row, int column) {
+                super.getTableCellRendererComponent(grid, value, selected, focused, row, column);
+                setBackground(ArenaPalette.SURFACE_RAISED);
+                setForeground(ArenaPalette.MUTED);
+                setFont(Theme.SMALL_BOLD);
+                setHorizontalAlignment(SwingConstants.CENTER);
+                setBorder(new EmptyBorder(0, 10, 0, 10));
+                return this;
+            }
+        });
 
         // Setup Custom Renderers
         setupTableRenderers();
 
         scrollPane = new JScrollPane(table);
-        scrollPane.setBorder(BorderFactory.createMatteBorder(1, 0, 1, 0, Theme.BORDER_LIGHT));
+        scrollPane.setColumnHeaderView(table.getTableHeader());
+        scrollPane.setBorder(BorderFactory.createMatteBorder(1, 0, 1, 0, ArenaPalette.BORDER));
         scrollPane.setOpaque(false);
         scrollPane.getViewport().setOpaque(false);
         scrollPane.getVerticalScrollBar().setUnitIncrement(18);
@@ -154,6 +177,7 @@ public class LeaderboardPanel extends JPanel {
         // ==========================================
         myRankBar = new StickyMyRankBar();
         add(myRankBar, BorderLayout.SOUTH);
+        ArenaPalette.styleTree(this);
     }
 
     private void updateFilterButtons() {
@@ -161,6 +185,20 @@ public class LeaderboardPanel extends JPanel {
         btnFilterWeekly.setStyle(isWeeklyFilter ? ModernButton.Style.PRIMARY : ModernButton.Style.OUTLINE_GRAY);
         btnFilterAll.repaint();
         btnFilterWeekly.repaint();
+    }
+
+    @Override public void doLayout() {
+        int mode = getWidth() < 800 ? JTable.AUTO_RESIZE_OFF : JTable.AUTO_RESIZE_SUBSEQUENT_COLUMNS;
+        if (table.getAutoResizeMode() != mode) {
+            table.setAutoResizeMode(mode);
+            if (mode == JTable.AUTO_RESIZE_OFF) {
+                for (int index = 0; index < table.getColumnCount(); index++) {
+                    javax.swing.table.TableColumn column = table.getColumnModel().getColumn(index);
+                    column.setWidth(column.getPreferredWidth());
+                }
+            }
+        }
+        super.doLayout();
     }
 
     private void setupTableRenderers() {
@@ -184,14 +222,14 @@ public class LeaderboardPanel extends JPanel {
 
                         if (row == 0) {
                             // Gold Medallion #1
-                            g2.setPaint(new GradientPaint(px, py, new Color(0xFB, 0xBF, 0x24), px + pillW, py + pillH, new Color(0xD9, 0x77, 0x06)));
+                            g2.setPaint(new GradientPaint(px, py, new Color(0xFB, 0xBF, 0x24), px + pillW, py + pillH, new Color(246, 200, 121)));
                             g2.fillRoundRect(px, py, pillW, pillH, 12, 12);
                             g2.setColor(Theme.WHITE);
                             g2.setFont(Theme.SMALL_BOLD);
                             drawCenteredText(g2, "TOP 1", px, py, pillW, pillH);
                         } else if (row == 1) {
                             // Silver Medallion #2
-                            g2.setPaint(new GradientPaint(px, py, new Color(0xCB, 0xD5, 0xE1), px + pillW, py + pillH, new Color(0x64, 0x74, 0x8B)));
+                            g2.setPaint(new GradientPaint(px, py, ArenaPalette.BORDER, px + pillW, py + pillH, ArenaPalette.MUTED));
                             g2.fillRoundRect(px, py, pillW, pillH, 12, 12);
                             g2.setColor(Theme.WHITE);
                             g2.setFont(Theme.SMALL_BOLD);
@@ -205,9 +243,9 @@ public class LeaderboardPanel extends JPanel {
                             drawCenteredText(g2, "TOP 3", px, py, pillW, pillH);
                         } else {
                             // Normal Rank Badge #4+
-                            g2.setColor(new Color(0xF1, 0xF5, 0xF9));
+                            g2.setColor(ArenaPalette.SURFACE);
                             g2.fillRoundRect(px + 6, py, pillW - 12, pillH, 10, 10);
-                            g2.setColor(Theme.MUTED_GRAY);
+                            g2.setColor(ArenaPalette.MUTED);
                             g2.setFont(Theme.SMALL_BOLD);
                             drawCenteredText(g2, "#" + (row + 1), px + 6, py, pillW - 12, pillH);
                         }
@@ -231,33 +269,30 @@ public class LeaderboardPanel extends JPanel {
         table.getColumnModel().getColumn(1).setCellRenderer(new DefaultTableCellRenderer() {
             @Override
             public Component getTableCellRendererComponent(JTable t, Object val, boolean sel, boolean foc, int row, int col) {
-                JPanel cell = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 8));
-                cell.setOpaque(false);
-
-                if (row < allEntries.size()) {
-                    PlayerRankEntry entry = allEntries.get(row);
-
-                    // Mini Avatar (28x28)
-                    JPanel avatar = new JPanel() {
-                        @Override
-                        protected void paintComponent(Graphics g) {
-                            super.paintComponent(g);
-                            Graphics2D g2 = (Graphics2D) g.create();
-                            Theme.setupAntiAliasing(g2);
-                            AvatarPicker.paintAvatar(g2, entry.avatarId, 0, 0, 26);
-                            g2.dispose();
-                        }
-                    };
-                    avatar.setPreferredSize(new Dimension(26, 26));
-                    avatar.setOpaque(false);
-                    cell.add(avatar);
-
-                    boolean isMe = entry.name.equalsIgnoreCase(currentUsername);
-                    JLabel lblName = new JLabel(entry.name + (isMe ? " (Bạn)" : ""));
-                    lblName.setFont(isMe ? Theme.BODY_BOLD : Theme.BODY);
-                    lblName.setForeground(isMe ? Theme.BLUE : Theme.DARK_TEXT);
-                    cell.add(lblName);
-                }
+                PlayerRankEntry entry = row < allEntries.size() ? allEntries.get(row) : null;
+                JPanel cell = new JPanel() {
+                    @Override protected void paintComponent(Graphics graphics) {
+                        super.paintComponent(graphics);
+                        if (entry == null) return;
+                        Graphics2D g = (Graphics2D) graphics.create();
+                        Theme.setupAntiAliasing(g);
+                        AvatarPicker.paintAvatar(g, entry.avatarId, 10, (getHeight() - 26) / 2, 26);
+                        boolean mine = entry.name.equalsIgnoreCase(currentUsername);
+                        g.setFont(mine ? Theme.BODY_BOLD : Theme.BODY);
+                        g.setColor(mine ? ArenaPalette.CYAN : ArenaPalette.TEXT);
+                        String full = entry.name + (mine ? " (Bạn)" : "");
+                        String text = full;
+                        FontMetrics metrics = g.getFontMetrics();
+                        int available = Math.max(0, getWidth() - 54);
+                        while (!text.isEmpty() && metrics.stringWidth(text) > available)
+                            text = text.substring(0, text.length() - 1);
+                        if (!text.equals(full) && text.length() > 2) text = text.substring(0, text.length() - 2) + "…";
+                        g.clipRect(44, 0, available, getHeight());
+                        g.drawString(text, 44, (getHeight() - metrics.getHeight()) / 2 + metrics.getAscent());
+                        g.dispose();
+                    }
+                };
+                cell.setToolTipText(entry == null ? null : entry.name);
                 return cell;
             }
         });
@@ -313,7 +348,7 @@ public class LeaderboardPanel extends JPanel {
                 Component c = super.getTableCellRendererComponent(t, val, sel, foc, row, col);
                 setHorizontalAlignment(SwingConstants.CENTER);
                 setFont(Theme.BODY_BOLD);
-                setForeground(Theme.PURPLE);
+                setForeground(ArenaPalette.CYAN);
                 return c;
             }
         });
@@ -332,9 +367,9 @@ public class LeaderboardPanel extends JPanel {
                 if (row < allEntries.size()) {
                     PlayerRankEntry entry = allEntries.get(row);
                     if (entry.name.equalsIgnoreCase(currentUsername)) {
-                        c.setBackground(new Color(0xEE, 0xF2, 0xFF)); // Light Indigo
+                        c.setBackground(ArenaPalette.SURFACE_RAISED); // Light Indigo
                     } else {
-                        c.setBackground(row % 2 == 0 ? Theme.WHITE : new Color(0xF8, 0xFA, 0xFC));
+                        c.setBackground(row % 2 == 0 ? ArenaPalette.SURFACE : ArenaPalette.SURFACE_RAISED);
                     }
                 }
                 return c;
@@ -343,15 +378,15 @@ public class LeaderboardPanel extends JPanel {
     }
 
     public static Color getRankColor(String rankLabel) {
-        if (rankLabel == null) return Theme.MUTED_GRAY;
+        if (rankLabel == null) return ArenaPalette.MUTED;
         String r = rankLabel.toLowerCase(Locale.ROOT);
-        if (r.contains("thách đấu") || r.contains("challenger")) return new Color(0xDC, 0x26, 0x26);
-        if (r.contains("cao thủ") || r.contains("master")) return new Color(0x7C, 0x3A, 0xED);
+        if (r.contains("thách đấu") || r.contains("challenger")) return new Color(255, 141, 165);
+        if (r.contains("cao thủ") || r.contains("master")) return new Color(188, 174, 255);
         if (r.contains("kim cương") || r.contains("diamond")) return new Color(0x02, 0x84, 0xC7);
-        if (r.contains("vàng") || r.contains("gold")) return new Color(0xD9, 0x77, 0x06);
-        if (r.contains("bạc") || r.contains("silver")) return new Color(0x64, 0x74, 0x8B);
-        if (r.contains("đồng") || r.contains("bronze")) return new Color(0xB4, 0x53, 0x09);
-        return new Color(0x64, 0x74, 0x8B);
+        if (r.contains("vàng") || r.contains("gold")) return new Color(246, 200, 121);
+        if (r.contains("bạc") || r.contains("silver")) return ArenaPalette.MUTED;
+        if (r.contains("đồng") || r.contains("bronze")) return new Color(246, 200, 121);
+        return ArenaPalette.MUTED;
     }
 
     public void updateData(String rawData, String currentUsername) {
@@ -458,25 +493,26 @@ public class LeaderboardPanel extends JPanel {
 
             // Nền Card chứa Podium với hiệu ứng gradient hiện đại
             RoundRectangle2D bgCard = new RoundRectangle2D.Float(0, 0, w, h, 16, 16);
-            g2.setPaint(new GradientPaint(0, 0, new Color(0xF8, 0xFA, 0xFC), 0, h, new Color(0xEE, 0xF2, 0xFF)));
+            g2.setPaint(new GradientPaint(0, 0, ArenaPalette.SURFACE_RAISED, 0, h, ArenaPalette.SURFACE_RAISED));
             g2.fill(bgCard);
-            g2.setColor(new Color(0xCB, 0xD5, 0xE1));
+            g2.setColor(ArenaPalette.BORDER);
             g2.setStroke(new BasicStroke(1.2f));
             g2.draw(bgCard);
 
             int baselineY = h - 12;
             int p1X = cx;
-            int p2X = cx - 165;
-            int p3X = cx + 165;
+            int spacing = Math.min(165, Math.max(116, (w - 152) / 2));
+            int p2X = cx - spacing;
+            int p3X = cx + spacing;
 
             // Vẽ Bục Top 2 (Bạc Silver Cyber)
-            drawPodiumColumn(g2, p2X, baselineY, 74, 130, 2, top2, new Color(0xE2, 0xE8, 0xF0), new Color(0x94, 0xA3, 0xB8), new Color(0x64, 0x74, 0x8B));
+            drawPodiumColumn(g2, p2X, baselineY, 74, 130, 2, top2, ArenaPalette.BORDER, new Color(0x94, 0xA3, 0xB8), ArenaPalette.MUTED);
 
             // Vẽ Bục Top 3 (Đồng Bronze Metallic)
             drawPodiumColumn(g2, p3X, baselineY, 54, 130, 3, top3, new Color(0xFD, 0xBA, 0x74), new Color(0xC2, 0x41, 0x0C), new Color(0x9A, 0x34, 0x12));
 
             // Vẽ Bục Top 1 (Vàng Gold Radiant - cao nhất)
-            drawPodiumColumn(g2, p1X, baselineY, 96, 146, 1, top1, new Color(0xFB, 0xBF, 0x24), new Color(0xD9, 0x77, 0x06), new Color(0xB4, 0x53, 0x09));
+            drawPodiumColumn(g2, p1X, baselineY, 96, 146, 1, top1, new Color(0xFB, 0xBF, 0x24), new Color(246, 200, 121), new Color(246, 200, 121));
 
             g2.dispose();
         }
@@ -505,7 +541,7 @@ public class LeaderboardPanel extends JPanel {
 
             // Nếu chưa có đấu thủ
             if (player == null) {
-                g2.setColor(Theme.MUTED_GRAY);
+                g2.setColor(ArenaPalette.MUTED);
                 g2.setFont(Theme.SMALL_BOLD);
                 String waitingStr = "Chờ cao thủ";
                 FontMetrics fmW = g2.getFontMetrics();
@@ -540,14 +576,14 @@ public class LeaderboardPanel extends JPanel {
             // 3. Thông tin người chơi (Tên, Điểm, Rank)
             g2.setFont(Theme.BODY_BOLD);
             boolean isMe = player.name.equalsIgnoreCase(currentUsername);
-            g2.setColor(isMe ? Theme.BLUE : Theme.DARK_TEXT);
+            g2.setColor(isMe ? ArenaPalette.CYAN : ArenaPalette.TEXT);
             FontMetrics fmName = g2.getFontMetrics();
             String nameStr = player.name + (isMe ? " (Bạn)" : "");
             if (nameStr.length() > 14) nameStr = nameStr.substring(0, 12) + "...";
             g2.drawString(nameStr, centerX - fmName.stringWidth(nameStr) / 2, pedY - 14);
 
             g2.setFont(Theme.SMALL_BOLD);
-            g2.setColor(rankPos == 1 ? new Color(0xB4, 0x53, 0x09) : Theme.TEXT_BODY);
+            g2.setColor(rankPos == 1 ? new Color(246, 200, 121) : ArenaPalette.MUTED);
             FontMetrics fmPts = g2.getFontMetrics();
             String ptsStr = player.score + " pts";
             g2.drawString(ptsStr, centerX - fmPts.stringWidth(ptsStr) / 2, pedY - 2);
@@ -568,7 +604,7 @@ public class LeaderboardPanel extends JPanel {
 
                 g2.setPaint(new GradientPaint(cx - 15, cy - 13, new Color(0xFF, 0xEE, 0x55), cx + 15, cy + 4, new Color(0xF5, 0x9E, 0x0B)));
                 g2.fill(crown);
-                g2.setColor(new Color(0xB4, 0x53, 0x09));
+                g2.setColor(new Color(246, 200, 121));
                 g2.setStroke(new BasicStroke(1.2f));
                 g2.draw(crown);
 
@@ -589,9 +625,9 @@ public class LeaderboardPanel extends JPanel {
                 crown.lineTo(cx + 12, cy + 3);
                 crown.closePath();
 
-                g2.setPaint(new GradientPaint(cx - 12, cy - 6, new Color(0xF1, 0xF5, 0xF9), cx + 12, cy + 3, new Color(0x94, 0xA3, 0xB8)));
+                g2.setPaint(new GradientPaint(cx - 12, cy - 6, ArenaPalette.SURFACE, cx + 12, cy + 3, new Color(0x94, 0xA3, 0xB8)));
                 g2.fill(crown);
-                g2.setColor(new Color(0x47, 0x55, 0x69));
+                g2.setColor(ArenaPalette.MUTED);
                 g2.setStroke(new BasicStroke(1.2f));
                 g2.draw(crown);
 
@@ -633,7 +669,7 @@ public class LeaderboardPanel extends JPanel {
         public StickyMyRankBar() {
             super(new BorderLayout(14, 0));
             setCardBackground(Theme.WHITE);
-            setBorderColor(new Color(0xCB, 0xD5, 0xE1));
+            setBorderColor(ArenaPalette.BORDER);
             setCornerRadius(12);
             setCardPadding(8, 18, 8, 18);
             setPreferredSize(new Dimension(600, 50));
@@ -648,7 +684,7 @@ public class LeaderboardPanel extends JPanel {
 
             lblMyRank = new JLabel("Hạng: —");
             lblMyRank.setFont(Theme.BODY_BOLD);
-            lblMyRank.setForeground(Theme.DARK_TEXT);
+            lblMyRank.setForeground(ArenaPalette.TEXT);
 
             leftPanel.add(lblAvatar);
             leftPanel.add(lblMyRank);
@@ -682,7 +718,7 @@ public class LeaderboardPanel extends JPanel {
                     crown.closePath();
                     g2.setPaint(new GradientPaint(cx - 7, cy - 6, new Color(0xFF, 0xEE, 0x55), cx + 7, cy + 3, new Color(0xF5, 0x9E, 0x0B)));
                     g2.fill(crown);
-                    g2.setColor(new Color(0xB4, 0x53, 0x09));
+                    g2.setColor(new Color(246, 200, 121));
                     g2.setStroke(new BasicStroke(1.0f));
                     g2.draw(crown);
                 }
@@ -691,15 +727,45 @@ public class LeaderboardPanel extends JPanel {
 
             lblDifferenceNotice = new JLabel("Đang tải thứ hạng...", SwingConstants.CENTER);
             lblDifferenceNotice.setFont(Theme.SMALL_BOLD);
-            lblDifferenceNotice.setForeground(Theme.TEXT_BODY);
+            lblDifferenceNotice.setForeground(ArenaPalette.MUTED);
             centerPanel.add(lblDifferenceNotice);
             add(centerPanel, BorderLayout.CENTER);
 
             // Right: Matches & WinRate
             lblStatsSummary = new JLabel("—", SwingConstants.RIGHT);
             lblStatsSummary.setFont(Theme.SMALL);
-            lblStatsSummary.setForeground(Theme.MUTED_GRAY);
+            lblStatsSummary.setForeground(ArenaPalette.MUTED);
             add(lblStatsSummary, BorderLayout.EAST);
+            setLayout(new LayoutManager() {
+                @Override public void addLayoutComponent(String name, Component child) {}
+                @Override public void removeLayoutComponent(Component child) {}
+                @Override public Dimension preferredLayoutSize(Container parent) { return parent.getPreferredSize(); }
+                @Override public Dimension minimumLayoutSize(Container parent) { return new Dimension(0, 50); }
+                @Override public void layoutContainer(Container parent) {
+                    int width = parent.getWidth();
+                    if (width < 900) {
+                        leftPanel.setBounds(14, 8, Math.max(0, width - 28), 30);
+                        centerPanel.setBounds(14, 39, Math.max(0, width - 28), 22);
+                        lblStatsSummary.setBounds(20, 65, Math.max(0, width - 40), 18);
+                    } else {
+                        int leftWidth = leftPanel.getPreferredSize().width;
+                        int rightWidth = lblStatsSummary.getPreferredSize().width;
+                        leftPanel.setBounds(18, 9, leftWidth, 32);
+                        lblStatsSummary.setBounds(width - rightWidth - 18, 9, rightWidth, 32);
+                        centerPanel.setBounds(leftWidth + 32, 8,
+                                Math.max(0, width - leftWidth - rightWidth - 64), 34);
+                    }
+                }
+            });
+        }
+
+        @Override public Dimension getPreferredSize() {
+            int width = getParent() == null ? getWidth() : getParent().getWidth();
+            return new Dimension(600, width > 0 && width < 900 ? 92 : 50);
+        }
+
+        @Override public Dimension getMaximumSize() {
+            return new Dimension(Integer.MAX_VALUE, getPreferredSize().height);
         }
 
         public void updateMyRank(List<PlayerRankEntry> entries, String currentUsername) {
@@ -724,7 +790,7 @@ public class LeaderboardPanel extends JPanel {
                 isTop1User = false;
                 lblMyRank.setText("Hạng: Chưa xếp");
                 lblDifferenceNotice.setText("Bạn chưa có thứ hạng • Hãy tham gia thi đấu đối kháng để ghi tên lên Bảng Vàng!");
-                lblDifferenceNotice.setForeground(Theme.MUTED_GRAY);
+                lblDifferenceNotice.setForeground(ArenaPalette.MUTED);
                 lblStatsSummary.setText("");
             } else {
                 PlayerRankEntry me = entries.get(myIndex);
@@ -734,13 +800,13 @@ public class LeaderboardPanel extends JPanel {
                     isTop1User = true;
                     // SỬ DỤNG CHỮ THUẦN KHÔNG CÓ EMOJI ĐỂ TRÁNH LỖI Ô VUÔNG TRÊN WINDOWS:
                     lblDifferenceNotice.setText("QUÁN QUÂN • Bạn đang dẫn đầu Bảng Xếp Hạng! Tiếp tục giữ vững phong độ.");
-                    lblDifferenceNotice.setForeground(new Color(0xB4, 0x53, 0x09));
+                    lblDifferenceNotice.setForeground(new Color(246, 200, 121));
                 } else {
                     isTop1User = false;
                     PlayerRankEntry playerAbove = entries.get(myIndex - 1);
                     int ptsDiff = Math.max(1, (playerAbove.score - me.score) + 1);
                     lblDifferenceNotice.setText("Điểm: " + me.score + " pts • Cần thêm " + ptsDiff + " pts để vượt " + playerAbove.name + " (#" + playerAbove.rank + ")");
-                    lblDifferenceNotice.setForeground(Theme.TEXT_BODY);
+                    lblDifferenceNotice.setForeground(ArenaPalette.MUTED);
                 }
 
                 lblStatsSummary.setText(me.totalMatches + " trận • Thắng " + me.winRate);

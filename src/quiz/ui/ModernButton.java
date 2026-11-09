@@ -32,6 +32,7 @@ public class ModernButton extends JButton {
     }
 
     private Style style = Style.PRIMARY;
+    private boolean arenaStyle;
     private int cornerRadius = 14;
     private boolean isHovered = false;
     private boolean isPressed = false;
@@ -84,6 +85,11 @@ public class ModernButton extends JButton {
     public boolean isMultiSelectMode() { return isMultiSelectMode; }
 
     public void triggerBounce() {
+        if (arenaStyle && (Boolean.getBoolean("quiz.ui.reduceMotion") || !isShowing())) {
+            bounceScale = 1.0f;
+            repaint();
+            return;
+        }
         if (bounceTimer != null && bounceTimer.isRunning()) {
             bounceTimer.stop();
         }
@@ -185,11 +191,20 @@ public class ModernButton extends JButton {
 
     public void setStyle(Style style) {
         this.style = style;
+        if (arenaStyle) setForeground(resolveFgColor());
         repaint();
     }
 
     public Style getStyle() {
         return style;
+    }
+
+    /** Opt-in dashboard appearance; answer rendering keeps the current team implementation. */
+    public void setArenaStyle(boolean enabled) {
+        arenaStyle = enabled;
+        setForeground(resolveFgColor());
+        setIconTextGap(8);
+        repaint();
     }
 
     public void setCornerRadius(int radius) {
@@ -264,7 +279,7 @@ public class ModernButton extends JButton {
         boolean isAns = isAnswerCardStyle();
         boolean isTfStyle = (style == Style.TRUE_BLUE || style == Style.FALSE_YELLOW);
         boolean isSolid = (style != Style.SECONDARY && style != Style.OUTLINE_GRAY && style != Style.SECONDARY_SKY);
-        int depth = (isAns || isTfStyle) ? 5 : (isSolid ? 3 : 0);
+        int depth = (isAns || isTfStyle) ? 5 : (isSolid && !arenaStyle ? 3 : 0);
 
         // Hiệu ứng hover nhô lên (-2px) và hiệu ứng bấm lún (pressOffset)
         int hoverLift = (isHovered && !isPressed && isEnabled() && (isAns || isTfStyle)) ? -2 : 0;
@@ -339,6 +354,13 @@ public class ModernButton extends JButton {
             g2.draw(new RoundRectangle2D.Float(1, faceY, w - 2, faceH, cornerRadius, cornerRadius));
         }
 
+        if (arenaStyle && hasFocus() && isEnabled()) {
+            g2.setColor(isSolid ? fg : ArenaPalette.CYAN);
+            g2.setStroke(new BasicStroke(1.5f));
+            g2.drawRoundRect(4, faceY + 3, w - 9, Math.max(1, faceH - 7),
+                    Math.max(4, cornerRadius - 4), Math.max(4, cornerRadius - 4));
+        }
+
         // Dịch chuyển nội dung chữ/icon theo độ lún khi bấm
         if (pressOffset != 0) {
             g2.translate(0, pressOffset);
@@ -346,6 +368,26 @@ public class ModernButton extends JButton {
 
         int contentH = h - depth;
         String text = getText();
+
+        // Toolbar icons are separate from the updated geometric answer badges below.
+        if (!isAns && !isTfStyle && (prefixBadge == null || prefixBadge.isEmpty()) && getIcon() != null) {
+            Icon icon = isEnabled() ? getIcon() : getDisabledIcon();
+            if (icon == null) icon = getIcon();
+            FontMetrics metrics = g2.getFontMetrics(getFont());
+            int textWidth = text == null || text.isEmpty() ? 0 : metrics.stringWidth(text);
+            int gap = textWidth == 0 ? 0 : getIconTextGap();
+            int iconX = Math.max(6, (w - icon.getIconWidth() - gap - textWidth) / 2);
+            g2.clipRect(6, 0, Math.max(0, w - 12), h);
+            g2.setColor(fg);
+            icon.paintIcon(this, g2, iconX, (contentH - icon.getIconHeight()) / 2);
+            if (textWidth > 0) {
+                int textX = iconX + icon.getIconWidth() + gap;
+                drawWrappedOrCenteredText(g2, text, textX, Math.max(1, w - textX - 8),
+                        w, contentH, fg, true);
+            }
+            g2.dispose();
+            return;
+        }
 
         // 3. VẼ PHONG CÁCH ĐÚNG / SAI (True = Hình thoi + Dấu tích, False = Hình tam giác + Dấu nhân)
         if (isTfStyle && prefixBadge != null && !prefixBadge.isEmpty()) {
@@ -665,6 +707,23 @@ public class ModernButton extends JButton {
         if (revealBgColor != null) {
             return revealBgColor;
         }
+        if (arenaStyle && !isAnswerCardStyle() && style != Style.TRUE_BLUE && style != Style.FALSE_YELLOW) {
+            if (!isEnabled()) return new Color(30, 43, 65);
+            Color base = switch (style) {
+                case PRIMARY -> ArenaPalette.ACCENT;
+                case SECONDARY, OUTLINE_GRAY, SECONDARY_SKY -> ArenaPalette.SURFACE_RAISED;
+                case SUCCESS, EMERALD -> new Color(47, 200, 154);
+                case DANGER -> new Color(184, 43, 73);
+                case ACCENT_PURPLE -> new Color(95, 70, 196);
+                case SKY_BLUE -> ArenaPalette.CYAN;
+                case ORANGE -> new Color(241, 172, 78);
+                default -> ArenaPalette.SURFACE_RAISED;
+            };
+            if (isPressed || getModel().isPressed() && getModel().isArmed()) return base.darker();
+            if (isHovered) return new Color(Math.min(255, base.getRed() + 10),
+                    Math.min(255, base.getGreen() + 10), Math.min(255, base.getBlue() + 10));
+            return base;
+        }
         if (!isEnabled()) {
             return Theme.DISABLED;
         }
@@ -747,6 +806,14 @@ public class ModernButton extends JButton {
         if (revealFgColor != null) {
             return revealFgColor;
         }
+        if (arenaStyle && !isAnswerCardStyle() && style != Style.TRUE_BLUE && style != Style.FALSE_YELLOW) {
+            if (!isEnabled()) return ArenaPalette.MUTED;
+            return switch (style) {
+                case PRIMARY -> ArenaPalette.ACCENT_INK;
+                case SUCCESS, EMERALD, SKY_BLUE, ORANGE -> new Color(6, 31, 31);
+                default -> ArenaPalette.TEXT;
+            };
+        }
         if (!isEnabled()) {
             return Theme.WHITE;
         }
@@ -772,6 +839,8 @@ public class ModernButton extends JButton {
         if (!isEnabled()) {
             return null;
         }
+        if (arenaStyle && (style == Style.SECONDARY || style == Style.OUTLINE_GRAY
+                || style == Style.SECONDARY_SKY)) return isHovered ? ArenaPalette.CYAN : ArenaPalette.BORDER;
 
         switch (style) {
             case SECONDARY:
@@ -783,5 +852,14 @@ public class ModernButton extends JButton {
             default:
                 return null;
         }
+    }
+
+    @Override
+    public void removeNotify() {
+        if (arenaStyle && bounceTimer != null) {
+            bounceTimer.stop();
+            bounceScale = 1.0f;
+        }
+        super.removeNotify();
     }
 }

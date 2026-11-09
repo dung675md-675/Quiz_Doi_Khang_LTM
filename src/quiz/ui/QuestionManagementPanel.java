@@ -150,11 +150,11 @@ public class QuestionManagementPanel extends JPanel {
 
         JLabel title = new JLabel("QUẢN LÝ NGÂN HÀNG CÂU HỎI");
         title.setFont(Theme.TITLE);
-        title.setForeground(Theme.BLUE);
+        title.setForeground(ArenaPalette.CYAN);
 
         JLabel subtitle = new JLabel("Biên soạn câu hỏi đối kháng, kiểm soát độ phủ chủ đề và chuẩn bị ngân hàng đề thi");
         subtitle.setFont(Theme.SMALL);
-        subtitle.setForeground(Theme.MUTED_GRAY);
+        subtitle.setForeground(ArenaPalette.MUTED);
 
         headerTitle.add(title, BorderLayout.NORTH);
         headerTitle.add(subtitle, BorderLayout.SOUTH);
@@ -166,13 +166,13 @@ public class QuestionManagementPanel extends JPanel {
         kpiRow.setOpaque(false);
 
         kpiRow.add(createKpiCard("TỔNG SỐ CÂU HỎI", "Ngân hàng đề thi", lblTotalCountVal,
-                new Color(0xEE, 0xF2, 0xFF), new Color(0xDB, 0xEA, 0xFE), new Color(0xBF, 0xDB, 0xFE), new Color(0x1D, 0x4E, 0xD8), 0));
+                ArenaPalette.SURFACE_RAISED, new Color(29, 45, 70), ArenaPalette.BORDER, ArenaPalette.CYAN, 0));
         kpiRow.add(createKpiCard("MỨC ĐỘ DỄ", "Cơ bản & Nhận biết", lblEasyCountVal,
-                new Color(0xEC, 0xFD, 0xF5), new Color(0xD1, 0xFA, 0xE5), new Color(0xA7, 0xF3, 0xD0), new Color(0x04, 0x78, 0x57), 1));
+                new Color(23, 54, 47), new Color(30, 67, 56), new Color(52, 99, 80), new Color(105, 226, 178), 1));
         kpiRow.add(createKpiCard("MỨC ĐỘ VỪA", "Thông hiểu & Vận dụng", lblMediumCountVal,
-                new Color(0xFF, 0xFB, 0xEB), new Color(0xFE, 0xF3, 0xC7), new Color(0xFD, 0xE6, 0x8A), new Color(0xB4, 0x53, 0x09), 2));
+                new Color(57, 45, 31), new Color(67, 51, 32), new Color(112, 90, 49), new Color(246, 200, 121), 2));
         kpiRow.add(createKpiCard("MỨC ĐỘ KHÓ", "Thử thách đỉnh cao", lblHardCountVal,
-                new Color(0xFE, 0xF2, 0xF2), new Color(0xFE, 0xE2, 0xE2), new Color(0xFE, 0xCA, 0xCA), new Color(0xDC, 0x26, 0x26), 3));
+                new Color(55, 28, 42), new Color(66, 32, 48), new Color(107, 50, 70), new Color(255, 141, 165), 3));
 
         topContainer.add(kpiRow);
         topContainer.add(Box.createVerticalStrut(10));
@@ -186,8 +186,8 @@ public class QuestionManagementPanel extends JPanel {
         // Unified Toolbar Card (Actions + Search + Filters)
         ModernCard toolbarCard = new ModernCard(new BorderLayout(10, 10));
         toolbarCard.setCardPadding(12, 16, 12, 16);
-        toolbarCard.setCardBackground(Theme.WHITE);
-        toolbarCard.setBorderColor(Theme.BORDER_LIGHT);
+        toolbarCard.setCardBackground(ArenaPalette.SURFACE);
+        toolbarCard.setBorderColor(ArenaPalette.BORDER);
 
         // Actions Row (Top)
         JPanel actionsRow = new JPanel(new BorderLayout(10, 0));
@@ -195,13 +195,14 @@ public class QuestionManagementPanel extends JPanel {
 
         lblSummary = new JLabel("Hiển thị: 0 câu hỏi");
         lblSummary.setFont(Theme.BODY_BOLD);
-        lblSummary.setForeground(Theme.DARK_TEXT);
-        actionsRow.add(lblSummary, BorderLayout.WEST);
+        lblSummary.setForeground(ArenaPalette.TEXT);
+        actionsRow.add(lblSummary, BorderLayout.NORTH);
 
-        JPanel btnGroup = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 0));
+        JPanel btnGroup = new JPanel(new FlowRows(FlowLayout.LEFT, 8, 8));
         btnGroup.setOpaque(false);
 
         ModernButton btnAdd = new ModernButton("+ Thêm Câu Hỏi Mới", ModernButton.Style.EMERALD);
+        btnAdd.setArenaStyle(true);
         btnAdd.setPreferredSize(new Dimension(175, 36));
         btnAdd.addActionListener(e -> {
             SoundManager.playClick();
@@ -209,6 +210,7 @@ public class QuestionManagementPanel extends JPanel {
         });
 
         ModernButton btnEdit = new ModernButton("Sửa", ModernButton.Style.PRIMARY);
+        btnEdit.setArenaStyle(true);
         btnEdit.setPreferredSize(new Dimension(80, 36));
         btnEdit.addActionListener(e -> {
             SoundManager.playClick();
@@ -216,6 +218,7 @@ public class QuestionManagementPanel extends JPanel {
         });
 
         ModernButton btnDelete = new ModernButton("Xóa", ModernButton.Style.DANGER);
+        btnDelete.setArenaStyle(true);
         btnDelete.setPreferredSize(new Dimension(80, 36));
         btnDelete.addActionListener(e -> {
             SoundManager.playClick();
@@ -223,6 +226,7 @@ public class QuestionManagementPanel extends JPanel {
         });
 
         ModernButton btnRefresh = new ModernButton("Làm Mới", ModernButton.Style.SECONDARY);
+        btnRefresh.setArenaStyle(true);
         btnRefresh.setPreferredSize(new Dimension(95, 36));
         btnRefresh.addActionListener(e -> {
             SoundManager.playClick();
@@ -233,11 +237,11 @@ public class QuestionManagementPanel extends JPanel {
         btnGroup.add(btnEdit);
         btnGroup.add(btnDelete);
         btnGroup.add(btnRefresh);
-        actionsRow.add(btnGroup, BorderLayout.EAST);
+        actionsRow.add(btnGroup, BorderLayout.CENTER);
         toolbarCard.add(actionsRow, BorderLayout.NORTH);
 
         // Filter & Search Row (Bottom)
-        JPanel filterRow = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
+        JPanel filterRow = new JPanel(new FlowRows(FlowLayout.LEFT, 10, 8));
         filterRow.setOpaque(false);
 
         // Custom Search Box with integrated Java2D Magnifying Glass icon
@@ -248,14 +252,14 @@ public class QuestionManagementPanel extends JPanel {
                 Theme.setupAntiAliasing(g2);
                 int w = getWidth();
                 int h = getHeight();
-                g2.setColor(new Color(0xF8, 0xFA, 0xFC));
+                g2.setColor(ArenaPalette.SURFACE_RAISED);
                 g2.fillRoundRect(0, 0, w, h, 12, 12);
-                g2.setColor(new Color(0xCB, 0xD5, 0xE1));
+                g2.setColor(ArenaPalette.BORDER);
                 g2.setStroke(new BasicStroke(1.0f));
                 g2.drawRoundRect(0, 0, w - 1, h - 1, 12, 12);
 
                 // Magnifying glass icon on left
-                g2.setColor(new Color(0x64, 0x74, 0x8B));
+                g2.setColor(ArenaPalette.MUTED);
                 g2.setStroke(new BasicStroke(1.6f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
                 int cx = 16;
                 int cy = h / 2 - 2;
@@ -330,14 +334,14 @@ public class QuestionManagementPanel extends JPanel {
         table.setIntercellSpacing(new Dimension(0, 0));
         table.setFillsViewportHeight(true);
         table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        table.setSelectionBackground(new Color(0xEE, 0xF2, 0xFF));
-        table.setSelectionForeground(Theme.DARK_TEXT);
+        table.setSelectionBackground(ArenaPalette.SURFACE_RAISED);
+        table.setSelectionForeground(ArenaPalette.TEXT);
 
         table.getTableHeader().setFont(Theme.BODY_BOLD);
-        table.getTableHeader().setBackground(new Color(0xF8, 0xFA, 0xFC));
-        table.getTableHeader().setForeground(Theme.DARK_TEXT);
+        table.getTableHeader().setBackground(ArenaPalette.SURFACE_RAISED);
+        table.getTableHeader().setForeground(ArenaPalette.TEXT);
         table.getTableHeader().setPreferredSize(new Dimension(0, 40));
-        table.getTableHeader().setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, new Color(0xCB, 0xD5, 0xE1)));
+        table.getTableHeader().setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, ArenaPalette.BORDER));
 
         table.getColumnModel().getColumn(0).setPreferredWidth(85);
         table.getColumnModel().getColumn(0).setMaxWidth(105);
@@ -384,9 +388,9 @@ public class QuestionManagementPanel extends JPanel {
                 if (sel) {
                     c.setBackground(t.getSelectionBackground());
                 } else if (row == hoveredRow) {
-                    c.setBackground(new Color(0xF1, 0xF5, 0xF9));
+                    c.setBackground(ArenaPalette.SURFACE);
                 } else {
-                    c.setBackground(row % 2 == 0 ? Theme.WHITE : new Color(0xF8, 0xFA, 0xFC));
+                    c.setBackground(row % 2 == 0 ? ArenaPalette.SURFACE : ArenaPalette.SURFACE_RAISED);
                 }
 
                 setFont((col == 0 || col == 2 || col == 3) ? Theme.SMALL_BOLD : Theme.BODY);
@@ -394,24 +398,24 @@ public class QuestionManagementPanel extends JPanel {
                 setBorder(new EmptyBorder(0, 12, 0, 12));
 
                 if (col == 0) {
-                    setForeground(new Color(0x47, 0x55, 0x69));
+                    setForeground(ArenaPalette.MUTED);
                 } else if (col == 2) {
                     // Level badge
-                    if ("Dễ".equalsIgnoreCase(strVal)) setForeground(new Color(0x05, 0x96, 0x69));
-                    else if ("Trung bình".equalsIgnoreCase(strVal)) setForeground(new Color(0xD9, 0x77, 0x06));
-                    else setForeground(new Color(0xDC, 0x26, 0x26));
+                    if ("Dễ".equalsIgnoreCase(strVal)) setForeground(new Color(105, 226, 178));
+                    else if ("Trung bình".equalsIgnoreCase(strVal)) setForeground(new Color(246, 200, 121));
+                    else setForeground(new Color(255, 141, 165));
                 } else if (col == 3) {
                     // Type badge
-                    if (strVal.contains("Trắc nghiệm")) setForeground(new Color(0x25, 0x63, 0xEB));
-                    else if (strVal.contains("Đúng / Sai")) setForeground(new Color(0x7C, 0x3A, 0xED));
-                    else if (strVal.contains("Chọn nhiều")) setForeground(new Color(0xD9, 0x77, 0x06));
-                    else if (strVal.contains("Điền từ")) setForeground(new Color(0x05, 0x96, 0x69));
+                    if (strVal.contains("Trắc nghiệm")) setForeground(ArenaPalette.CYAN);
+                    else if (strVal.contains("Đúng / Sai")) setForeground(new Color(188, 174, 255));
+                    else if (strVal.contains("Chọn nhiều")) setForeground(new Color(246, 200, 121));
+                    else if (strVal.contains("Điền từ")) setForeground(new Color(105, 226, 178));
                     else setForeground(new Color(0xEA, 0x58, 0x0C));
                 } else if (col == 5) {
-                    setForeground(new Color(0x05, 0x96, 0x69));
+                    setForeground(new Color(105, 226, 178));
                     setFont(Theme.BODY_BOLD);
                 } else {
-                    setForeground(Theme.DARK_TEXT);
+                    setForeground(ArenaPalette.TEXT);
                 }
                 return c;
             }
@@ -422,11 +426,13 @@ public class QuestionManagementPanel extends JPanel {
         }
 
         JScrollPane scroll = new JScrollPane(table);
-        scroll.setBorder(BorderFactory.createLineBorder(Theme.BORDER_LIGHT, 1));
-        scroll.getViewport().setBackground(Theme.WHITE);
+        scroll.setBorder(BorderFactory.createLineBorder(ArenaPalette.BORDER, 1));
+        scroll.getViewport().setBackground(ArenaPalette.SURFACE);
         scroll.getVerticalScrollBar().setUI(new ModernScrollBarUI());
         scroll.getVerticalScrollBar().setUnitIncrement(18);
         add(scroll, BorderLayout.CENTER);
+        arrangeDashboard(topContainer, scroll);
+        ArenaPalette.styleTree(this);
     }
 
     private JPanel createKpiCard(String title, String subtitle, JLabel lblValue,
@@ -439,11 +445,11 @@ public class QuestionManagementPanel extends JPanel {
                 int w = getWidth();
                 int h = getHeight();
 
-                GradientPaint gp = new GradientPaint(0, 0, bgTop, 0, h, bgBottom);
+                GradientPaint gp = new GradientPaint(0, 0, ArenaPalette.SURFACE, 0, h, ArenaPalette.SURFACE_RAISED);
                 g2.setPaint(gp);
                 g2.fillRoundRect(0, 0, w, h, 14, 14);
 
-                g2.setColor(borderColor);
+                g2.setColor(ArenaPalette.BORDER);
                 g2.setStroke(new BasicStroke(1.2f));
                 g2.drawRoundRect(0, 0, w - 1, h - 1, 14, 14);
 
@@ -458,7 +464,7 @@ public class QuestionManagementPanel extends JPanel {
                 g2.setStroke(new BasicStroke(1.0f));
                 g2.drawRoundRect(icX, icY, icSize - 1, icSize - 1, 8, 8);
 
-                g2.setColor(primaryColor);
+                g2.setColor(readableAccent(primaryColor));
                 g2.setStroke(new BasicStroke(1.8f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
                 int cx = icX + icSize / 2;
                 int cy = icY + icSize / 2;
@@ -507,16 +513,16 @@ public class QuestionManagementPanel extends JPanel {
 
         JLabel lblTitle = new JLabel(title);
         lblTitle.setFont(Theme.SMALL_BOLD);
-        lblTitle.setForeground(primaryColor);
+        lblTitle.setForeground(readableAccent(primaryColor));
         lblTitle.setAlignmentX(Component.LEFT_ALIGNMENT);
 
         lblValue.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 18));
-        lblValue.setForeground(primaryColor);
+        lblValue.setForeground(readableAccent(primaryColor));
         lblValue.setAlignmentX(Component.LEFT_ALIGNMENT);
 
         JLabel lblSub = new JLabel(subtitle);
         lblSub.setFont(Theme.SMALL);
-        lblSub.setForeground(new Color(primaryColor.getRed(), primaryColor.getGreen(), primaryColor.getBlue(), 180));
+        lblSub.setForeground(ArenaPalette.MUTED);
         lblSub.setAlignmentX(Component.LEFT_ALIGNMENT);
 
         card.add(lblTitle);
@@ -531,14 +537,14 @@ public class QuestionManagementPanel extends JPanel {
         JComboBox<String> cb = new JComboBox<>(items);
         cb.setFont(Theme.BODY);
         cb.setPreferredSize(new Dimension(width, 34));
-        cb.setBackground(new Color(0xF8, 0xFA, 0xFC));
+        cb.setBackground(ArenaPalette.SURFACE_RAISED);
         return cb;
     }
 
     private static JLabel createFilterLabel(String text) {
         JLabel l = new JLabel(text);
         l.setFont(Theme.SMALL_BOLD);
-        l.setForeground(new Color(0x47, 0x55, 0x69));
+        l.setForeground(ArenaPalette.MUTED);
         return l;
     }
 
@@ -615,8 +621,8 @@ public class QuestionManagementPanel extends JPanel {
                 Theme.setupAntiAliasing(g2);
                 int w = getWidth();
                 int h = getHeight();
-                Color bg = lowTopics.isEmpty() ? new Color(0xEC, 0xFD, 0xF5) : new Color(0xFF, 0xFB, 0xEB);
-                Color border = lowTopics.isEmpty() ? new Color(0xA7, 0xF3, 0xD0) : new Color(0xFD, 0xE6, 0x8A);
+                Color bg = lowTopics.isEmpty() ? new Color(23, 54, 47) : new Color(57, 45, 31);
+                Color border = lowTopics.isEmpty() ? new Color(52, 99, 80) : new Color(112, 90, 49);
                 g2.setColor(bg);
                 g2.fillRoundRect(0, 0, w, h, 10, 10);
                 g2.setColor(border);
@@ -632,12 +638,12 @@ public class QuestionManagementPanel extends JPanel {
         if (lowTopics.isEmpty()) {
             JLabel lblOk = new JLabel("CHUẨN BỊ ĐẦU ĐỦ: Tất cả các chủ đề thi đấu đều đạt từ 10 câu trở lên (Đủ điều kiện tạo trận đấu 1v1).");
             lblOk.setFont(Theme.SMALL_BOLD);
-            lblOk.setForeground(new Color(0x04, 0x78, 0x57));
+            lblOk.setForeground(new Color(105, 226, 178));
             alertBanner.add(lblOk, BorderLayout.WEST);
         } else {
             JLabel lblWarn = new JLabel("CẢNH BÁO THIẾU CÂU HỎI (" + lowTopics.size() + " chủ đề chưa đủ 10 câu): " + String.join(" • ", lowTopics));
             lblWarn.setFont(Theme.SMALL_BOLD);
-            lblWarn.setForeground(new Color(0xB4, 0x53, 0x09));
+            lblWarn.setForeground(new Color(246, 200, 121));
             alertBanner.add(lblWarn, BorderLayout.CENTER);
         }
 
@@ -823,7 +829,7 @@ public class QuestionManagementPanel extends JPanel {
         // --- CỘT TRÁI: FORM NHẬP LIỆU ---
         JPanel formPanel = new JPanel();
         formPanel.setLayout(new BoxLayout(formPanel, BoxLayout.Y_AXIS));
-        formPanel.setBackground(new Color(0xF8, 0xFA, 0xFC));
+        formPanel.setBackground(ArenaPalette.SURFACE_RAISED);
         formPanel.setBorder(new EmptyBorder(18, 22, 18, 22));
 
         // Meta row: Topic, Level, Type sử dụng GridBagLayout chống tràn vỡ giao diện
@@ -1120,14 +1126,16 @@ public class QuestionManagementPanel extends JPanel {
 
         // Footer Bar
         JPanel footer = new JPanel(new FlowLayout(FlowLayout.RIGHT, 12, 12));
-        footer.setBackground(Theme.WHITE);
-        footer.setBorder(BorderFactory.createMatteBorder(1, 0, 0, 0, Theme.BORDER_LIGHT));
+        footer.setBackground(ArenaPalette.SURFACE);
+        footer.setBorder(BorderFactory.createMatteBorder(1, 0, 0, 0, ArenaPalette.BORDER));
 
         ModernButton btnCancel = new ModernButton("Hủy Bỏ", ModernButton.Style.OUTLINE_GRAY);
+        btnCancel.setArenaStyle(true);
         btnCancel.setPreferredSize(new Dimension(100, 36));
         btnCancel.addActionListener(e -> dlg.dispose());
 
         ModernButton btnSave = new ModernButton(isEdit ? "Cập Nhật Câu Hỏi" : "Lưu Câu Hỏi Mới", ModernButton.Style.EMERALD);
+        btnSave.setArenaStyle(true);
         btnSave.setPreferredSize(new Dimension(170, 36));
         btnSave.addActionListener(e -> {
             SoundManager.playClick();
@@ -1257,6 +1265,7 @@ public class QuestionManagementPanel extends JPanel {
         });
 
         SwingUtilities.invokeLater(() -> splitPane.setDividerLocation(initialDivider));
+        ArenaPalette.styleTree(dlg.getContentPane());
         dlg.setVisible(true);
     }
 
@@ -1322,7 +1331,7 @@ public class QuestionManagementPanel extends JPanel {
 
             JLabel tagTopic = new JLabel(topic + " • " + level + " • " + type.getDisplayName());
             tagTopic.setFont(Theme.SMALL);
-            tagTopic.setForeground(new Color(0xE2, 0xE8, 0xF0));
+            tagTopic.setForeground(ArenaPalette.BORDER);
 
             topTagBar.add(tagPreview);
             topTagBar.add(tagTopic);
@@ -1398,7 +1407,7 @@ public class QuestionManagementPanel extends JPanel {
                     tok.setOpaque(true);
                     tok.setBackground(new Color(0x33, 0x41, 0x55));
                     tok.setForeground(Color.WHITE);
-                    tok.setBorder(new LineBorder(new Color(0x64, 0x74, 0x8B), 1, true));
+                    tok.setBorder(new LineBorder(ArenaPalette.MUTED, 1, true));
                     tokensPool.add(tok);
                 }
 
@@ -1447,7 +1456,7 @@ public class QuestionManagementPanel extends JPanel {
                     int h = getHeight();
 
                     Color bg = isCorrect ? new Color(0x06, 0x4E, 0x3B) : new Color(0x1E, 0x29, 0x3B);
-                    Color border = isCorrect ? new Color(0x10, 0xB9, 0x81) : new Color(0x47, 0x55, 0x69);
+                    Color border = isCorrect ? new Color(0x10, 0xB9, 0x81) : ArenaPalette.MUTED;
 
                     g2.setColor(bg);
                     g2.fillRoundRect(0, 0, w, h, 10, 10);
@@ -1456,7 +1465,7 @@ public class QuestionManagementPanel extends JPanel {
                     g2.drawRoundRect(0, 0, w - 1, h - 1, 10, 10);
 
                     // Prefix Badge
-                    g2.setColor(isCorrect ? new Color(0x10, 0xB9, 0x81) : new Color(0x64, 0x74, 0x8B));
+                    g2.setColor(isCorrect ? new Color(0x10, 0xB9, 0x81) : ArenaPalette.MUTED);
                     g2.fillOval(8, (h - 22) / 2, 22, 22);
 
                     g2.setColor(Color.WHITE);
@@ -1494,7 +1503,95 @@ public class QuestionManagementPanel extends JPanel {
     private static JLabel createBoldLabel(String text) {
         JLabel l = new JLabel(text);
         l.setFont(Theme.SMALL_BOLD);
-        l.setForeground(Theme.DARK_TEXT);
+        l.setForeground(ArenaPalette.TEXT);
         return l;
+    }
+
+    /** The complete dashboard scrolls at small sizes while tables keep their own row scrolling. */
+    private void arrangeDashboard(JPanel top, JScrollPane tableScroll) {
+        remove(top);
+        remove(tableScroll);
+        class Dashboard extends JPanel implements Scrollable {
+            Dashboard() { super(new BorderLayout(0, 12)); setOpaque(false); }
+            @Override public void doLayout() { invalidateRows(top); super.doLayout(); }
+            @Override public Dimension getPreferredSize() {
+                return new Dimension(560, Math.max(580, top.getPreferredSize().height + 250));
+            }
+            @Override public Dimension getPreferredScrollableViewportSize() { return getPreferredSize(); }
+            @Override public int getScrollableUnitIncrement(Rectangle r, int orientation, int direction) { return 24; }
+            @Override public int getScrollableBlockIncrement(Rectangle r, int orientation, int direction) { return Math.max(24, r.height - 48); }
+            @Override public boolean getScrollableTracksViewportWidth() { return true; }
+            @Override public boolean getScrollableTracksViewportHeight() {
+                return getParent() instanceof JViewport viewport && viewport.getHeight() > getPreferredSize().height;
+            }
+        }
+        JPanel dashboard = new Dashboard();
+        dashboard.add(top, BorderLayout.NORTH);
+        dashboard.add(tableScroll, BorderLayout.CENTER);
+        JScrollPane page = new JScrollPane(dashboard);
+        page.setBorder(null);
+        page.setOpaque(false);
+        page.getViewport().setOpaque(false);
+        page.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+        page.getVerticalScrollBar().setUnitIncrement(24);
+        tableScroll.setColumnHeaderView(table.getTableHeader());
+        table.getTableHeader().setDefaultRenderer(new DefaultTableCellRenderer() {
+            @Override public Component getTableCellRendererComponent(JTable grid, Object value,
+                    boolean selected, boolean focused, int row, int column) {
+                super.getTableCellRendererComponent(grid, value, selected, focused, row, column);
+                setBackground(ArenaPalette.SURFACE_RAISED);
+                setForeground(ArenaPalette.MUTED);
+                setFont(Theme.SMALL_BOLD);
+                setHorizontalAlignment(SwingConstants.CENTER);
+                setBorder(new EmptyBorder(0, 10, 0, 10));
+                return this;
+            }
+        });
+        table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
+        add(page, BorderLayout.CENTER);
+    }
+
+    private static void invalidateRows(Container root) {
+        root.invalidate();
+        for (Component child : root.getComponents()) if (child instanceof Container nested) invalidateRows(nested);
+    }
+
+    private static final class FlowRows extends FlowLayout {
+        FlowRows(int alignment, int horizontalGap, int verticalGap) {
+            super(alignment, horizontalGap, verticalGap);
+        }
+        @Override public Dimension preferredLayoutSize(Container target) { return measured(target); }
+        @Override public Dimension minimumLayoutSize(Container target) {
+            Dimension size = measured(target);
+            return new Dimension(0, size.height);
+        }
+        private Dimension measured(Container target) {
+            synchronized (target.getTreeLock()) {
+                int width = target.getWidth();
+                Container ancestor = target.getParent();
+                while (ancestor != null) {
+                    if (ancestor.getWidth() > 0) width = width <= 0 ? ancestor.getWidth() : Math.min(width, ancestor.getWidth());
+                    ancestor = ancestor.getParent();
+                }
+                if (width <= 0) width = 560;
+                Insets insets = target.getInsets();
+                int available = Math.max(1, width - insets.left - insets.right - getHgap() * 2);
+                int rowWidth = 0, rowHeight = 0, height = getVgap() * 2;
+                for (Component child : target.getComponents()) {
+                    if (!child.isVisible()) continue;
+                    Dimension size = child.getPreferredSize();
+                    if (rowWidth > 0 && rowWidth + getHgap() + size.width > available) {
+                        height += rowHeight + getVgap(); rowWidth = 0; rowHeight = 0;
+                    }
+                    rowWidth += (rowWidth == 0 ? 0 : getHgap()) + size.width;
+                    rowHeight = Math.max(rowHeight, size.height);
+                }
+                return new Dimension(width, height + rowHeight + insets.top + insets.bottom);
+            }
+        }
+    }
+
+    private static Color readableAccent(Color color) {
+        return new Color(Math.max(105, color.getRed()), Math.max(155, color.getGreen()), Math.max(155, color.getBlue()));
     }
 }

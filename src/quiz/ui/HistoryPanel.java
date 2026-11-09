@@ -62,11 +62,11 @@ public class HistoryPanel extends JPanel {
 
         JLabel title = new JLabel("LỊCH SỬ THI ĐẤU ĐỐI KHÁNG 1V1");
         title.setFont(Theme.TITLE);
-        title.setForeground(Theme.BLUE);
+        title.setForeground(ArenaPalette.CYAN);
 
         JLabel subtitle = new JLabel("Thống kê phong độ và tra cứu chi tiết kết quả các trận đối kháng 1v1");
         subtitle.setFont(Theme.SMALL);
-        subtitle.setForeground(Theme.MUTED_GRAY);
+        subtitle.setForeground(ArenaPalette.MUTED);
 
         headerTitle.add(title, BorderLayout.NORTH);
         headerTitle.add(subtitle, BorderLayout.SOUTH);
@@ -82,10 +82,10 @@ public class HistoryPanel extends JPanel {
                 "TỔNG SỐ TRẬN",
                 "Trận đấu xếp hạng",
                 lblTotalMatchesVal,
-                new Color(0xEE, 0xF2, 0xFF),
-                new Color(0xDB, 0xEA, 0xFE),
-                new Color(0xBF, 0xDB, 0xFE),
-                new Color(0x1D, 0x4E, 0xD8),
+                ArenaPalette.SURFACE_RAISED,
+                new Color(29, 45, 70),
+                ArenaPalette.BORDER,
+                ArenaPalette.CYAN,
                 0 // Icon: Swords/Gamepad
         ));
 
@@ -93,10 +93,10 @@ public class HistoryPanel extends JPanel {
                 "TỈ LỆ THẮNG",
                 "Hiệu suất chiến thắng",
                 lblWinRateVal,
-                new Color(0xEC, 0xFD, 0xF5),
-                new Color(0xD1, 0xFA, 0xE5),
-                new Color(0xA7, 0xF3, 0xD0),
-                new Color(0x04, 0x78, 0x57),
+                new Color(23, 54, 47),
+                new Color(30, 67, 56),
+                new Color(52, 99, 80),
+                new Color(105, 226, 178),
                 1 // Icon: Trophy
         ));
 
@@ -104,10 +104,10 @@ public class HistoryPanel extends JPanel {
                 "CHUỖI KỶ LỤC",
                 "Chuỗi thắng dài nhất",
                 lblMaxStreakVal,
-                new Color(0xFF, 0xFB, 0xEB),
-                new Color(0xFE, 0xF3, 0xC7),
-                new Color(0xFD, 0xE6, 0x8A),
-                new Color(0xB4, 0x53, 0x09),
+                new Color(57, 45, 31),
+                new Color(67, 51, 32),
+                new Color(112, 90, 49),
+                new Color(246, 200, 121),
                 2 // Icon: Flame/Streak
         ));
 
@@ -115,10 +115,10 @@ public class HistoryPanel extends JPanel {
                 "ĐIỂM TÍCH LŨY",
                 "Điểm xếp hạng Rank",
                 lblTotalPointsVal,
-                new Color(0xFA, 0xF5, 0xFF),
-                new Color(0xED, 0xE9, 0xFE),
-                new Color(0xDD, 0xD6, 0xFE),
-                new Color(0x6D, 0x28, 0xD9),
+                new Color(35, 29, 59),
+                new Color(43, 36, 70),
+                new Color(78, 63, 110),
+                new Color(188, 174, 255),
                 3 // Icon: Star/Crown
         ));
 
@@ -130,9 +130,9 @@ public class HistoryPanel extends JPanel {
         toolbar.setOpaque(false);
 
         btnFilterAll = new FilterCapsuleButton("Tất cả", new Color(0x4F, 0x46, 0xE5), () -> setFilter(FilterMode.ALL));
-        btnFilterWin = new FilterCapsuleButton("Thắng", new Color(0x05, 0x96, 0x69), () -> setFilter(FilterMode.WIN));
-        btnFilterLoss = new FilterCapsuleButton("Thua", new Color(0xDC, 0x26, 0x26), () -> setFilter(FilterMode.LOSS));
-        btnFilterDraw = new FilterCapsuleButton("Hòa", new Color(0xD9, 0x77, 0x06), () -> setFilter(FilterMode.DRAW));
+        btnFilterWin = new FilterCapsuleButton("Thắng", new Color(105, 226, 178), () -> setFilter(FilterMode.WIN));
+        btnFilterLoss = new FilterCapsuleButton("Thua", new Color(255, 141, 165), () -> setFilter(FilterMode.LOSS));
+        btnFilterDraw = new FilterCapsuleButton("Hòa", new Color(246, 200, 121), () -> setFilter(FilterMode.DRAW));
 
         btnFilterAll.setActive(true);
 
@@ -148,7 +148,7 @@ public class HistoryPanel extends JPanel {
         // ==========================================
         // 2. LIST PANEL & MODERN SCROLLPANE
         // ==========================================
-        listPanel = new JPanel();
+        listPanel = new HistoryList();
         listPanel.setLayout(new BoxLayout(listPanel, BoxLayout.Y_AXIS));
         listPanel.setOpaque(false);
         listPanel.setBorder(new EmptyBorder(4, 0, 10, 0));
@@ -162,6 +162,7 @@ public class HistoryPanel extends JPanel {
         scrollPane.getVerticalScrollBar().setUI(new ModernScrollBarUI());
         scrollPane.getVerticalScrollBar().setUnitIncrement(18);
         add(scrollPane, BorderLayout.CENTER);
+        ArenaPalette.styleTree(this);
     }
 
     /**
@@ -179,12 +180,12 @@ public class HistoryPanel extends JPanel {
                 int h = getHeight();
 
                 // Gradient pastel
-                GradientPaint gp = new GradientPaint(0, 0, bgTop, 0, h, bgBottom);
+                GradientPaint gp = new GradientPaint(0, 0, ArenaPalette.SURFACE, 0, h, ArenaPalette.SURFACE_RAISED);
                 g2.setPaint(gp);
                 g2.fillRoundRect(0, 0, w, h, 14, 14);
 
                 // Border
-                g2.setColor(borderColor);
+                g2.setColor(ArenaPalette.BORDER);
                 g2.setStroke(new BasicStroke(1.2f));
                 g2.drawRoundRect(0, 0, w - 1, h - 1, 14, 14);
 
@@ -196,7 +197,7 @@ public class HistoryPanel extends JPanel {
                 g2.setColor(new Color(primaryColor.getRed(), primaryColor.getGreen(), primaryColor.getBlue(), 28));
                 g2.fillOval(icX, icY, icSize, icSize);
 
-                g2.setColor(primaryColor);
+                g2.setColor(readableAccent(primaryColor));
                 g2.setStroke(new BasicStroke(1.8f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
                 int cx = icX + icSize / 2;
                 int cy = icY + icSize / 2;
@@ -239,16 +240,16 @@ public class HistoryPanel extends JPanel {
 
         JLabel lblTitle = new JLabel(title);
         lblTitle.setFont(Theme.SMALL_BOLD);
-        lblTitle.setForeground(primaryColor);
+        lblTitle.setForeground(readableAccent(primaryColor));
         lblTitle.setAlignmentX(Component.LEFT_ALIGNMENT);
 
         lblValue.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 20));
-        lblValue.setForeground(primaryColor);
+        lblValue.setForeground(readableAccent(primaryColor));
         lblValue.setAlignmentX(Component.LEFT_ALIGNMENT);
 
         JLabel lblSub = new JLabel(subtitle);
         lblSub.setFont(Theme.SMALL);
-        lblSub.setForeground(new Color(primaryColor.getRed(), primaryColor.getGreen(), primaryColor.getBlue(), 180));
+        lblSub.setForeground(ArenaPalette.MUTED);
         lblSub.setAlignmentX(Component.LEFT_ALIGNMENT);
 
         card.add(lblTitle);
@@ -430,10 +431,10 @@ public class HistoryPanel extends JPanel {
 
             if (isActive) {
                 // Active pill: Màu chủ đạo nổi bật + đổ bóng nhẹ
-                g2.setColor(activeColor);
+                g2.setColor(new Color(activeColor.getRed(), activeColor.getGreen(), activeColor.getBlue(), 95));
                 g2.fillRoundRect(0, 0, w, h, 16, 16);
 
-                g2.setColor(Theme.WHITE);
+                g2.setColor(readableAccent(activeColor));
                 g2.setFont(Theme.SMALL_BOLD);
                 FontMetrics fm = g2.getFontMetrics();
                 int tx = (w - fm.stringWidth(text)) / 2;
@@ -441,15 +442,15 @@ public class HistoryPanel extends JPanel {
                 g2.drawString(text, tx, ty);
             } else {
                 // Inactive pill: Nền xám nhạt phẳng, chữ xám đậm
-                Color bg = isHover ? new Color(0xE2, 0xE8, 0xF0) : new Color(0xF1, 0xF5, 0xF9);
+                Color bg = isHover ? ArenaPalette.BORDER : ArenaPalette.SURFACE;
                 g2.setColor(bg);
                 g2.fillRoundRect(0, 0, w, h, 16, 16);
 
-                g2.setColor(isHover ? new Color(0x94, 0xA3, 0xB8) : new Color(0xCB, 0xD5, 0xE1));
+                g2.setColor(isHover ? new Color(0x94, 0xA3, 0xB8) : ArenaPalette.BORDER);
                 g2.setStroke(new BasicStroke(1.0f));
                 g2.drawRoundRect(0, 0, w - 1, h - 1, 16, 16);
 
-                g2.setColor(isHover ? Theme.DARK_TEXT : new Color(0x47, 0x55, 0x69));
+                g2.setColor(isHover ? ArenaPalette.TEXT : ArenaPalette.MUTED);
                 g2.setFont(Theme.SMALL);
                 FontMetrics fm = g2.getFontMetrics();
                 int tx = (w - fm.stringWidth(text)) / 2;
@@ -458,5 +459,16 @@ public class HistoryPanel extends JPanel {
             }
             g2.dispose();
         }
+    }
+
+    private static Color readableAccent(Color color) {
+        return new Color(Math.max(105, color.getRed()), Math.max(155, color.getGreen()), Math.max(155, color.getBlue()));
+    }
+    private static final class HistoryList extends JPanel implements Scrollable {
+        @Override public Dimension getPreferredScrollableViewportSize() { return getPreferredSize(); }
+        @Override public int getScrollableUnitIncrement(Rectangle r, int orientation, int direction) { return 24; }
+        @Override public int getScrollableBlockIncrement(Rectangle r, int orientation, int direction) { return Math.max(24, r.height - 48); }
+        @Override public boolean getScrollableTracksViewportWidth() { return true; }
+        @Override public boolean getScrollableTracksViewportHeight() { return false; }
     }
 }

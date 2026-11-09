@@ -101,11 +101,11 @@ public class PlayerManagementPanel extends JPanel {
 
         JLabel lblTitle = new JLabel("QUẢN LÝ THÔNG TIN NGƯỜI CHƠI & TÀI KHOẢN");
         lblTitle.setFont(Theme.TITLE);
-        lblTitle.setForeground(Theme.BLUE);
+        lblTitle.setForeground(ArenaPalette.CYAN);
 
         JLabel lblDesc = new JLabel("Giám sát danh sách người dùng, trạng thái trực tuyến và phân quyền quản trị");
         lblDesc.setFont(Theme.SMALL);
-        lblDesc.setForeground(Theme.MUTED_GRAY);
+        lblDesc.setForeground(ArenaPalette.MUTED);
 
         titleBox.add(lblTitle, BorderLayout.NORTH);
         titleBox.add(lblDesc, BorderLayout.SOUTH);
@@ -117,13 +117,13 @@ public class PlayerManagementPanel extends JPanel {
         kpiRow.setOpaque(false);
 
         kpiRow.add(createKpiCard("TỔNG TÀI KHOẢN", "Toàn bộ server", lblTotalUsersVal,
-                new Color(0xEE, 0xF2, 0xFF), new Color(0xDB, 0xEA, 0xFE), new Color(0xBF, 0xDB, 0xFE), new Color(0x1D, 0x4E, 0xD8), 0));
+                ArenaPalette.SURFACE_RAISED, new Color(29, 45, 70), ArenaPalette.BORDER, ArenaPalette.CYAN, 0));
         kpiRow.add(createKpiCard("ĐANG TRỰC TUYẾN", "Sẵn sàng thi đấu", lblOnlineUsersVal,
-                new Color(0xEC, 0xFD, 0xF5), new Color(0xD1, 0xFA, 0xE5), new Color(0xA7, 0xF3, 0xD0), new Color(0x04, 0x78, 0x57), 1));
+                new Color(23, 54, 47), new Color(30, 67, 56), new Color(52, 99, 80), new Color(105, 226, 178), 1));
         kpiRow.add(createKpiCard("QUẢN TRỊ VIÊN", "Quyền hạn Admin", lblAdminCountVal,
-                new Color(0xFA, 0xF5, 0xFF), new Color(0xED, 0xE9, 0xFE), new Color(0xDD, 0xD6, 0xFE), new Color(0x6D, 0x28, 0xD9), 2));
+                new Color(35, 29, 59), new Color(43, 36, 70), new Color(78, 63, 110), new Color(188, 174, 255), 2));
         kpiRow.add(createKpiCard("ĐIỂM TRUNG BÌNH", "Mức điểm bình quân", lblAvgScoreVal,
-                new Color(0xFF, 0xFB, 0xEB), new Color(0xFE, 0xF3, 0xC7), new Color(0xFD, 0xE6, 0x8A), new Color(0xB4, 0x53, 0x09), 3));
+                new Color(57, 45, 31), new Color(67, 51, 32), new Color(112, 90, 49), new Color(246, 200, 121), 3));
 
         topContainer.add(kpiRow);
         topContainer.add(Box.createVerticalStrut(10));
@@ -131,8 +131,8 @@ public class PlayerManagementPanel extends JPanel {
         // Unified Toolbar Card (Actions + Search + Filters)
         ModernCard toolbarCard = new ModernCard(new BorderLayout(10, 10));
         toolbarCard.setCardPadding(12, 16, 12, 16);
-        toolbarCard.setCardBackground(Theme.WHITE);
-        toolbarCard.setBorderColor(Theme.BORDER_LIGHT);
+        toolbarCard.setCardBackground(ArenaPalette.SURFACE);
+        toolbarCard.setBorderColor(ArenaPalette.BORDER);
 
         // Actions Row (Top)
         JPanel actionRow = new JPanel(new BorderLayout(10, 0));
@@ -140,13 +140,14 @@ public class PlayerManagementPanel extends JPanel {
 
         lblTotalCount = new JLabel("Hiển thị: 0 người chơi");
         lblTotalCount.setFont(Theme.BODY_BOLD);
-        lblTotalCount.setForeground(Theme.DARK_TEXT);
-        actionRow.add(lblTotalCount, BorderLayout.WEST);
+        lblTotalCount.setForeground(ArenaPalette.TEXT);
+        actionRow.add(lblTotalCount, BorderLayout.NORTH);
 
-        JPanel btnGroup = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 0));
+        JPanel btnGroup = new JPanel(new FlowRows(FlowLayout.LEFT, 8, 8));
         btnGroup.setOpaque(false);
 
         ModernButton btnInspector = new ModernButton("Xem Hồ Sơ", ModernButton.Style.PRIMARY);
+        btnInspector.setArenaStyle(true);
         btnInspector.setPreferredSize(new Dimension(110, 36));
         btnInspector.addActionListener(e -> {
             SoundManager.playClick();
@@ -154,6 +155,7 @@ public class PlayerManagementPanel extends JPanel {
         });
 
         ModernButton btnAdd = new ModernButton("+ Thêm Mới", ModernButton.Style.EMERALD);
+        btnAdd.setArenaStyle(true);
         btnAdd.setPreferredSize(new Dimension(115, 36));
         btnAdd.addActionListener(e -> {
             SoundManager.playClick();
@@ -161,6 +163,7 @@ public class PlayerManagementPanel extends JPanel {
         });
 
         ModernButton btnEdit = new ModernButton("Sửa", ModernButton.Style.PRIMARY);
+        btnEdit.setArenaStyle(true);
         btnEdit.setPreferredSize(new Dimension(80, 36));
         btnEdit.addActionListener(e -> {
             SoundManager.playClick();
@@ -168,6 +171,7 @@ public class PlayerManagementPanel extends JPanel {
         });
 
         ModernButton btnToggleLock = new ModernButton("Khóa / Mở Khóa", ModernButton.Style.ORANGE);
+        btnToggleLock.setArenaStyle(true);
         btnToggleLock.setPreferredSize(new Dimension(140, 36));
         btnToggleLock.addActionListener(e -> {
             SoundManager.playClick();
@@ -175,6 +179,7 @@ public class PlayerManagementPanel extends JPanel {
         });
 
         ModernButton btnDelete = new ModernButton("Xóa", ModernButton.Style.DANGER);
+        btnDelete.setArenaStyle(true);
         btnDelete.setPreferredSize(new Dimension(80, 36));
         btnDelete.addActionListener(e -> {
             SoundManager.playClick();
@@ -182,6 +187,7 @@ public class PlayerManagementPanel extends JPanel {
         });
 
         ModernButton btnRefresh = new ModernButton("Làm Mới", ModernButton.Style.SECONDARY);
+        btnRefresh.setArenaStyle(true);
         btnRefresh.setPreferredSize(new Dimension(95, 36));
         btnRefresh.addActionListener(e -> {
             SoundManager.playClick();
@@ -194,11 +200,11 @@ public class PlayerManagementPanel extends JPanel {
         btnGroup.add(btnToggleLock);
         btnGroup.add(btnDelete);
         btnGroup.add(btnRefresh);
-        actionRow.add(btnGroup, BorderLayout.EAST);
+        actionRow.add(btnGroup, BorderLayout.CENTER);
         toolbarCard.add(actionRow, BorderLayout.NORTH);
 
         // Filter & Search Row (Bottom)
-        JPanel filterRow = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
+        JPanel filterRow = new JPanel(new FlowRows(FlowLayout.LEFT, 10, 8));
         filterRow.setOpaque(false);
 
         // Custom Search Box with integrated Java2D Magnifying Glass icon
@@ -209,14 +215,14 @@ public class PlayerManagementPanel extends JPanel {
                 Theme.setupAntiAliasing(g2);
                 int w = getWidth();
                 int h = getHeight();
-                g2.setColor(new Color(0xF8, 0xFA, 0xFC));
+                g2.setColor(ArenaPalette.SURFACE_RAISED);
                 g2.fillRoundRect(0, 0, w, h, 12, 12);
-                g2.setColor(new Color(0xCB, 0xD5, 0xE1));
+                g2.setColor(ArenaPalette.BORDER);
                 g2.setStroke(new BasicStroke(1.0f));
                 g2.drawRoundRect(0, 0, w - 1, h - 1, 12, 12);
 
                 // Magnifying glass icon on left
-                g2.setColor(new Color(0x64, 0x74, 0x8B));
+                g2.setColor(ArenaPalette.MUTED);
                 g2.setStroke(new BasicStroke(1.6f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
                 int cx = 16;
                 int cy = h / 2 - 2;
@@ -278,14 +284,14 @@ public class PlayerManagementPanel extends JPanel {
         table.setIntercellSpacing(new Dimension(0, 0));
         table.setFillsViewportHeight(true);
         table.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
-        table.setSelectionBackground(new Color(0xEE, 0xF2, 0xFF));
-        table.setSelectionForeground(Theme.DARK_TEXT);
+        table.setSelectionBackground(ArenaPalette.SURFACE_RAISED);
+        table.setSelectionForeground(ArenaPalette.TEXT);
 
         table.getTableHeader().setFont(Theme.BODY_BOLD);
-        table.getTableHeader().setBackground(new Color(0xF8, 0xFA, 0xFC));
-        table.getTableHeader().setForeground(Theme.DARK_TEXT);
+        table.getTableHeader().setBackground(ArenaPalette.SURFACE_RAISED);
+        table.getTableHeader().setForeground(ArenaPalette.TEXT);
         table.getTableHeader().setPreferredSize(new Dimension(0, 40));
-        table.getTableHeader().setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, new Color(0xCB, 0xD5, 0xE1)));
+        table.getTableHeader().setBorder(BorderFactory.createMatteBorder(0, 0, 1, 0, ArenaPalette.BORDER));
 
         // Column 0: Circular Avatar with metallic border
         table.getColumnModel().getColumn(0).setPreferredWidth(64);
@@ -314,9 +320,9 @@ public class PlayerManagementPanel extends JPanel {
                 if (sel) {
                     avCell.setBackground(t.getSelectionBackground());
                 } else if (row == hoveredRow) {
-                    avCell.setBackground(new Color(0xF1, 0xF5, 0xF9));
+                    avCell.setBackground(ArenaPalette.SURFACE);
                 } else {
-                    avCell.setBackground(row % 2 == 0 ? Theme.WHITE : new Color(0xF8, 0xFA, 0xFC));
+                    avCell.setBackground(row % 2 == 0 ? ArenaPalette.SURFACE : ArenaPalette.SURFACE_RAISED);
                 }
                 return avCell;
             }
@@ -332,9 +338,9 @@ public class PlayerManagementPanel extends JPanel {
                 if (sel) {
                     c.setBackground(t.getSelectionBackground());
                 } else if (row == hoveredRow) {
-                    c.setBackground(new Color(0xF1, 0xF5, 0xF9));
+                    c.setBackground(ArenaPalette.SURFACE);
                 } else {
-                    c.setBackground(row % 2 == 0 ? Theme.WHITE : new Color(0xF8, 0xFA, 0xFC));
+                    c.setBackground(row % 2 == 0 ? ArenaPalette.SURFACE : ArenaPalette.SURFACE_RAISED);
                 }
 
                 setFont((col == 1 || col == 2 || col == 3 || col == 4 || col == 5) ? Theme.BODY_BOLD : Theme.BODY);
@@ -342,26 +348,26 @@ public class PlayerManagementPanel extends JPanel {
                 setBorder(new EmptyBorder(0, 12, 0, 12));
 
                 if (col == 1) {
-                    setForeground(strVal.contains("(Bạn)") ? Theme.BLUE : Theme.DARK_TEXT);
+                    setForeground(strVal.contains("(Bạn)") ? ArenaPalette.CYAN : ArenaPalette.TEXT);
                 } else if (col == 2) {
                     // Role badge
-                    if ("ADMIN".equalsIgnoreCase(strVal)) setForeground(new Color(0x7C, 0x3A, 0xED));
-                    else if ("LOCKED".equalsIgnoreCase(strVal)) setForeground(new Color(0xDC, 0x26, 0x26));
-                    else setForeground(new Color(0x47, 0x55, 0x69));
+                    if ("ADMIN".equalsIgnoreCase(strVal)) setForeground(new Color(188, 174, 255));
+                    else if ("LOCKED".equalsIgnoreCase(strVal)) setForeground(new Color(255, 141, 165));
+                    else setForeground(ArenaPalette.MUTED);
                 } else if (col == 3) {
                     // Score
-                    setForeground(new Color(0x25, 0x63, 0xEB));
+                    setForeground(ArenaPalette.CYAN);
                 } else if (col == 4) {
                     // Rank
-                    setForeground(new Color(0x8B, 0x5C, 0xF6));
+                    setForeground(new Color(188, 174, 255));
                 } else if (col == 5) {
                     // Status
-                    if (strVal.contains("Trực tuyến")) setForeground(new Color(0x05, 0x96, 0x69));
-                    else if (strVal.contains("Đang đấu")) setForeground(new Color(0xD9, 0x77, 0x06));
-                    else if (strVal.contains("Đã khóa")) setForeground(new Color(0xDC, 0x26, 0x26));
-                    else setForeground(Theme.MUTED_GRAY);
+                    if (strVal.contains("Trực tuyến")) setForeground(new Color(105, 226, 178));
+                    else if (strVal.contains("Đang đấu")) setForeground(new Color(246, 200, 121));
+                    else if (strVal.contains("Đã khóa")) setForeground(new Color(255, 141, 165));
+                    else setForeground(ArenaPalette.MUTED);
                 } else {
-                    setForeground(Theme.DARK_TEXT);
+                    setForeground(ArenaPalette.TEXT);
                 }
                 return c;
             }
@@ -409,11 +415,13 @@ public class PlayerManagementPanel extends JPanel {
         });
 
         JScrollPane scrollPane = new JScrollPane(table);
-        scrollPane.setBorder(BorderFactory.createLineBorder(Theme.BORDER_LIGHT, 1));
-        scrollPane.getViewport().setBackground(Theme.WHITE);
+        scrollPane.setBorder(BorderFactory.createLineBorder(ArenaPalette.BORDER, 1));
+        scrollPane.getViewport().setBackground(ArenaPalette.SURFACE);
         scrollPane.getVerticalScrollBar().setUI(new ModernScrollBarUI());
         scrollPane.getVerticalScrollBar().setUnitIncrement(18);
         add(scrollPane, BorderLayout.CENTER);
+        arrangeDashboard(topContainer, scrollPane);
+        ArenaPalette.styleTree(this);
     }
 
     private JPanel createKpiCard(String title, String subtitle, JLabel lblValue,
@@ -426,11 +434,11 @@ public class PlayerManagementPanel extends JPanel {
                 int w = getWidth();
                 int h = getHeight();
 
-                GradientPaint gp = new GradientPaint(0, 0, bgTop, 0, h, bgBottom);
+                GradientPaint gp = new GradientPaint(0, 0, ArenaPalette.SURFACE, 0, h, ArenaPalette.SURFACE_RAISED);
                 g2.setPaint(gp);
                 g2.fillRoundRect(0, 0, w, h, 14, 14);
 
-                g2.setColor(borderColor);
+                g2.setColor(ArenaPalette.BORDER);
                 g2.setStroke(new BasicStroke(1.2f));
                 g2.drawRoundRect(0, 0, w - 1, h - 1, 14, 14);
 
@@ -445,7 +453,7 @@ public class PlayerManagementPanel extends JPanel {
                 g2.setStroke(new BasicStroke(1.0f));
                 g2.drawRoundRect(icX, icY, icSize - 1, icSize - 1, 8, 8);
 
-                g2.setColor(primaryColor);
+                g2.setColor(readableAccent(primaryColor));
                 g2.setStroke(new BasicStroke(1.8f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
                 int cx = icX + icSize / 2;
                 int cy = icY + icSize / 2;
@@ -462,7 +470,7 @@ public class PlayerManagementPanel extends JPanel {
                     // Modern Wifi / Broadcast Signal Wave (Signal dot + clear waves)
                     g2.setColor(new Color(0x10, 0xB9, 0x81));
                     g2.fillOval(cx - 2, cy + 3, 4, 4);
-                    g2.setColor(new Color(0x05, 0x96, 0x69));
+                    g2.setColor(new Color(105, 226, 178));
                     g2.drawArc(cx - 6, cy - 1, 12, 12, 45, 90);
                     g2.drawArc(cx - 10, cy - 5, 20, 20, 45, 90);
                 } else if (iconType == 2) {
@@ -493,16 +501,16 @@ public class PlayerManagementPanel extends JPanel {
 
         JLabel lblTitle = new JLabel(title);
         lblTitle.setFont(Theme.SMALL_BOLD);
-        lblTitle.setForeground(primaryColor);
+        lblTitle.setForeground(readableAccent(primaryColor));
         lblTitle.setAlignmentX(Component.LEFT_ALIGNMENT);
 
         lblValue.setFont(new Font(Font.SANS_SERIF, Font.BOLD, 18));
-        lblValue.setForeground(primaryColor);
+        lblValue.setForeground(readableAccent(primaryColor));
         lblValue.setAlignmentX(Component.LEFT_ALIGNMENT);
 
         JLabel lblSub = new JLabel(subtitle);
         lblSub.setFont(Theme.SMALL);
-        lblSub.setForeground(new Color(primaryColor.getRed(), primaryColor.getGreen(), primaryColor.getBlue(), 180));
+        lblSub.setForeground(ArenaPalette.MUTED);
         lblSub.setAlignmentX(Component.LEFT_ALIGNMENT);
 
         card.add(lblTitle);
@@ -517,14 +525,14 @@ public class PlayerManagementPanel extends JPanel {
         JComboBox<String> cb = new JComboBox<>(items);
         cb.setFont(Theme.BODY);
         cb.setPreferredSize(new Dimension(width, 34));
-        cb.setBackground(new Color(0xF8, 0xFA, 0xFC));
+        cb.setBackground(ArenaPalette.SURFACE_RAISED);
         return cb;
     }
 
     private static JLabel createFilterLabel(String text) {
         JLabel l = new JLabel(text);
         l.setFont(Theme.SMALL_BOLD);
-        l.setForeground(new Color(0x47, 0x55, 0x69));
+        l.setForeground(ArenaPalette.MUTED);
         return l;
     }
 
@@ -788,13 +796,13 @@ public class PlayerManagementPanel extends JPanel {
         JLabel lblRoleTag = new JLabel(" " + r.role() + " ");
         lblRoleTag.setFont(Theme.SMALL_BOLD);
         lblRoleTag.setOpaque(true);
-        lblRoleTag.setBackground("ADMIN".equalsIgnoreCase(r.role()) ? new Color(0x7C, 0x3A, 0xED) : ("LOCKED".equalsIgnoreCase(r.role()) ? new Color(0xDC, 0x26, 0x26) : new Color(0x47, 0x55, 0x69)));
+        lblRoleTag.setBackground("ADMIN".equalsIgnoreCase(r.role()) ? new Color(188, 174, 255) : ("LOCKED".equalsIgnoreCase(r.role()) ? new Color(255, 141, 165) : ArenaPalette.MUTED));
         lblRoleTag.setForeground(Color.WHITE);
 
         JLabel lblStatusTag = new JLabel(" " + r.status() + " ");
         lblStatusTag.setFont(Theme.SMALL_BOLD);
         lblStatusTag.setOpaque(true);
-        lblStatusTag.setBackground(r.status().contains("Trực tuyến") ? new Color(0x05, 0x96, 0x69) : new Color(0x64, 0x74, 0x8B));
+        lblStatusTag.setBackground(r.status().contains("Trực tuyến") ? new Color(105, 226, 178) : ArenaPalette.MUTED);
         lblStatusTag.setForeground(Color.WHITE);
 
         tagRow.add(lblRoleTag);
@@ -809,7 +817,7 @@ public class PlayerManagementPanel extends JPanel {
         // Body Content
         JPanel body = new JPanel();
         body.setLayout(new BoxLayout(body, BoxLayout.Y_AXIS));
-        body.setBackground(Theme.WHITE);
+        body.setBackground(ArenaPalette.SURFACE);
         body.setBorder(new EmptyBorder(18, 24, 18, 24));
 
         // Stats Box (Score + Rank)
@@ -817,26 +825,26 @@ public class PlayerManagementPanel extends JPanel {
         statsBox.setOpaque(false);
 
         JPanel cardScore = new JPanel(new BorderLayout(0, 4));
-        cardScore.setBackground(new Color(0xEE, 0xF2, 0xFF));
+        cardScore.setBackground(ArenaPalette.SURFACE_RAISED);
         cardScore.setBorder(new EmptyBorder(12, 16, 12, 16));
         JLabel lblScTitle = new JLabel("ĐIỂM XẾP HẠNG");
         lblScTitle.setFont(Theme.SMALL_BOLD);
-        lblScTitle.setForeground(Theme.BLUE);
+        lblScTitle.setForeground(ArenaPalette.CYAN);
         JLabel lblScVal = new JLabel(r.score() + " pts");
         lblScVal.setFont(Theme.TITLE_XL);
-        lblScVal.setForeground(Theme.BLUE);
+        lblScVal.setForeground(ArenaPalette.CYAN);
         cardScore.add(lblScTitle, BorderLayout.NORTH);
         cardScore.add(lblScVal, BorderLayout.CENTER);
 
         JPanel cardRank = new JPanel(new BorderLayout(0, 4));
-        cardRank.setBackground(new Color(0xFA, 0xF5, 0xFF));
+        cardRank.setBackground(new Color(35, 29, 59));
         cardRank.setBorder(new EmptyBorder(12, 16, 12, 16));
         JLabel lblRkTitle = new JLabel("BẬC RANK HIỆN TẠI");
         lblRkTitle.setFont(Theme.SMALL_BOLD);
-        lblRkTitle.setForeground(new Color(0x7C, 0x3A, 0xED));
+        lblRkTitle.setForeground(new Color(188, 174, 255));
         JLabel lblRkVal = new JLabel(r.rankLabel());
         lblRkVal.setFont(Theme.TITLE_XL);
-        lblRkVal.setForeground(new Color(0x7C, 0x3A, 0xED));
+        lblRkVal.setForeground(new Color(188, 174, 255));
         cardRank.add(lblRkTitle, BorderLayout.NORTH);
         cardRank.add(lblRkVal, BorderLayout.CENTER);
 
@@ -856,11 +864,12 @@ public class PlayerManagementPanel extends JPanel {
 
         // Footer Actions Bar
         JPanel footer = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 12));
-        footer.setBackground(new Color(0xF8, 0xFA, 0xFC));
-        footer.setBorder(BorderFactory.createMatteBorder(1, 0, 0, 0, Theme.BORDER_LIGHT));
+        footer.setBackground(ArenaPalette.SURFACE_RAISED);
+        footer.setBorder(BorderFactory.createMatteBorder(1, 0, 0, 0, ArenaPalette.BORDER));
 
         if (isAdminMode) {
             ModernButton btnLock = new ModernButton("LOCKED".equalsIgnoreCase(r.role()) ? "Mở Khóa" : "Khóa TK", ModernButton.Style.ORANGE);
+        btnLock.setArenaStyle(true);
             btnLock.setPreferredSize(new Dimension(105, 36));
             btnLock.addActionListener(e -> {
                 dlg.dispose();
@@ -868,6 +877,7 @@ public class PlayerManagementPanel extends JPanel {
             });
 
             ModernButton btnEditFull = new ModernButton("Sửa Hồ Sơ", ModernButton.Style.PRIMARY);
+        btnEditFull.setArenaStyle(true);
             btnEditFull.setPreferredSize(new Dimension(110, 36));
             btnEditFull.addActionListener(e -> {
                 dlg.dispose();
@@ -879,11 +889,13 @@ public class PlayerManagementPanel extends JPanel {
         }
 
         ModernButton btnClose = new ModernButton("Đóng", ModernButton.Style.SECONDARY);
+        btnClose.setArenaStyle(true);
         btnClose.setPreferredSize(new Dimension(85, 36));
         btnClose.addActionListener(e -> dlg.dispose());
         footer.add(btnClose);
 
         dlg.add(footer, BorderLayout.SOUTH);
+        ArenaPalette.styleTree(dlg.getContentPane());
         dlg.setVisible(true);
     }
 
@@ -892,7 +904,7 @@ public class PlayerManagementPanel extends JPanel {
         row.setOpaque(false);
         JLabel lblL = new JLabel(label);
         lblL.setFont(Theme.SMALL_BOLD);
-        lblL.setForeground(new Color(0x64, 0x74, 0x8B));
+        lblL.setForeground(ArenaPalette.MUTED);
         lblL.setPreferredSize(new Dimension(140, 24));
 
         JLabel lblV = new JLabel("<html><body style='font-family: Segoe UI, sans-serif; font-size: 13px; color: #1E293B;'>" + value + "</body></html>");
@@ -938,7 +950,7 @@ public class PlayerManagementPanel extends JPanel {
 
         // Header
         JPanel header = new JPanel(new BorderLayout());
-        header.setBackground(isEdit ? Theme.BLUE : Theme.EMERALD);
+        header.setBackground(isEdit ? ArenaPalette.CYAN : Theme.EMERALD);
         header.setBorder(new EmptyBorder(14, 20, 14, 20));
         JLabel lblH = new JLabel(isEdit ? "CẬP NHẬT HỒ SƠ: " + existing.username() : "THÊM NGƯỜI CHƠI MỚI");
         lblH.setFont(Theme.TITLE);
@@ -954,7 +966,7 @@ public class PlayerManagementPanel extends JPanel {
         // Form Body
         JPanel form = new JPanel();
         form.setLayout(new BoxLayout(form, BoxLayout.Y_AXIS));
-        form.setBackground(Theme.WHITE);
+        form.setBackground(ArenaPalette.SURFACE);
         form.setBorder(new EmptyBorder(16, 24, 16, 24));
 
         final String[] chosenAvatar = { isEdit ? existing.avatarId() : "avatar_01" };
@@ -981,6 +993,7 @@ public class PlayerManagementPanel extends JPanel {
         avPreview.setOpaque(false);
 
         ModernButton btnChangeAv = new ModernButton("Đổi Avatar", ModernButton.Style.OUTLINE_GRAY);
+        btnChangeAv.setArenaStyle(true);
         btnChangeAv.setPreferredSize(new Dimension(110, 32));
         btnChangeAv.addActionListener(e -> {
             Frame frameOwner = (dlg.getOwner() instanceof Frame f) ? f : null;
@@ -1069,12 +1082,14 @@ public class PlayerManagementPanel extends JPanel {
 
         // Footer
         JPanel footer = new JPanel(new FlowLayout(FlowLayout.RIGHT, 12, 12));
-        footer.setBackground(Theme.WHITE);
+        footer.setBackground(ArenaPalette.SURFACE);
         ModernButton btnCancel = new ModernButton("Hủy", ModernButton.Style.OUTLINE_GRAY);
+        btnCancel.setArenaStyle(true);
         btnCancel.setPreferredSize(new Dimension(90, 36));
         btnCancel.addActionListener(e -> dlg.dispose());
 
         ModernButton btnSave = new ModernButton(isEdit ? "Cập Nhật" : "Thêm Người Chơi", isEdit ? ModernButton.Style.PRIMARY : ModernButton.Style.EMERALD);
+        btnSave.setArenaStyle(true);
         btnSave.setPreferredSize(new Dimension(140, 36));
         btnSave.addActionListener(e -> {
             SoundManager.playClick();
@@ -1113,6 +1128,95 @@ public class PlayerManagementPanel extends JPanel {
         footer.add(btnCancel);
         footer.add(btnSave);
         dlg.add(footer, BorderLayout.SOUTH);
+        ArenaPalette.styleTree(dlg.getContentPane());
         dlg.setVisible(true);
+    }
+
+    /** The complete dashboard scrolls at small sizes while tables keep their own row scrolling. */
+    private void arrangeDashboard(JPanel top, JScrollPane tableScroll) {
+        remove(top);
+        remove(tableScroll);
+        class Dashboard extends JPanel implements Scrollable {
+            Dashboard() { super(new BorderLayout(0, 12)); setOpaque(false); }
+            @Override public void doLayout() { invalidateRows(top); super.doLayout(); }
+            @Override public Dimension getPreferredSize() {
+                return new Dimension(560, Math.max(580, top.getPreferredSize().height + 250));
+            }
+            @Override public Dimension getPreferredScrollableViewportSize() { return getPreferredSize(); }
+            @Override public int getScrollableUnitIncrement(Rectangle r, int orientation, int direction) { return 24; }
+            @Override public int getScrollableBlockIncrement(Rectangle r, int orientation, int direction) { return Math.max(24, r.height - 48); }
+            @Override public boolean getScrollableTracksViewportWidth() { return true; }
+            @Override public boolean getScrollableTracksViewportHeight() {
+                return getParent() instanceof JViewport viewport && viewport.getHeight() > getPreferredSize().height;
+            }
+        }
+        JPanel dashboard = new Dashboard();
+        dashboard.add(top, BorderLayout.NORTH);
+        dashboard.add(tableScroll, BorderLayout.CENTER);
+        JScrollPane page = new JScrollPane(dashboard);
+        page.setBorder(null);
+        page.setOpaque(false);
+        page.getViewport().setOpaque(false);
+        page.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
+        page.getVerticalScrollBar().setUnitIncrement(24);
+        tableScroll.setColumnHeaderView(table.getTableHeader());
+        table.getTableHeader().setDefaultRenderer(new DefaultTableCellRenderer() {
+            @Override public Component getTableCellRendererComponent(JTable grid, Object value,
+                    boolean selected, boolean focused, int row, int column) {
+                super.getTableCellRendererComponent(grid, value, selected, focused, row, column);
+                setBackground(ArenaPalette.SURFACE_RAISED);
+                setForeground(ArenaPalette.MUTED);
+                setFont(Theme.SMALL_BOLD);
+                setHorizontalAlignment(SwingConstants.CENTER);
+                setBorder(new EmptyBorder(0, 10, 0, 10));
+                return this;
+            }
+        });
+        table.setAutoResizeMode(JTable.AUTO_RESIZE_OFF);
+        add(page, BorderLayout.CENTER);
+    }
+
+    private static void invalidateRows(Container root) {
+        root.invalidate();
+        for (Component child : root.getComponents()) if (child instanceof Container nested) invalidateRows(nested);
+    }
+
+    private static final class FlowRows extends FlowLayout {
+        FlowRows(int alignment, int horizontalGap, int verticalGap) {
+            super(alignment, horizontalGap, verticalGap);
+        }
+        @Override public Dimension preferredLayoutSize(Container target) { return measured(target); }
+        @Override public Dimension minimumLayoutSize(Container target) {
+            Dimension size = measured(target);
+            return new Dimension(0, size.height);
+        }
+        private Dimension measured(Container target) {
+            synchronized (target.getTreeLock()) {
+                int width = target.getWidth();
+                Container ancestor = target.getParent();
+                while (ancestor != null) {
+                    if (ancestor.getWidth() > 0) width = width <= 0 ? ancestor.getWidth() : Math.min(width, ancestor.getWidth());
+                    ancestor = ancestor.getParent();
+                }
+                if (width <= 0) width = 560;
+                Insets insets = target.getInsets();
+                int available = Math.max(1, width - insets.left - insets.right - getHgap() * 2);
+                int rowWidth = 0, rowHeight = 0, height = getVgap() * 2;
+                for (Component child : target.getComponents()) {
+                    if (!child.isVisible()) continue;
+                    Dimension size = child.getPreferredSize();
+                    if (rowWidth > 0 && rowWidth + getHgap() + size.width > available) {
+                        height += rowHeight + getVgap(); rowWidth = 0; rowHeight = 0;
+                    }
+                    rowWidth += (rowWidth == 0 ? 0 : getHgap()) + size.width;
+                    rowHeight = Math.max(rowHeight, size.height);
+                }
+                return new Dimension(width, height + rowHeight + insets.top + insets.bottom);
+            }
+        }
+    }
+
+    private static Color readableAccent(Color color) {
+        return new Color(Math.max(105, color.getRed()), Math.max(155, color.getGreen()), Math.max(155, color.getBlue()));
     }
 }

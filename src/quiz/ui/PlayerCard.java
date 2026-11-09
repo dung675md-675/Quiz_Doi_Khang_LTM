@@ -38,15 +38,16 @@ public class PlayerCard extends ModernCard {
     private static float currentPulse = 0.0f; // 0.0f -> 1.0f (dao động theo hàm sin mượt mà)
 
     public PlayerCard(String username, int score, String rankLabel, String avatarId, boolean isReady, boolean isInQueue) {
-        super(new BorderLayout(16, 0));
+        super(new BorderLayout(8, 0));
         this.username = username;
         this.score = score;
         this.isReady = isReady;
         this.isInQueue = isInQueue;
 
-        setCardBackground(Theme.WHITE);
-        setBorderColor(Theme.BORDER_LIGHT);
-        setCornerRadius(14);
+        setCardBackground(ArenaPalette.SURFACE);
+        setBorderColor(ArenaPalette.BORDER);
+        setHasShadow(false);
+        setCornerRadius(18);
         setCardPadding(12, 16, 12, 16);
         setMaximumSize(new Dimension(Integer.MAX_VALUE, 74));
         setPreferredSize(new Dimension(520, 72));
@@ -55,26 +56,30 @@ public class PlayerCard extends ModernCard {
         // ==========================================
         // LEFT: Avatar + Tên + Rank + Điểm số
         // ==========================================
-        JPanel leftPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 12, 0));
+        JPanel leftPanel = new JPanel(new BorderLayout(10, 0));
         leftPanel.setOpaque(false);
+        leftPanel.setPreferredSize(new Dimension(212, 46));
 
         // Avatar icon tròn
         AvatarCircleIcon avatar = new AvatarCircleIcon(avatarId);
-        leftPanel.add(avatar);
+        leftPanel.add(avatar, BorderLayout.WEST);
 
         JPanel infoPanel = new JPanel();
         infoPanel.setLayout(new BoxLayout(infoPanel, BoxLayout.Y_AXIS));
         infoPanel.setOpaque(false);
 
         // Hàng tên người chơi
-        JPanel nameRow = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 0));
+        JPanel nameRow = new JPanel(new BorderLayout());
         nameRow.setOpaque(false);
 
         JLabel lblName = new JLabel(username);
+        lblName.putClientProperty("html.disable", Boolean.TRUE);
+        lblName.setToolTipText(username);
         lblName.setFont(Theme.SUBTITLE);
-        lblName.setForeground(Theme.DARK_TEXT);
+        lblName.setForeground(ArenaPalette.TEXT);
         nameRow.add(lblName);
         infoPanel.add(nameRow);
+        nameRow.setMaximumSize(new Dimension(Integer.MAX_VALUE, 24));
 
         // Hàng Rank + Điểm số
         JPanel scoreRow = new JPanel(new FlowLayout(FlowLayout.LEFT, 6, 2));
@@ -82,21 +87,21 @@ public class PlayerCard extends ModernCard {
 
         JLabel lblRank = new JLabel(rankLabel);
         lblRank.setFont(Theme.SMALL_BOLD);
-        lblRank.setForeground(Theme.PURPLE);
+        lblRank.setForeground(ArenaPalette.CYAN);
         scoreRow.add(lblRank);
 
         JLabel lblDot = new JLabel("•");
         lblDot.setFont(Theme.SMALL);
-        lblDot.setForeground(Theme.MUTED_GRAY);
+        lblDot.setForeground(ArenaPalette.MUTED);
         scoreRow.add(lblDot);
 
         JLabel lblScore = new JLabel(score + " điểm");
         lblScore.setFont(Theme.SMALL_BOLD);
-        lblScore.setForeground(Theme.MUTED_GRAY);
+        lblScore.setForeground(ArenaPalette.MUTED);
         scoreRow.add(lblScore);
 
         infoPanel.add(scoreRow);
-        leftPanel.add(infoPanel);
+        leftPanel.add(infoPanel, BorderLayout.CENTER);
         add(leftPanel, BorderLayout.WEST);
 
         // ==========================================
@@ -120,6 +125,7 @@ public class PlayerCard extends ModernCard {
             isReady ? ModernButton.Style.EMERALD : ModernButton.Style.OUTLINE_GRAY
         );
         btnChallenge.setPreferredSize(new Dimension(116, 38));
+        btnChallenge.setArenaStyle(true);
         btnChallenge.setFont(Theme.BODY_BOLD);
         btnChallenge.setEnabled(isReady);
         btnChallenge.addActionListener(e -> {
@@ -146,8 +152,8 @@ public class PlayerCard extends ModernCard {
             public void mouseEntered(MouseEvent e) {
                 isHovered = true;
                 if (!isSelected) {
-                    setCardBackground(new Color(0xF8, 0xFA, 0xFC));
-                    setBorderColor(new Color(0xC7, 0xD2, 0xFE)); // Viền tím pastel nhẹ
+                    setCardBackground(ArenaPalette.SURFACE_RAISED);
+                    setBorderColor(new Color(64, 87, 118));
                     repaint();
                 }
             }
@@ -156,8 +162,8 @@ public class PlayerCard extends ModernCard {
             public void mouseExited(MouseEvent e) {
                 isHovered = false;
                 if (!isSelected) {
-                    setCardBackground(Theme.WHITE);
-                    setBorderColor(Theme.BORDER_LIGHT);
+                    setCardBackground(ArenaPalette.SURFACE);
+                    setBorderColor(ArenaPalette.BORDER);
                     repaint();
                 }
             }
@@ -182,8 +188,8 @@ public class PlayerCard extends ModernCard {
 
     public void setSelected(boolean selected) {
         this.isSelected = selected;
-        setBorderColor(selected ? Theme.PURPLE : (isHovered ? new Color(0xC7, 0xD2, 0xFE) : Theme.BORDER_LIGHT));
-        setCardBackground(selected ? new Color(0xF5, 0xF3, 0xFF) : (isHovered ? new Color(0xF8, 0xFA, 0xFC) : Theme.WHITE));
+        setBorderColor(selected ? ArenaPalette.ACCENT : (isHovered ? new Color(64, 87, 118) : ArenaPalette.BORDER));
+        setCardBackground(selected ? new Color(32, 47, 45) : (isHovered ? ArenaPalette.SURFACE_RAISED : ArenaPalette.SURFACE));
         repaint();
     }
 
@@ -275,27 +281,27 @@ public class PlayerCard extends ModernCard {
                 // Xanh lá tươi (Emerald) cho trạng thái Rảnh
                 this.labelText = "Rảnh";
                 this.statusColor = new Color(0x22, 0xC5, 0x5E);
-                this.bgColor = new Color(0xEC, 0xFD, 0xF5);
-                this.borderColor = new Color(0xA7, 0xF3, 0xD0);
-                this.textColor = new Color(0x15, 0x80, 0x3D);
+                this.bgColor = new Color(24, 57, 49);
+                this.borderColor = new Color(45, 93, 74);
+                this.textColor = new Color(105, 226, 178);
             } else if (isInQueue) {
                 // Vàng cam cho trạng thái Đang tìm
                 this.labelText = "Đang tìm";
                 this.statusColor = new Color(0xF5, 0x9E, 0x0B);
-                this.bgColor = new Color(0xFF, 0xFB, 0xEB);
-                this.borderColor = new Color(0xFD, 0xE6, 0x8A);
-                this.textColor = new Color(0xB4, 0x53, 0x09);
+                this.bgColor = new Color(66, 50, 31);
+                this.borderColor = new Color(105, 80, 44);
+                this.textColor = new Color(248, 205, 132);
             } else {
                 // Cam rực rỡ cho trạng thái Đang thi đấu
                 this.labelText = "Đang đấu";
                 this.statusColor = new Color(0xF9, 0x73, 0x16);
-                this.bgColor = new Color(0xFF, 0xF7, 0xED);
-                this.borderColor = new Color(0xFE, 0xD7, 0xAA);
-                this.textColor = new Color(0xC2, 0x41, 0x0C);
+                this.bgColor = new Color(64, 39, 31);
+                this.borderColor = new Color(106, 65, 42);
+                this.textColor = new Color(255, 181, 125);
             }
 
             setFont(Theme.SMALL_BOLD);
-            setPreferredSize(new Dimension(108, 28));
+            setPreferredSize(new Dimension(90, 28));
             setOpaque(false);
         }
 

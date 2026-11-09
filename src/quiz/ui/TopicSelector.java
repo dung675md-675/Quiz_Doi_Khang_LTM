@@ -1,261 +1,199 @@
 package quiz.ui;
 
 import java.awt.*;
-import java.awt.event.MouseWheelEvent;
+import java.awt.event.ActionEvent;
+import java.awt.event.KeyEvent;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 import javax.swing.*;
-import javax.swing.border.EmptyBorder;
 
-/**
- * TopicSelector — Khu vực chọn chủ đề trực quan bằng Topic Cards.
- * Có tiêu đề "CHỌN CHỦ ĐỀ" nổi bật, cuộn ngang mượt mà, hỗ trợ nút điều hướng và con lăn chuột.
- */
+/** A two-row photo explorer; every topic remains available in a compact window. */
 public class TopicSelector extends JPanel {
-
     private final JPanel cardsPanel;
     private final JScrollPane scrollPane;
     private final List<TopicCard> cardList = new ArrayList<>();
     private final JLabel lblSelectedInfo;
-
+    private final ModernBadge badgeCount;
+    private final JButton btnPrev;
+    private final JButton btnNext;
     private String selectedTopic = "Tổng hợp";
     private Consumer<String> onTopicChanged;
 
-    public TopicSelector() {
-        this(List.of());
-    }
+    public TopicSelector() { this(List.of()); }
 
     public TopicSelector(List<String> initialTopics) {
-        setLayout(new BorderLayout(0, 10));
+        super(new BorderLayout(0, 16));
         setOpaque(false);
 
-        // ==========================================
-        // 1. HEADER KHU VỰC CHỌN CHỦ ĐỀ
-        // ==========================================
-        JPanel headerPanel = new JPanel(new BorderLayout(12, 0));
-        headerPanel.setOpaque(false);
-
-        // Bên trái: Tiêu đề "CHỌN CHỦ ĐỀ" và thông tin chủ đề đang chọn
-        JPanel leftHeader = new JPanel();
-        leftHeader.setLayout(new BoxLayout(leftHeader, BoxLayout.Y_AXIS));
-        leftHeader.setOpaque(false);
-
-        JPanel titleRow = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 0));
+        JPanel header = new JPanel(new BorderLayout(16, 0));
+        header.setOpaque(false);
+        JPanel copy = new JPanel(new BorderLayout(0, 5));
+        copy.setOpaque(false);
+        JPanel titleRow = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
         titleRow.setOpaque(false);
-
-        // Chấm tròn điểm nhấn màu xanh cyan
-        JPanel accentDot = new JPanel() {
-            @Override
-            protected void paintComponent(Graphics g) {
-                Graphics2D g2 = (Graphics2D) g.create();
-                Theme.setupAntiAliasing(g2);
-                g2.setColor(new Color(0x00, 0xE5, 0xFF));
-                g2.fillOval(0, 2, 10, 10);
-                g2.dispose();
-            }
-        };
-        accentDot.setPreferredSize(new Dimension(10, 14));
-        accentDot.setOpaque(false);
-        titleRow.add(accentDot);
-
-        JLabel lblTitle = new JLabel("CHỌN CHỦ ĐỀ");
-        lblTitle.setFont(Theme.TITLE);
-        lblTitle.setForeground(Theme.DARK_TEXT);
-        titleRow.add(lblTitle);
-
-        ModernBadge badgeCount = new ModernBadge("8 Chủ Đề", ModernBadge.Type.RANK);
+        JLabel title = new JLabel("Khám phá chủ đề");
+        title.setFont(ArenaPalette.font(22, Font.BOLD));
+        title.setForeground(ArenaPalette.TEXT);
+        titleRow.add(title);
+        badgeCount = new ModernBadge("0 chủ đề", ModernBadge.Type.INFO);
+        badgeCount.setArenaStyle(true);
         titleRow.add(badgeCount);
-        leftHeader.add(titleRow);
-
+        copy.add(titleRow, BorderLayout.NORTH);
         lblSelectedInfo = new JLabel("Đang chọn: Tổng hợp");
-        lblSelectedInfo.setFont(Theme.SMALL);
-        lblSelectedInfo.setForeground(Theme.MUTED_GRAY);
-        lblSelectedInfo.setBorder(new EmptyBorder(2, 18, 0, 0));
-        leftHeader.add(lblSelectedInfo);
+        lblSelectedInfo.putClientProperty("html.disable", Boolean.TRUE);
+        lblSelectedInfo.setFont(ArenaPalette.font(12, Font.PLAIN));
+        lblSelectedInfo.setForeground(ArenaPalette.MUTED);
+        copy.add(lblSelectedInfo, BorderLayout.CENTER);
+        header.add(copy, BorderLayout.CENTER);
 
-        headerPanel.add(leftHeader, BorderLayout.WEST);
+        JPanel arrows = new JPanel(new FlowLayout(FlowLayout.RIGHT, 8, 0));
+        arrows.setOpaque(false);
+        btnPrev = navigation(true);
+        btnNext = navigation(false);
+        arrows.add(btnPrev);
+        arrows.add(btnNext);
+        header.add(arrows, BorderLayout.EAST);
+        add(header, BorderLayout.NORTH);
 
-        // Bên phải: Nút cuộn trái / phải
-        JPanel navButtons = new JPanel(new FlowLayout(FlowLayout.RIGHT, 6, 0));
-        navButtons.setOpaque(false);
-
-        JButton btnPrev = createNavButton(true, "Cuộn sang trái");
-        JButton btnNext = createNavButton(false, "Cuộn sang phải");
-
-        btnPrev.addActionListener(e -> {
-            SoundManager.playClick();
-            scrollBy(-226);
-        });
-
-        btnNext.addActionListener(e -> {
-            SoundManager.playClick();
-            scrollBy(226);
-        });
-
-        navButtons.add(btnPrev);
-        navButtons.add(btnNext);
-        headerPanel.add(navButtons, BorderLayout.EAST);
-
-        add(headerPanel, BorderLayout.NORTH);
-
-        // ==========================================
-        // 2. DANH SÁCH TOPIC CARDS CUỘN NGANG
-        // ==========================================
-        cardsPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 14, 8));
+        cardsPanel = new JPanel(new GridLayout(2, 0, 12, 12));
         cardsPanel.setOpaque(false);
-        cardsPanel.setBorder(new EmptyBorder(2, 4, 6, 4));
-
         scrollPane = new JScrollPane(cardsPanel);
-        scrollPane.setBorder(null);
+        scrollPane.setBorder(BorderFactory.createEmptyBorder());
         scrollPane.setOpaque(false);
         scrollPane.getViewport().setOpaque(false);
         scrollPane.setVerticalScrollBarPolicy(ScrollPaneConstants.VERTICAL_SCROLLBAR_NEVER);
         scrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
-        scrollPane.getHorizontalScrollBar().setUnitIncrement(28);
-
-        // Hỗ trợ cuộn ngang bằng chuột
-        scrollPane.addMouseWheelListener(e -> {
-            int units = e.getUnitsToScroll() * 32;
-            scrollBy(units);
+        scrollPane.setWheelScrollingEnabled(false);
+        scrollPane.getHorizontalScrollBar().setUnitIncrement(36);
+        scrollPane.setPreferredSize(new Dimension(1000, 292));
+        scrollPane.setMinimumSize(new Dimension(260, 292));
+        scrollPane.addMouseWheelListener(event -> {
+            scrollBy(event.getUnitsToScroll() * 28);
+            event.consume();
         });
-
-        // Thiết lập chiều cao vùng thẻ (~204px đủ cho card 176px + lift hover + bóng đổ)
-        scrollPane.setPreferredSize(new Dimension(880, 204));
-        scrollPane.setMinimumSize(new Dimension(600, 204));
-
+        scrollPane.getViewport().addChangeListener(event -> updateArrows());
+        btnPrev.addActionListener(event -> {
+            SoundManager.playClick();
+            scrollBy(-Math.max(222, scrollPane.getViewport().getWidth() - 60));
+        });
+        btnNext.addActionListener(event -> {
+            SoundManager.playClick();
+            scrollBy(Math.max(222, scrollPane.getViewport().getWidth() - 60));
+        });
         add(scrollPane, BorderLayout.CENTER);
-
-        // Nạp danh sách chủ đề ban đầu nếu có
-        if (initialTopics != null && !initialTopics.isEmpty()) {
-            setTopics(initialTopics);
-        } else {
-            // Mặc định nạp 8 chủ đề chuẩn của game
-            setTopics(quiz.Bank.STANDARD_TOPICS);
-        }
+        setTopics(initialTopics != null && !initialTopics.isEmpty() ? initialTopics : quiz.Bank.STANDARD_TOPICS);
     }
 
-    private void scrollBy(int pixels) {
-        JScrollBar hBar = scrollPane.getHorizontalScrollBar();
-        int cur = hBar.getValue();
-        int target = Math.max(0, Math.min(hBar.getMaximum() - hBar.getVisibleAmount(), cur + pixels));
-        hBar.setValue(target);
+    private void scrollBy(int distance) {
+        JViewport viewport = scrollPane.getViewport();
+        int limit = Math.max(0, viewport.getViewSize().width - viewport.getExtentSize().width);
+        int next = Math.max(0, Math.min(limit, viewport.getViewPosition().x + distance));
+        viewport.setViewPosition(new Point(next, 0));
+        updateArrows();
     }
 
-    private JButton createNavButton(boolean isLeft, String tooltip) {
-        JButton btn = new JButton() {
-            @Override
-            protected void paintComponent(Graphics g) {
-                Graphics2D g2 = (Graphics2D) g.create();
-                Theme.setupAntiAliasing(g2);
-                int w = getWidth();
-                int h = getHeight();
-                if (getModel().isPressed()) {
-                    g2.setColor(new Color(0xDE, 0xE4, 0xEE));
-                } else if (getModel().isRollover()) {
-                    g2.setColor(new Color(0xEB, 0xF0, 0xF8));
-                } else {
-                    g2.setColor(Theme.WHITE);
-                }
-                g2.fillRoundRect(0, 0, w - 1, h - 1, 8, 8);
-                g2.setColor(Theme.BORDER_LIGHT);
-                g2.drawRoundRect(0, 0, w - 1, h - 1, 8, 8);
+    private void updateArrows() {
+        if (scrollPane == null || btnPrev == null || btnNext == null) return;
+        JViewport viewport = scrollPane.getViewport();
+        int limit = Math.max(0, viewport.getViewSize().width - viewport.getExtentSize().width);
+        btnPrev.setEnabled(viewport.getViewPosition().x > 0);
+        btnNext.setEnabled(viewport.getViewPosition().x < limit);
+    }
 
-                // Mũi tên tam giác vector rõ ràng, không bao giờ bị cắt thành dấu ba chấm
-                g2.setColor(Theme.DARK_TEXT);
-                int cx = w / 2;
-                int cy = h / 2;
-                if (isLeft) {
-                    int[] xPoints = {cx + 3, cx - 4, cx + 3};
-                    int[] yPoints = {cy - 5, cy, cy + 5};
-                    g2.fillPolygon(xPoints, yPoints, 3);
-                } else {
-                    int[] xPoints = {cx - 3, cx + 4, cx - 3};
-                    int[] yPoints = {cy - 5, cy, cy + 5};
-                    g2.fillPolygon(xPoints, yPoints, 3);
-                }
-                g2.dispose();
+    private JButton navigation(boolean previous) {
+        JButton button = new JButton() {
+            @Override protected void paintComponent(Graphics graphics) {
+                Graphics2D g = (Graphics2D) graphics.create();
+                Theme.setupAntiAliasing(g);
+                g.setColor(getModel().isRollover() && isEnabled()
+                        ? ArenaPalette.SURFACE_RAISED : ArenaPalette.SURFACE);
+                g.fillRoundRect(0, 0, getWidth() - 1, getHeight() - 1, 14, 14);
+                g.setColor(hasFocus() ? ArenaPalette.ACCENT : ArenaPalette.BORDER);
+                g.drawRoundRect(0, 0, getWidth() - 1, getHeight() - 1, 14, 14);
+                g.setColor(isEnabled() ? ArenaPalette.TEXT : new Color(70, 85, 112));
+                g.setStroke(new BasicStroke(1.8f, BasicStroke.CAP_ROUND, BasicStroke.JOIN_ROUND));
+                int x = getWidth() / 2;
+                int y = getHeight() / 2;
+                int direction = previous ? -1 : 1;
+                g.drawLine(x - direction * 3, y - 5, x + direction * 3, y);
+                g.drawLine(x + direction * 3, y, x - direction * 3, y + 5);
+                g.dispose();
             }
         };
-        btn.setPreferredSize(new Dimension(32, 28));
-        btn.setToolTipText(tooltip);
-        btn.setContentAreaFilled(false);
-        btn.setBorderPainted(false);
-        btn.setFocusPainted(false);
-        btn.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-        return btn;
+        button.setPreferredSize(new Dimension(38, 38));
+        button.setToolTipText(previous ? "Chủ đề phía trước" : "Chủ đề tiếp theo");
+        button.getAccessibleContext().setAccessibleName(button.getToolTipText());
+        button.setBorderPainted(false);
+        button.setFocusPainted(false);
+        button.setContentAreaFilled(false);
+        button.setOpaque(false);
+        button.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        return button;
     }
 
-    /**
-     * Cập nhật danh sách các chủ đề hiển thị trên thanh chọn thẻ.
-     */
     public void setTopics(List<String> topics) {
         cardsPanel.removeAll();
         cardList.clear();
-
-        List<String> fullList = new ArrayList<>();
-        fullList.add("Tổng hợp");
-        for (String t : topics) {
-            if (!t.equalsIgnoreCase("Tổng hợp") && !fullList.contains(t)) {
-                fullList.add(t);
+        List<String> all = new ArrayList<>();
+        all.add("Tổng hợp");
+        if (topics != null) {
+            for (String topic : topics) {
+                if (topic != null && !topic.isBlank() && !topic.equalsIgnoreCase("Tổng hợp")
+                        && !all.contains(topic)) all.add(topic);
             }
         }
-
-        // Kiểm tra xem selectedTopic hiện tại có nằm trong danh sách không
-        boolean foundCurrent = false;
-        for (String t : fullList) {
-            if (t.equalsIgnoreCase(selectedTopic)) {
-                foundCurrent = true;
-                break;
-            }
-        }
-        if (!foundCurrent && !fullList.isEmpty()) {
-            selectedTopic = fullList.get(0);
-        }
-
-        for (String topic : fullList) {
-            boolean isSel = topic.equalsIgnoreCase(selectedTopic);
-            TopicCard card = new TopicCard(topic, isSel, this::onCardSelected);
+        if (all.stream().noneMatch(topic -> topic.equalsIgnoreCase(selectedTopic))) selectedTopic = "Tổng hợp";
+        badgeCount.setText(all.size() + " chủ đề");
+        for (int index = 0; index < all.size(); index++) {
+            String topic = all.get(index);
+            TopicCard card = new TopicCard(topic, topic.equalsIgnoreCase(selectedTopic), this::onCardSelected);
+            int position = index;
+            card.getInputMap(JComponent.WHEN_FOCUSED).put(KeyStroke.getKeyStroke(KeyEvent.VK_LEFT, 0), "previousTopic");
+            card.getInputMap(JComponent.WHEN_FOCUSED).put(KeyStroke.getKeyStroke(KeyEvent.VK_RIGHT, 0), "nextTopic");
+            card.getActionMap().put("previousTopic", new AbstractAction() {
+                @Override public void actionPerformed(ActionEvent event) { focusTopic(Math.max(0, position - 1)); }
+            });
+            card.getActionMap().put("nextTopic", new AbstractAction() {
+                @Override public void actionPerformed(ActionEvent event) { focusTopic(Math.min(cardList.size() - 1, position + 1)); }
+            });
             cardList.add(card);
             cardsPanel.add(card);
         }
-
+        cardsPanel.setLayout(new GridLayout(all.size() > 1 ? 2 : 1, 0, 12, 12));
         updateSelectedLabel();
         cardsPanel.revalidate();
         cardsPanel.repaint();
+        SwingUtilities.invokeLater(this::updateArrows);
+    }
+
+    private void focusTopic(int index) {
+        if (index < 0 || index >= cardList.size()) return;
+        TopicCard card = cardList.get(index);
+        card.scrollRectToVisible(new Rectangle(0, 0, card.getWidth(), card.getHeight()));
+        card.requestFocusInWindow();
     }
 
     private void onCardSelected(String topic) {
         setSelectedTopic(topic);
-        if (onTopicChanged != null) {
-            onTopicChanged.accept(topic);
-        }
+        if (onTopicChanged != null) onTopicChanged.accept(topic);
     }
 
     public void setSelectedTopic(String topic) {
-        if (topic == null || topic.isBlank()) {
-            topic = "Tổng hợp";
-        }
-        this.selectedTopic = topic;
-
+        selectedTopic = topic == null || topic.isBlank() ? "Tổng hợp" : topic;
         for (TopicCard card : cardList) {
-            card.setSelected(card.getTopicName().equalsIgnoreCase(selectedTopic));
+            boolean selected = card.getTopicName().equalsIgnoreCase(selectedTopic);
+            card.setSelected(selected);
+            if (selected) card.scrollRectToVisible(new Rectangle(0, 0, card.getWidth(), card.getHeight()));
         }
-
         updateSelectedLabel();
     }
 
     private void updateSelectedLabel() {
-        if (lblSelectedInfo != null) {
-            lblSelectedInfo.setText("Đang chọn: " + selectedTopic);
-        }
+        lblSelectedInfo.setText("Đang chọn: " + selectedTopic);
+        lblSelectedInfo.setToolTipText(selectedTopic);
     }
 
-    public String getSelectedTopic() {
-        return selectedTopic != null ? selectedTopic : "Tổng hợp";
-    }
-
-    public void setOnTopicChanged(Consumer<String> listener) {
-        this.onTopicChanged = listener;
-    }
+    public String getSelectedTopic() { return selectedTopic != null ? selectedTopic : "Tổng hợp"; }
+    public void setOnTopicChanged(Consumer<String> listener) { onTopicChanged = listener; }
 }
