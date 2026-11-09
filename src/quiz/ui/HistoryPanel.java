@@ -294,10 +294,11 @@ public class HistoryPanel extends JPanel {
         int currentStreak = 0;
         int maxStreak = 0;
 
+        List<HistoryCard> parsedCards = new ArrayList<>();
         for (String row : rows) {
             if (row.isBlank()) continue;
             HistoryCard card = new HistoryCard(row, this.currentUsername, SwingUtilities.getWindowAncestor(this));
-            allCards.add(card);
+            parsedCards.add(card);
             totalMatches++;
 
             if (card.getResult() == HistoryCard.MatchResult.WIN) {
@@ -314,6 +315,10 @@ public class HistoryPanel extends JPanel {
                 currentStreak = 0;
             }
         }
+
+        // Sắp xếp trận đấu gần nhất lên đầu tiên (timestamp giảm dần)
+        parsedCards.sort((c1, c2) -> Long.compare(c2.getTimestamp(), c1.getTimestamp()));
+        allCards.addAll(parsedCards);
 
         // Cập nhật thống kê 4 thẻ
         int winRate = totalMatches > 0 ? (winCount * 100 / totalMatches) : 0;
@@ -357,6 +362,10 @@ public class HistoryPanel extends JPanel {
 
         listPanel.revalidate();
         listPanel.repaint();
+    }
+
+    public List<HistoryCard> getAllCards() {
+        return java.util.Collections.unmodifiableList(allCards);
     }
 
     /**

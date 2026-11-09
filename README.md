@@ -4,11 +4,17 @@
 
 Giao diện được chuyển từ bản thiết kế Quiz Arena trước đó lên bản mã nguồn mới nhất của nhóm: nền navy tối, menu dọc, nút xanh lime, banner đấu trường và bộ chọn chủ đề hai hàng. Phần đăng nhập có nền minh họa và form tối; các màn hình bảng xếp hạng, lịch sử và quản trị dùng cùng bảng màu.
 
-Các thao tác và dữ liệu của bản nhóm được giữ lại, gồm kỹ năng chiến thuật, đồng hồ theo loại câu hỏi, bảng xếp hạng theo thời gian, thống kê lịch sử, chi tiết trận và chức năng quản trị. Lần cập nhật này chỉ thay giao diện, không bổ sung chat, phòng đấu bằng mã hay báo lỗi câu hỏi.
+Các thao tác và dữ liệu của bản `duymanh (2)` được giữ lại, gồm kỹ năng chiến thuật, đồng hồ theo loại câu hỏi, tái đấu, bảng xếp hạng, lịch sử mới nhất lên đầu, chi tiết trận và chức năng quản trị. Bổ sung kết bạn, chat riêng giữa bạn bè và chat trong trận. Không bổ sung phòng đấu bằng mã hay báo lỗi câu hỏi.
 
 Ảnh nằm trong `assets/backgrounds`; thông tin nguồn ảnh ở [ARTWORK.md](assets/backgrounds/ARTWORK.md). Maven đóng gói thư mục này vào classpath. Nút **Hiệu ứng: Bật/Tắt** điều khiển chuyển động nền; có thể đặt `-Dquiz.ui.reduceMotion=true` khi chạy client. Hiệu ứng dừng khi màn hình bị ẩn hoặc cửa sổ thu nhỏ.
 
-Sau khi biên dịch, mở hai terminal tại thư mục có `src`, `lib`, `out` và chạy:
+Biên dịch bằng Git Bash trên Windows, tại thư mục có `src`, `lib` và `assets`:
+
+```bash
+javac -encoding UTF-8 -cp "lib/*" -sourcepath src -d out src/quiz/*.java src/quiz/ui/*.java
+```
+
+Sau đó mở hai terminal tại thư mục dự án và chạy:
 
 ```bash
 java -cp "out;lib/*" quiz.Server 5050 data
@@ -16,6 +22,26 @@ java -cp "out;lib/*" quiz.Server 5050 data
 
 ```bash
 java -cp "out;lib/*" quiz.Client 127.0.0.1 5050
+```
+
+## Kết bạn và trò chuyện
+
+- Mở **Bạn Bè** ở menu bên trái để tìm tài khoản, gửi lời mời, chấp nhận/từ chối, hủy lời mời hoặc hủy kết bạn. Có thể gửi lời mời cho tài khoản đang ngoại tuyến.
+- Sau khi được chấp nhận, chọn **Nhắn tin** trên thẻ bạn bè. Gửi bằng nút **Gửi tin** hoặc **Ctrl+Enter**; lịch sử chia theo từng người, có thông báo chưa đọc và nút tải tin cũ hơn. Chỉ bạn bè đã chấp nhận mới gửi được tin nhắn riêng.
+- Trong trận 1v1, bấm **Chat** cạnh nút **Thoát**. Cửa sổ chat không chặn thao tác trả lời; chỉ hai người trong cùng trận nhận được tin. Nút hiển thị số tin mới khi cửa sổ đóng. Chat không bật trong luyện tập với bot.
+- Tin nhắn riêng được lưu nguyên tử trong `data/chat.dat`, gồm lịch sử và trạng thái đã đọc. Tin nhắn trận chỉ giữ tối đa 100 tin trong bộ nhớ của trận và không được lưu vĩnh viễn.
+- Quan hệ bạn bè lưu cùng `users.dat`, tương thích dữ liệu tài khoản cũ; khi PostgreSQL được bật với tự tạo bảng, server bổ sung bảng `friendships`. Việc xóa tài khoản đồng thời dọn quan hệ và tin nhắn riêng để tài khoản tạo lại không nhận lịch sử cũ.
+- Cần biên dịch và khởi động lại cả server lẫn client để dùng các lệnh mới.
+
+Kiểm thử kết bạn/chat bằng dữ liệu tạm, không sửa dữ liệu chơi thật:
+
+```bash
+javac -encoding UTF-8 -cp "out;lib/*" -d out tests/*.java
+java -ea -cp "out;lib/*" quiz.TestFriends
+java -ea -cp "out;lib/*" quiz.TestFriendsProtocol
+java -ea -cp "out;lib/*" quiz.TestSocialChat
+java -Djava.awt.headless=true -ea -cp "out;lib/*" quiz.TestSocialPanels
+java -Djava.awt.headless=true -ea -cp "out;lib/*" quiz.TestSocialLayout
 ```
 
 Project Java 17 độc lập theo đề tài Nhóm 5: TCP Socket, server nhiều luồng, client Swing, tài khoản, sảnh online, lời mời theo chủ đề và mức độ, cùng bộ đề 10 câu cho hai người, tính điểm và thời gian tại server, tái đấu, lịch sử và bảng xếp hạng.

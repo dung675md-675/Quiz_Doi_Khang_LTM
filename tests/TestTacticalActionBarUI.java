@@ -55,7 +55,7 @@ public class TestTacticalActionBarUI {
     }
 
     private static void testInteractivityAndCancel() {
-        System.out.println("2. Kiem tra kich hoat, doi ky nang va CANCEL khi bam lai nut...");
+        System.out.println("2. Kiem tra kich hoat, bao ve 0 va tat luon nut...");
         TacticalActionBar bar = new TacticalActionBar();
         List<String> actions = new ArrayList<>();
         bar.setOnActionListener(actions::add);
@@ -70,26 +70,24 @@ public class TestTacticalActionBarUI {
         assertCondition(def.isEnabled(), "Phong thu phai bat");
         assertCondition(star.isEnabled(), "Ngoi sao phai bat khi >= 50 diem");
 
-        // Click DEFEND
+        // Click DEFEND -> phai tieu hao luot ve 0 ngay lap tuc va tat nut
         def.doClick();
         assertCondition(actions.size() == 1 && actions.get(0).equals("DEFEND"), "Phai phat action DEFEND");
         assertCondition("DEFEND".equals(bar.getActiveSkill()), "Active skill phai la DEFEND");
+        assertCondition(bar.getDefendRemaining() == 0, "Defend phai bao ve 0 luot ngay khi bam");
+        assertCondition(def.getText().equals("Phòng Thủ (0)"), "Label phai bao ve 0: Phòng Thủ (0)");
+        assertCondition(!def.isEnabled(), "Nut Phong thu phai tat luon (disabled) khong cho click tiep");
 
-        // Click lai DEFEND -> HỦY (CANCEL)
-        def.doClick();
-        assertCondition(actions.size() == 2 && actions.get(1).equals("CANCEL"), "Bam lai phai phat action CANCEL");
-        assertCondition("NONE".equals(bar.getActiveSkill()), "Active skill phai ve NONE");
+        // Sang cau hoi moi: nut Phong thu phai tiep tuc tat (0 luot), khong duoc bat lai
+        bar.onNewQuestion(120, bar.getAttackRemaining(), bar.getDefendRemaining(), bar.getStarRemaining());
+        assertCondition(!bar.isQuestionLocked(), "Cau moi phai mo khoa");
+        assertCondition("NONE".equals(bar.getActiveSkill()), "Cau moi active skill phai reset ve NONE");
+        assertCondition(bar.getDefendRemaining() == 0, "Defend van phai la 0");
+        assertCondition(!bar.getDefendButton().isEnabled(), "Nut Phong thu da dung phai tat hoan toan o cau sau");
+        assertCondition(bar.getAttackButton().isEnabled(), "Tan cong chua dung van bat binh thuong khi diem >= 50");
+        assertCondition(bar.getStarButton().isEnabled(), "Ngoi sao chua dung van bat binh thuong khi diem >= 50");
 
-        // Click ATTACK -> sau do click STAR (chuyen ky nang)
-        atk.doClick();
-        assertCondition(actions.size() == 3 && actions.get(2).equals("ATTACK"), "Phai phat action ATTACK");
-        assertCondition("ATTACK".equals(bar.getActiveSkill()), "Active skill phai la ATTACK");
-
-        star.doClick();
-        assertCondition(actions.size() == 4 && actions.get(3).equals("STAR"), "Phai chuyen sang STAR");
-        assertCondition("STAR".equals(bar.getActiveSkill()), "Active skill phai la STAR");
-
-        System.out.println("   [PASS] Kich hoat, doi nut va CANCEL hoat dong hoan hao!");
+        System.out.println("   [PASS] Kich hoat bao ve 0 va tat luon nut hoat dong hoan hao!");
     }
 
     private static void testLockAndNewQuestion() {
@@ -119,7 +117,7 @@ public class TestTacticalActionBarUI {
         assertCondition(!bar.isQuestionLocked(), "Cau moi phai mo khoa");
         assertCondition("NONE".equals(bar.getActiveSkill()), "Cau moi active skill phai reset ve NONE");
         assertCondition(bar.getAttackButton().isEnabled(), "Tan cong mo lai khi diem >= 50");
-        assertCondition(bar.getDefendButton().isEnabled(), "Phong thu mo lai");
+        assertCondition(!bar.getDefendButton().isEnabled(), "Phong thu da dung o cau truoc phai tat hoan toan o cau sau");
         assertCondition(bar.getStarButton().isEnabled(), "Ngoi sao mo lai khi diem >= 50");
 
         System.out.println("   [PASS] Khoa khi het gio / nop bai va reset cau moi chuan xac!");
@@ -171,9 +169,9 @@ public class TestTacticalActionBarUI {
         assertCondition("DEFEND".equals(caughtAction.get()), "MatchScreen phai nhan duoc DEFEND qua setOnTacticalActionListener");
 
         // Kiem tra server confirm dong bo trang thai vao bar
-        matchScreen.handleTacticalConfirm("DEFEND", 2, 1, 1);
+        matchScreen.handleTacticalConfirm("DEFEND", 1, 0, 1);
         assertCondition("DEFEND".equals(bar.getActiveSkill()), "Bar phai active DEFEND");
-        assertCondition(bar.getDefendRemaining() == 1, "Defend phai con 1 luot");
+        assertCondition(bar.getDefendRemaining() == 0, "Defend phai la 0 luot");
 
         // Kiem tra khi MatchScreen ket thuc cau hoi (finish / reveal)
         matchScreen.showQuestionRevealPhase(0, 0, "Exp", 100, 80, 1, 0, 0, 1, "DEFEND", "ATTACK", "DEFEND_BLOCKED", "ATTACK_BLOCKED", 0, 0);

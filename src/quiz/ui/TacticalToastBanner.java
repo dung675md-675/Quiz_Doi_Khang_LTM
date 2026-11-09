@@ -49,10 +49,58 @@ public class TacticalToastBanner extends JPanel {
     }
 
     /**
+     * Hiển thị banner khi chính bản thân người chơi kích hoạt kỹ năng:
+     * - ATTACK: "[CHIẾN THUẬT] Bạn vừa phát động TẤN CÔNG (0 lượt còn lại)!"
+     * - DEFEND: "[CHIẾN THUẬT] Bạn đã kích hoạt KHIÊN PHÒNG THỦ (0 lượt còn lại)!"
+     * - STAR: "[CHIẾN THUẬT] Bạn đã đặt cược NGÔI SAO HY VỌNG (0 lượt còn lại)!"
+     */
+    public void showSelfAction(String action) {
+        if (action == null || action.isBlank() || "CANCEL".equalsIgnoreCase(action) || "NONE".equalsIgnoreCase(action)) {
+            hideToast();
+            return;
+        }
+
+        this.currentAction = action.toUpperCase();
+        switch (this.currentAction) {
+            case "ATTACK" -> {
+                this.messageText = "[CHIẾN THUẬT] Bạn vừa phát động TẤN CÔNG (0 lượt còn lại)!";
+                this.bgStart = new Color(0x7F, 0x1D, 0x1D, 235);
+                this.bgEnd = new Color(0x45, 0x0A, 0x0A, 245);
+                this.borderCol = new Color(0xF4, 0x3F, 0x5E);
+                this.iconCol = new Color(0xFB, 0x71, 0x85);
+            }
+            case "DEFEND" -> {
+                this.messageText = "[CHIẾN THUẬT] Bạn đã kích hoạt KHIÊN PHÒNG THỦ (0 lượt còn lại)!";
+                this.bgStart = new Color(0x16, 0x4E, 0x63, 235);
+                this.bgEnd = new Color(0x08, 0x33, 0x44, 245);
+                this.borderCol = new Color(0x06, 0xB6, 0xD4);
+                this.iconCol = new Color(0x22, 0xD3, 0xEE);
+            }
+            case "STAR" -> {
+                this.messageText = "[CHIẾN THUẬT] Bạn đã đặt cược NGÔI SAO HY VỌNG (0 lượt còn lại)!";
+                this.bgStart = new Color(0x78, 0x35, 0x0F, 235);
+                this.bgEnd = new Color(0x45, 0x1A, 0x03, 245);
+                this.borderCol = new Color(0xF5, 0x9E, 0x0B);
+                this.iconCol = new Color(0xFB, 0xBF, 0x24);
+            }
+            default -> {
+                hideToast();
+                return;
+            }
+        }
+
+        autoHideTimer.stop();
+        setVisible(true);
+        isSlidingIn = true;
+        isSlidingOut = false;
+        slideTimer.start();
+    }
+
+    /**
      * Hiển thị banner tương ứng với action của đối thủ:
-     * - ATTACK: "⚔️ [ĐỐI THỦ] <tên> vừa phát động TẤN CÔNG!"
-     * - DEFEND: "🛡️ [ĐỐI THỦ] <tên> đã kích hoạt KHIÊN PHÒNG THỦ!"
-     * - STAR: "⭐ [ĐỐI THỦ] <tên> đã đặt cược NGÔI SAO HY VỌNG!"
+     * - ATTACK: "[ĐỐI THỦ] <tên> vừa phát động TẤN CÔNG!"
+     * - DEFEND: "[ĐỐI THỦ] <tên> đã kích hoạt KHIÊN PHÒNG THỦ!"
+     * - STAR: "[ĐỐI THỦ] <tên> đã đặt cược NGÔI SAO HY VỌNG!"
      * - CANCEL: Ẩn ngay banner.
      */
     public void showOpponentAction(String oppName, String action) {

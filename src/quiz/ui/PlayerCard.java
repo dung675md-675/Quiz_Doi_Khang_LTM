@@ -28,6 +28,8 @@ public class PlayerCard extends ModernCard {
     private boolean isHovered = false;
 
     private final ModernButton btnChallenge;
+    private final ModernButton btnFriend;
+    private Consumer<String> onFriendRequestCallback;
     private final StatusIndicatorBadge statusBadge;
     private Consumer<String> onChallengeCallback;
     private Consumer<PlayerCard> onSelectCallback;
@@ -49,8 +51,8 @@ public class PlayerCard extends ModernCard {
         setHasShadow(false);
         setCornerRadius(18);
         setCardPadding(12, 16, 12, 16);
-        setMaximumSize(new Dimension(Integer.MAX_VALUE, 74));
-        setPreferredSize(new Dimension(520, 72));
+        setMaximumSize(new Dimension(Integer.MAX_VALUE, 112));
+        setPreferredSize(new Dimension(520, 112));
         setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
 
         // ==========================================
@@ -102,22 +104,22 @@ public class PlayerCard extends ModernCard {
 
         infoPanel.add(scoreRow);
         leftPanel.add(infoPanel, BorderLayout.CENTER);
-        add(leftPanel, BorderLayout.WEST);
+        add(leftPanel, BorderLayout.CENTER);
 
         // ==========================================
         // CENTER: Chấm trạng thái Java2D & Nhãn trạng thái
         // ==========================================
-        JPanel centerPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 0, 10));
+        JPanel centerPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 2));
         centerPanel.setOpaque(false);
 
         statusBadge = new StatusIndicatorBadge(isReady, isInQueue);
         centerPanel.add(statusBadge);
-        add(centerPanel, BorderLayout.CENTER);
+        infoPanel.add(centerPanel);
 
         // ==========================================
         // RIGHT: Nút Thách Đấu
         // ==========================================
-        JPanel rightPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 0, 6));
+        JPanel rightPanel = new JPanel(new GridLayout(2, 1, 0, 6));
         rightPanel.setOpaque(false);
 
         btnChallenge = new ModernButton(
@@ -135,6 +137,15 @@ public class PlayerCard extends ModernCard {
             }
         });
         rightPanel.add(btnChallenge);
+        btnFriend = new ModernButton("Kết bạn", ModernButton.Style.SECONDARY);
+        btnFriend.setArenaStyle(true);
+        btnFriend.setPreferredSize(new Dimension(132, 34));
+        btnFriend.setIcon(new ArenaIcon(ArenaIcon.Type.FRIENDS, 15, null));
+        btnFriend.addActionListener(e -> {
+            if (onFriendRequestCallback != null) onFriendRequestCallback.accept(username);
+        });
+        btnFriend.setVisible(false);
+        rightPanel.add(btnFriend);
         add(rightPanel, BorderLayout.EAST);
 
         // ==========================================
@@ -215,6 +226,36 @@ public class PlayerCard extends ModernCard {
 
     public void setOnChallenge(Consumer<String> callback) {
         this.onChallengeCallback = callback;
+    }
+
+    public void setOnFriendRequest(Consumer<String> callback) {
+        onFriendRequestCallback = callback;
+        btnFriend.setVisible(callback != null);
+    }
+
+    public void setFriendState(String state) {
+        switch (state == null ? "NONE" : state) {
+            case "FRIEND" -> {
+                btnFriend.setText("Bạn bè");
+                btnFriend.setEnabled(false);
+                btnFriend.setStyle(ModernButton.Style.OUTLINE_GRAY);
+            }
+            case "OUTGOING" -> {
+                btnFriend.setText("Đã gửi lời mời");
+                btnFriend.setEnabled(false);
+                btnFriend.setStyle(ModernButton.Style.OUTLINE_GRAY);
+            }
+            case "INCOMING" -> {
+                btnFriend.setText("Xem lời mời");
+                btnFriend.setEnabled(true);
+                btnFriend.setStyle(ModernButton.Style.ACCENT_PURPLE);
+            }
+            default -> {
+                btnFriend.setText("Kết bạn");
+                btnFriend.setEnabled(true);
+                btnFriend.setStyle(ModernButton.Style.SECONDARY);
+            }
+        }
     }
 
     public void setOnSelect(Consumer<PlayerCard> callback) {

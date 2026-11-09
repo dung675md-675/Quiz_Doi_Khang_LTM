@@ -78,6 +78,7 @@ public class NavigationTab extends JButton {
     private static ArenaIcon.Type iconFor(String text) {
         return switch (text) {
             case "Người Chơi" -> ArenaIcon.Type.PLAYERS;
+            case "Bạn Bè" -> ArenaIcon.Type.FRIENDS;
             case "Bảng Xếp Hạng" -> ArenaIcon.Type.TROPHY;
             case "Lịch Sử" -> ArenaIcon.Type.HISTORY;
             case "Ngân Hàng Câu Hỏi" -> ArenaIcon.Type.BOOK;

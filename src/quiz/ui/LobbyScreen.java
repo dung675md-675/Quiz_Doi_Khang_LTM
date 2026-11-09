@@ -60,6 +60,8 @@ public class LobbyScreen extends JPanel {
     private boolean isMatchmaking = false;
 
     // Tab panels
+    private final FriendsPanel friendsPanel;
+    private Consumer<String> friendRequestListener;
     private final LeaderboardPanel leaderboardPanel;
     private final HistoryPanel historyPanel;
     private final PlayerManagementPanel playerManagementPanel;
@@ -99,6 +101,7 @@ public class LobbyScreen extends JPanel {
         navBar = new NavigationBar();
         navBar.setSidebarMode(true);
         navBar.addTab("Người Chơi");
+        navBar.addTab("Bạn Bè");
         navBar.addTab("Bảng Xếp Hạng");
         navBar.addTab("Lịch Sử");
         navBar.addTab("Quản Lý Người Chơi");
@@ -344,6 +347,11 @@ public class LobbyScreen extends JPanel {
         onlineSection.add(playersListPanel, BorderLayout.CENTER);
         playersWrapper.add(onlineSection, BorderLayout.CENTER);
 
+        friendsPanel = new FriendsPanel();
+        friendsPanel.setOnChallenge(target -> {
+            if (challengeListener != null) challengeListener.onChallenge(target, getSelectedTopic(), getSelectedLevel());
+        });
+        friendsPanel.setOnRelationsChanged(this::refreshPlayerFriendStates);
         leaderboardPanel = new LeaderboardPanel();
         historyPanel = new HistoryPanel();
         playerManagementPanel = new PlayerManagementPanel();
@@ -357,6 +365,7 @@ public class LobbyScreen extends JPanel {
         playersScroll.getVerticalScrollBar().setPreferredSize(new Dimension(9, 0));
         playersScroll.getVerticalScrollBar().setUI(new QuietScrollBarUI());
         cardPanel.add(playersScroll, "Người Chơi");
+        cardPanel.add(friendsPanel, "Bạn Bè");
         cardPanel.add(leaderboardPanel, "Bảng Xếp Hạng");
         cardPanel.add(historyPanel, "Lịch Sử");
         cardPanel.add(playerManagementPanel, "Quản Lý Người Chơi");
@@ -368,6 +377,7 @@ public class LobbyScreen extends JPanel {
             cardLayout.show(cardPanel, tab);
             pageTitle.setText(switch (tab) {
                 case "Người Chơi" -> "Đấu trường tri thức";
+                case "Bạn Bè" -> "Bạn bè và tin nhắn";
                 case "Bảng Xếp Hạng" -> "Vinh danh cao thủ";
                 case "Lịch Sử" -> "Thành tích của bạn";
                 case "Quản Lý Người Chơi" -> "Quản lý tài khoản";
@@ -620,6 +630,16 @@ public class LobbyScreen extends JPanel {
         this.updateAvatarListener = listener;
     }
 
+    public FriendsPanel getFriendsPanel() { return friendsPanel; }
+
+    public void setOnFriendRequest(Consumer<String> listener) { friendRequestListener = listener; }
+
+    private void refreshPlayerFriendStates() {
+        for (Component child : playersListPanel.getComponents()) {
+            if (child instanceof PlayerCard card) card.setFriendState(friendsPanel.getRelationState(card.getUsername()));
+        }
+    }
+
     public LeaderboardPanel getLeaderboardPanel() {
         return leaderboardPanel;
     }
@@ -645,6 +665,7 @@ public class LobbyScreen extends JPanel {
      * Format mới: name;score;status;avatarId;rankLabel|...
      */
     public void updatePlayersFromLobbyData(String lobbyData, String myName) {
+        friendsPanel.updatePresence(lobbyData);
         playersListPanel.removeAll();
 
         if (lobbyData == null || lobbyData.isBlank()) {
@@ -687,6 +708,13 @@ public class LobbyScreen extends JPanel {
                         challengeListener.onChallenge(targetUser, getSelectedTopic(), getSelectedLevel());
                     }
                 });
+                card.setOnFriendRequest(target -> {
+                    if ("INCOMING".equals(friendsPanel.getRelationState(target))) {
+                        navBar.selectTab("Bạn Bè");
+                        friendsPanel.showIncomingRequests();
+                    } else if (friendRequestListener != null) friendRequestListener.accept(target);
+                });
+                card.setFriendState(friendsPanel.getRelationState(name));
                 otherPlayers.add(card);
             }
         }

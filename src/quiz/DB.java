@@ -98,6 +98,20 @@ public final class DB implements AutoCloseable {
             } catch (Exception ignored) {}
 
             st.execute("""
+                CREATE TABLE IF NOT EXISTS friendships (
+                    user_a VARCHAR(50) NOT NULL REFERENCES users(username) ON DELETE CASCADE,
+                    user_b VARCHAR(50) NOT NULL REFERENCES users(username) ON DELETE CASCADE,
+                    requested_by VARCHAR(50) NOT NULL,
+                    status VARCHAR(16) NOT NULL CHECK (status IN ('PENDING', 'ACCEPTED')),
+                    created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                    PRIMARY KEY (user_a, user_b),
+                    CHECK (user_a COLLATE "C" < user_b COLLATE "C"),
+                    CHECK (requested_by IN (user_a, user_b))
+                );
+            """);
+            st.execute("CREATE INDEX IF NOT EXISTS idx_friendships_user_b ON friendships(user_b)");
+
+            st.execute("""
                 CREATE TABLE IF NOT EXISTS question_sets (
                     id VARCHAR(50) PRIMARY KEY,
                     topic VARCHAR(100) NOT NULL,
@@ -293,6 +307,192 @@ public final class DB implements AutoCloseable {
         }
     }
 
+    // --- FRIENDSHIP DAO METHODS ---
+
+    /**
+     * This single-server application's initialized file snapshot is authoritative. Reconcile
+     * SQL transactionally after file-only operation; bootstrap a legacy/missing snapshot from SQL.
+     */
+    public Map<String, Model.Friendship> initializeFriendships(
+            Map<String, Model.Friendship> fileRelationships,
+            boolean fileInitialized,
+            Map<String, Model.User> fileUsers) {
+        if (!connected) {
+            throw new IllegalStateException("PostgreSQL chưa sẵn sàng để đọc danh sách bạn bè.");
+        }
+        Map<String, Model.Friendship> committedSnapshot = null;
+        try (Connection conn = getConnection()) {
+            conn.setAutoCommit(false);
+            try {
+                // Serialize first-time imports with other friendship writers.
+                try (Statement lock = conn.createStatement()) {
+                    lock.execute("LOCK TABLE friendships IN SHARE ROW EXCLUSIVE MODE");
+                }
+                if (fileInitialized || !fileRelationships.isEmpty()) {
+                    importFriendshipAccounts(conn, fileRelationships.values(), fileUsers);
+                    try (Statement st = conn.createStatement()) {
+                        st.executeUpdate("DELETE FROM friendships");
+                    }
+                    for (Model.Friendship relation : fileRelationships.values()) {
+                        // A missing SQL account fails the transaction instead of dropping local data.
+                        insertFriendship(conn, relation);
+                    }
+                }
+                Map<String, Model.Friendship> loaded = readFriendships(conn);
+                conn.commit();
+                committedSnapshot = loaded;
+                return loaded;
+            } catch (SQLException | RuntimeException e) {
+                try {
+                    conn.rollback();
+                } catch (SQLException rollbackFailure) {
+                    e.addSuppressed(rollbackFailure);
+                }
+                throw e;
+            }
+        } catch (SQLException e) {
+            if (committedSnapshot != null) {
+                System.err.println("[DATABASE] Lỗi đóng kết nối sau khi nạp bạn bè: " + e.getMessage());
+                return committedSnapshot;
+            }
+            throw new IllegalStateException("Không thể nạp dữ liệu bạn bè từ PostgreSQL.", e);
+        }
+    }
+
+    /**
+     * Persist a single relationship transition and its file snapshot before committing SQL.
+     * The caller restores its in-memory/file snapshot if any step fails.
+     */
+    public void changeFriendship(
+            Model.Friendship previous, Model.Friendship next, Runnable saveFileSnapshot) {
+        if (!connected) {
+            throw new IllegalStateException("PostgreSQL chưa sẵn sàng để lưu quan hệ bạn bè.");
+        }
+        if (previous == null && next == null) {
+            throw new IllegalArgumentException("Không có thay đổi quan hệ bạn bè.");
+        }
+        boolean committed = false;
+        try (Connection conn = getConnection()) {
+            conn.setAutoCommit(false);
+            try {
+                if (previous == null) {
+                    insertFriendship(conn, next);
+                } else if (next == null) {
+                    String sql = "DELETE FROM friendships WHERE user_a = ? AND user_b = ? "
+                            + "AND requested_by = ? AND status = ?";
+                    try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                        bindExpectedFriendship(ps, previous);
+                        if (ps.executeUpdate() != 1) {
+                            throw new SQLException("Quan hệ bạn bè đã thay đổi. Vui lòng tải lại.");
+                        }
+                    }
+                } else {
+                    String sql = "UPDATE friendships SET status = ? WHERE user_a = ? AND user_b = ? "
+                            + "AND requested_by = ? AND status = ?";
+                    try (PreparedStatement ps = conn.prepareStatement(sql)) {
+                        ps.setString(1, next.status().name());
+                        ps.setString(2, previous.userA());
+                        ps.setString(3, previous.userB());
+                        ps.setString(4, previous.requestedBy());
+                        ps.setString(5, previous.status().name());
+                        if (ps.executeUpdate() != 1) {
+                            throw new SQLException("Quan hệ bạn bè đã thay đổi. Vui lòng tải lại.");
+                        }
+                    }
+                }
+                saveFileSnapshot.run();
+                conn.commit();
+                committed = true;
+            } catch (SQLException | RuntimeException e) {
+                try {
+                    conn.rollback();
+                } catch (SQLException rollbackFailure) {
+                    e.addSuppressed(rollbackFailure);
+                }
+                throw e;
+            }
+        } catch (SQLException e) {
+            if (committed) {
+                // Both stores already contain the committed state; a close failure must not
+                // trigger a file-only rollback after the SQL transaction has succeeded.
+                System.err.println("[DATABASE] Lỗi đóng kết nối sau khi lưu quan hệ bạn bè: " + e.getMessage());
+                return;
+            }
+            throw new IllegalStateException("Không thể lưu quan hệ bạn bè vào PostgreSQL.", e);
+        }
+    }
+
+    private Map<String, Model.Friendship> readFriendships(Connection conn) throws SQLException {
+        Map<String, Model.Friendship> result = new HashMap<>();
+        String sql = "SELECT user_a, user_b, requested_by, status, created_at FROM friendships";
+        try (Statement st = conn.createStatement(); ResultSet rs = st.executeQuery(sql)) {
+            while (rs.next()) {
+                Model.Friendship relation = new Model.Friendship(
+                        rs.getString("user_a"),
+                        rs.getString("user_b"),
+                        rs.getString("requested_by"),
+                        Model.FriendshipStatus.valueOf(rs.getString("status")),
+                        rs.getTimestamp("created_at").getTime());
+                result.put(Model.Friendship.key(relation.userA(), relation.userB()), relation);
+            }
+        }
+        return result;
+    }
+
+    /** Import only missing accounts referenced by the durable friendship snapshot. */
+    private void importFriendshipAccounts(
+            Connection conn,
+            Collection<Model.Friendship> relationships,
+            Map<String, Model.User> fileUsers) throws SQLException {
+        Set<String> referenced = new HashSet<>();
+        for (Model.Friendship relation : relationships) {
+            referenced.add(relation.userA());
+            referenced.add(relation.userB());
+        }
+        String sql = "INSERT INTO users(username, password, score, avatar_id, full_name, email, bio, role) "
+                + "VALUES (?, ?, ?, ?, ?, ?, ?, ?) ON CONFLICT (username) DO NOTHING";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            for (String username : referenced) {
+                Model.User account = fileUsers.get(username);
+                if (account == null) {
+                    throw new IllegalStateException("Không tìm thấy tài khoản trong dữ liệu bạn bè: " + username);
+                }
+                ps.setString(1, username);
+                ps.setString(2, account.password);
+                ps.setInt(3, Math.max(0, account.score));
+                ps.setString(4, account.avatarId == null || account.avatarId.isBlank()
+                        ? "avatar_01" : account.avatarId);
+                ps.setString(5, account.fullName == null ? "" : account.fullName);
+                ps.setString(6, account.email == null ? "" : account.email);
+                ps.setString(7, account.bio == null ? "" : account.bio);
+                ps.setString(8, account.role == null || account.role.isBlank()
+                        ? "PLAYER" : account.role);
+                ps.executeUpdate();
+            }
+        }
+    }
+
+    private void insertFriendship(Connection conn, Model.Friendship relation) throws SQLException {
+        String sql = "INSERT INTO friendships(user_a, user_b, requested_by, status, created_at) "
+                + "VALUES (?, ?, ?, ?, ?)";
+        try (PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, relation.userA());
+            ps.setString(2, relation.userB());
+            ps.setString(3, relation.requestedBy());
+            ps.setString(4, relation.status().name());
+            ps.setTimestamp(5, new Timestamp(relation.createdAt()));
+            ps.executeUpdate();
+        }
+    }
+
+    private void bindExpectedFriendship(PreparedStatement ps, Model.Friendship relation)
+            throws SQLException {
+        ps.setString(1, relation.userA());
+        ps.setString(2, relation.userB());
+        ps.setString(3, relation.requestedBy());
+        ps.setString(4, relation.status().name());
+    }
+
     // --- USER DAO METHODS ---
 
     public boolean registerUser(String username, String passwordHash) {
@@ -368,6 +568,41 @@ public final class DB implements AutoCloseable {
         } catch (SQLException e) {
             System.err.println("[DATABASE] Lỗi xóa user " + username + ": " + e.getMessage());
             return false;
+        }
+    }
+
+    /** Keep account deletion, SQL relationship cascades, and the file snapshot in one transaction. */
+    public void deleteUserWithSnapshot(String username, Runnable saveFileSnapshot) {
+        if (!connected) {
+            throw new IllegalStateException("PostgreSQL chưa sẵn sàng để xóa tài khoản.");
+        }
+        boolean committed = false;
+        try (Connection conn = getConnection()) {
+            conn.setAutoCommit(false);
+            try {
+                try (PreparedStatement ps = conn.prepareStatement("DELETE FROM users WHERE username = ?")) {
+                    ps.setString(1, username);
+                    if (ps.executeUpdate() != 1) {
+                        throw new SQLException("Không tìm thấy tài khoản cần xóa trong PostgreSQL.");
+                    }
+                }
+                saveFileSnapshot.run();
+                conn.commit();
+                committed = true;
+            } catch (SQLException | RuntimeException e) {
+                try {
+                    conn.rollback();
+                } catch (SQLException rollbackFailure) {
+                    e.addSuppressed(rollbackFailure);
+                }
+                throw e;
+            }
+        } catch (SQLException e) {
+            if (committed) {
+                System.err.println("[DATABASE] Lỗi đóng kết nối sau khi xóa tài khoản: " + e.getMessage());
+                return;
+            }
+            throw new IllegalStateException("Không thể xóa tài khoản khỏi PostgreSQL.", e);
         }
     }
 

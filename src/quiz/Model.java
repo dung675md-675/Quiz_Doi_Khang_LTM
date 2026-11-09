@@ -88,10 +88,75 @@ public final class Model {
    return "ADMIN".equalsIgnoreCase(role)||"admin".equalsIgnoreCase(name);
   }
  }
+ public enum FriendshipStatus {
+     PENDING,
+     ACCEPTED
+ }
+
+ /** One shared relationship for a canonical, case-sensitive pair of accounts. */
+ public record Friendship(
+         String userA,
+         String userB,
+         String requestedBy,
+         FriendshipStatus status,
+         long createdAt) implements Serializable {
+
+     public Friendship {
+         Objects.requireNonNull(userA, "userA");
+         Objects.requireNonNull(userB, "userB");
+         Objects.requireNonNull(requestedBy, "requestedBy");
+         Objects.requireNonNull(status, "status");
+         if (userA.isBlank() || userB.isBlank() || userA.equals(userB)
+                 || userA.indexOf('\0') >= 0 || userB.indexOf('\0') >= 0) {
+             throw new IllegalArgumentException("Cặp tài khoản kết bạn không hợp lệ.");
+         }
+         if (userA.compareTo(userB) > 0) {
+             String first = userA;
+             userA = userB;
+             userB = first;
+         }
+         if (!requestedBy.equals(userA) && !requestedBy.equals(userB)) {
+             throw new IllegalArgumentException("Người gửi lời mời không thuộc quan hệ này.");
+         }
+     }
+
+     public static String key(String first, String second) {
+         Objects.requireNonNull(first, "first");
+         Objects.requireNonNull(second, "second");
+         return first.compareTo(second) < 0
+                 ? first + '\0' + second
+                 : second + '\0' + first;
+     }
+
+     public boolean involves(String username) {
+         return userA.equals(username) || userB.equals(username);
+     }
+
+     public String other(String username) {
+         if (userA.equals(username)) {
+             return userB;
+         }
+         if (userB.equals(username)) {
+             return userA;
+         }
+         throw new IllegalArgumentException("Tài khoản không thuộc quan hệ này.");
+     }
+ }
+
  public static record Result(String match,String left,String right,String topic,String level,String setId,int leftCorrect,int rightCorrect,long leftMs,long rightMs,int duration,String winner,long timestamp) implements Serializable {}
  public static final class Store implements Serializable {
   private static final long serialVersionUID = -2459928414739261786L;
   public Map<String,User> users=new HashMap<>(); public List<Result> results=new ArrayList<>();
+  public Map<String,Friendship> friendships = new HashMap<>();
+  public boolean friendshipsInitialized = false;
+
+  /** Preserve accounts from users.dat files written before friendships existed. */
+  private void readObject(ObjectInputStream in) throws IOException, ClassNotFoundException {
+      in.defaultReadObject();
+      if (friendships == null) {
+          friendships = new HashMap<>();
+      }
+  }
   public static Store read(File file){if(!file.exists())return new Store();try(ObjectInputStream in=new ObjectInputStream(new FileInputStream(file))){return (Store)in.readObject();}catch(Exception e){System.err.println("[STORE] Dữ liệu "+file.getName()+" không tương thích ("+e.getMessage()+"). Khởi tạo kho dữ liệu mới.");return new Store();}}
   public void save(File file){try{File parent=file.getAbsoluteFile().getParentFile();parent.mkdirs();File temp=new File(parent,file.getName()+".tmp");try(ObjectOutputStream out=new ObjectOutputStream(new FileOutputStream(temp))){out.writeObject(this);}try{java.nio.file.Files.move(temp.toPath(),file.toPath(),java.nio.file.StandardCopyOption.REPLACE_EXISTING,java.nio.file.StandardCopyOption.ATOMIC_MOVE);}catch(java.nio.file.AtomicMoveNotSupportedException e){java.nio.file.Files.move(temp.toPath(),file.toPath(),java.nio.file.StandardCopyOption.REPLACE_EXISTING);}}catch(IOException e){throw new IllegalStateException(e);}}
  }
